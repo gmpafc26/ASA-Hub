@@ -264,7 +264,7 @@
   .balances-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
   .balances-table tr:last-child td{border-bottom:none}
   .balances-table tr:hover td{background:#f8fafc}
-  .bal-player-photo{width:32px;height:32px;border-radius:50%;object-fit:cover;object-position:top center;border:1.5px solid var(--border)}
+  .bal-player-photo{width:48px;height:48px;border-radius:50%;object-fit:cover;object-position:top center;border:1.5px solid var(--border)}
   .bal-number{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--teal);color:#fff;border-radius:50%;font-size:10px;font-weight:700;flex-shrink:0}
   .bal-bar-wrap{display:flex;align-items:center;gap:8px}
   .bal-bar{height:6px;background:var(--border);border-radius:3px;width:80px;overflow:hidden;flex-shrink:0}
@@ -442,38 +442,91 @@
     <div style="font-size:13px;color:#166534;line-height:1.7" id="processIntroText">Submit your request via the <strong>+ New Request</strong> tab. Select <strong>Tentative</strong> if you're not yet certain, or <strong>Planned</strong> if you're 100% sure and just need player confirmation. You'll receive an email confirmation when submitted, and a further email once your request is approved or not approved by the relevant approver.</div>
   </div>
 
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px" id="streamsGrid">
+  <div id="streamsGrid" style="margin-bottom:20px">
 
-    <div class="stream-card retail">
-      <div class="stream-title"><div class="stream-icon retail">&#128717;</div><span class="process-editable-title">Stream 1 — Retail</span></div>
-      <div class="stream-subtitle process-editable-subtitle">Consumer / Retail ASA Requests — Approver: Georgie Morris or Andrew Fuss</div>
-      <div class="process-step"><div class="step-num">1</div><div><div class="step-title process-editable">Submit request via + New Request</div><div class="step-desc process-editable">Select Retail as request type. Choose Tentative or Planned status.</div></div></div>
-      <div class="process-step"><div class="step-num">2</div><div><div class="step-title process-editable">Confirmation email sent</div><div class="step-desc process-editable">You'll receive an automatic email confirming your request has been submitted for review.</div></div></div>
-      <div class="process-step"><div class="step-num">3</div><div><div class="step-title process-editable">Georgie or Andrew reviews</div><div class="step-desc process-editable">Retail approver checks the calendar for conflicts and player availability.</div></div></div>
-      <div class="process-step"><div class="step-num">4</div><div><div class="step-title process-editable">Approval email sent to submitter</div><div class="step-desc process-editable">You'll be notified by email whether your request has been approved or not, including any comments.</div></div></div>
-      <div class="process-step"><div class="step-num">5</div><div><div class="step-title process-editable">Passed to Trent</div><div class="step-desc process-editable">If approved, Georgie passes the confirmed details to Trent for player liaison. Status updated to Confirmed once Trent signs off.</div></div></div>
+    <!-- Unified process with stream callouts -->
+    <div style="background:#fff;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow)">
+
+      <!-- Step 1 -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border)">
+        <div style="width:44px;flex-shrink:0;background:#f8fafc;display:flex;align-items:flex-start;justify-content:center;padding-top:18px">
+          <div class="step-num" style="flex-shrink:0">1</div>
+        </div>
+        <div style="padding:16px 20px;flex:1">
+          <div class="step-title process-editable">Submit your request via + New Request</div>
+          <div class="step-desc process-editable" style="margin-top:4px">Fill in the request name, date, location, start time, time required, players and any relevant notes. Select your status — <strong>TBC</strong> if you&rsquo;re not yet certain, or <strong>Planned</strong> if you&rsquo;re ready to go.</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">&#128717; Retail → Georgie or Andrew</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe">&#128188; Commercial → Jodie or John</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe">&#127775; PCL → Jacob</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border)">
+        <div style="width:44px;flex-shrink:0;background:#f8fafc;display:flex;align-items:flex-start;justify-content:center;padding-top:18px">
+          <div class="step-num">2</div>
+        </div>
+        <div style="padding:16px 20px;flex:1">
+          <div class="step-title process-editable">Confirmation email sent automatically</div>
+          <div class="step-desc process-editable" style="margin-top:4px">You&rsquo;ll receive an email confirming your request has been submitted and is pending review. The email includes a summary of all the details you entered.</div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border)">
+        <div style="width:44px;flex-shrink:0;background:#f8fafc;display:flex;align-items:flex-start;justify-content:center;padding-top:18px">
+          <div class="step-num">3</div>
+        </div>
+        <div style="padding:16px 20px;flex:1">
+          <div class="step-title process-editable">Approver reviews the request</div>
+          <div class="step-desc process-editable" style="margin-top:4px">The relevant approver checks the calendar for availability and conflicts, then approves or declines the request — adding comments where needed.</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">&#128717; Retail → Georgie or Andrew</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe">&#128188; Commercial → Jodie or John</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe">&#127775; PCL → Jacob</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border)">
+        <div style="width:44px;flex-shrink:0;background:#f8fafc;display:flex;align-items:flex-start;justify-content:center;padding-top:18px">
+          <div class="step-num">4</div>
+        </div>
+        <div style="padding:16px 20px;flex:1">
+          <div class="step-title process-editable">Approval email sent to submitter</div>
+          <div class="step-desc process-editable" style="margin-top:4px">You&rsquo;ll be notified by email of the outcome — approved or not approved — including any comments left by the approver. Status updates to <strong>Internally Approved</strong> or <strong>Not Approved</strong>.</div>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border)">
+        <div style="width:44px;flex-shrink:0;background:#f8fafc;display:flex;align-items:flex-start;justify-content:center;padding-top:18px">
+          <div class="step-num">5</div>
+        </div>
+        <div style="padding:16px 20px;flex:1">
+          <div class="step-title process-editable">Approver notifies Trent or Rachel</div>
+          <div class="step-desc process-editable" style="margin-top:4px">For internally approved requests, the approver sends the details to the relevant player liaison for final confirmation. AFL requests go to <strong>Trent</strong>, AFLW requests go to <strong>Rachel</strong>, mixed requests go to both with players split accordingly.</div>
+          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:#92400e" class="process-editable">
+            This can be done directly from the Requests tab — click the <strong>&#128231; Trent</strong> or <strong>&#128231; Rachel</strong> button on any Internally Approved request. Alternatively, the approver can confirm directly with them offline and manually mark the request as Confirmed.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6 -->
+      <div style="display:flex;gap:0">
+        <div style="width:44px;flex-shrink:0;background:#f8fafc;display:flex;align-items:flex-start;justify-content:center;padding-top:18px">
+          <div class="step-num" style="background:var(--confirmed);color:#fff">6</div>
+        </div>
+        <div style="padding:16px 20px;flex:1">
+          <div class="step-title process-editable" style="color:var(--confirmed)">Confirmed — fully locked in</div>
+          <div class="step-desc process-editable" style="margin-top:4px">Once Trent or Rachel has confirmed, the approver updates the status to <strong>Confirmed</strong>. The submitter is notified and the request is locked in on the calendar.</div>
+        </div>
+      </div>
+
     </div>
-
-    <div class="stream-card">
-      <div class="stream-title"><div class="stream-icon">&#128188;</div><span class="process-editable-title">Stream 2 — Commercial</span></div>
-      <div class="stream-subtitle process-editable-subtitle">Commercial ASA Requests — Approvers: Jodie Cairns / John Kleeman</div>
-      <div class="process-step"><div class="step-num">1</div><div><div class="step-title process-editable">Submit request via + New Request</div><div class="step-desc process-editable">Select Commercial as request type. Choose Tentative or Planned status.</div></div></div>
-      <div class="process-step"><div class="step-num">2</div><div><div class="step-title process-editable">Confirmation email sent</div><div class="step-desc process-editable">You'll receive an automatic email confirming your request has been submitted for review.</div></div></div>
-      <div class="process-step"><div class="step-num">3</div><div><div class="step-title process-editable">Jodie or John reviews</div><div class="step-desc process-editable">Commercial approver checks the calendar for conflicts and player availability.</div></div></div>
-      <div class="process-step"><div class="step-num">4</div><div><div class="step-title process-editable">Approval email sent to submitter</div><div class="step-desc process-editable">You'll be notified by email whether your request has been approved or not, including any comments.</div></div></div>
-      <div class="process-step"><div class="step-num">5</div><div><div class="step-title process-editable">Passed to Trent</div><div class="step-desc process-editable">If approved, Jodie or John passes the confirmed details to Trent for player liaison. Status updated to Confirmed once Trent signs off.</div></div></div>
-    </div>
-
-    <div class="stream-card" style="border-left:4px solid #6d28d9">
-      <div class="stream-title"><div class="stream-icon" style="background:#f5f3ff">&#127775;</div><span class="process-editable-title">Stream 3 — PCL</span></div>
-      <div class="stream-subtitle process-editable-subtitle">PCL Requests — Approver: Jacob</div>
-      <div class="process-step"><div class="step-num" style="background:#f5f3ff;color:#6d28d9">1</div><div><div class="step-title process-editable">Submit request via + New Request</div><div class="step-desc process-editable">Select PCL as request type. Choose Tentative or Planned status.</div></div></div>
-      <div class="process-step"><div class="step-num" style="background:#f5f3ff;color:#6d28d9">2</div><div><div class="step-title process-editable">Confirmation email sent</div><div class="step-desc process-editable">You'll receive an automatic email confirming your request has been submitted for review.</div></div></div>
-      <div class="process-step"><div class="step-num" style="background:#f5f3ff;color:#6d28d9">3</div><div><div class="step-title process-editable">Jacob reviews</div><div class="step-desc process-editable">PCL approver checks the calendar for conflicts and player availability.</div></div></div>
-      <div class="process-step"><div class="step-num" style="background:#f5f3ff;color:#6d28d9">4</div><div><div class="step-title process-editable">Approval email sent to submitter</div><div class="step-desc process-editable">You'll be notified by email whether your request has been approved or not, including any comments.</div></div></div>
-      <div class="process-step"><div class="step-num" style="background:#f5f3ff;color:#6d28d9">5</div><div><div class="step-title process-editable">Passed to Trent</div><div class="step-desc process-editable">If approved, Jacob passes the confirmed details to Trent for player liaison. Status updated to Confirmed once Trent signs off.</div></div></div>
-    </div>
-
   </div>
 
   <div class="cal-info-card">
@@ -1156,7 +1209,7 @@ function renderPlayers(){
       +'<div class="player-img-wrap"><img src="'+p.img+'" alt="'+p.name+'" loading="lazy" onerror="this.style.opacity=.2"><div class="player-number">'+p.num+"</div>"+restrictedBadge+"</div>"
       +'<div class="player-body"><div class="player-name">'+p.name+"</div><div class=\"player-position\">"+p.pos+"</div>"
       +'<div class="player-tags">'+tags+"</div>"
-      +'<div class="balance-section"><div class="balance-row"><span class="balance-label">ASA / CBA Balance</span><span class="balance-pct">'+p.bal+'%</span></div><div class="cba-bar"><div class="cba-fill" style="width:'+p.bal+'%"></div></div></div>'
+      +'<div class="balance-section"><div class="balance-row"><span class="balance-label">Balance Remaining</span><span class="balance-pct">'+p.bal+'%</span></div><div class="cba-bar"><div class="cba-fill" style="width:'+p.bal+'%"></div></div></div>'
       +'<div class="player-actions"><button class="btn-sm btn-outline" style="flex:2" onclick="openPlayerRequests(\''+p.id+'\')">&#128203; Requests'+reqCount+"</button>"+editBtn+"</div></div></div>";
   }
   document.getElementById("playersGrid").innerHTML=html;
@@ -1323,6 +1376,7 @@ function renderRequests(){
     var aflwCount=r.players.filter(function(pid){return aflwPlayers.find(function(p){return p.id===pid})}).length;
     var liaison=aflCount>0&&aflwCount>0?"Trent & Rachel":aflwCount>0?"Rachel":"Trent";
     var sendBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button class="btn-icon" onclick="sendToLiaison(\''+r.id+'\')" style="color:#6d28d9;width:auto;padding:0 8px;font-size:11px;font-weight:600;white-space:nowrap">&#128231; '+liaison+'</button>':"";
+    var confirmBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button class="btn-icon" onclick="markFullyConfirmed(\''+r.id+'\')" title="Mark as fully confirmed (bypass liaison)" style="color:var(--confirmed);width:auto;padding:0 8px;font-size:11px;font-weight:600;white-space:nowrap">&#9989; Confirm</button>':"";
     var pNote=!r.approved&&canApprove(r.type)?'<span class="pending-badge">&#8987; Pending your approval</span>':"";
     var bNote=r.briefed?'<span style="font-size:10px;color:var(--confirmed);display:block;margin-top:2px">&#9989; Briefed to Trent</span>':"";
     var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
@@ -1335,7 +1389,7 @@ function renderRequests(){
       +"<td>"+(r.location||"--")+"</td>"
       +"<td style='color:var(--muted);font-size:12px'>"+(r.start_time?fmtTime(r.start_time)+" · ":"")+(r.time_required||"--")+"</td>"
       +'<td><span class="status-chip '+sc(r.status)+'">'+r.status+"</span></td>"
-      +'<td><div class="action-btns">'+sendBtn+aBtn+eBtn+dBtn+"</div></td></tr>";
+      +'<td><div class="action-btns">'+sendBtn+confirmBtn+aBtn+eBtn+dBtn+"</div></td></tr>";
   }
   tb.innerHTML=html;
 }
@@ -1621,6 +1675,28 @@ function openPendingModal(){
   }
   body.appendChild(wrap);document.getElementById("pendingModal").classList.add("open");
 }
+function markFullyConfirmed(id){
+  var r=requests.find(function(x){return x.id===id});
+  if(!r)return;
+  // Confirm dialog
+  document.getElementById("confirmTitle").textContent="Mark as Confirmed";
+  document.getElementById("confirmSubtitle").textContent=r.name;
+  document.getElementById("confirmMessage").textContent="This will mark the request as fully Confirmed, bypassing the Trent/Rachel notification step. Use this if you have already confirmed with them directly.";
+  document.getElementById("confirmOkBtn").textContent="Confirm";
+  document.getElementById("confirmOkBtn").style.background="var(--confirmed)";
+  document.getElementById("confirmOkBtn").onclick=function(){
+    r.status="Confirmed";
+    syncRequestToMonday(id,{status:"Confirmed",notes:(r.notes||"")+" | Manually confirmed by approver"});
+    closeModal("confirmModal");
+    // Reset confirm button style
+    document.getElementById("confirmOkBtn").textContent="Delete";
+    document.getElementById("confirmOkBtn").style.background="var(--red)";
+    renderRequests();renderCalendar();
+    showToast(r.name+" marked as Confirmed","success");
+  };
+  document.getElementById("confirmModal").classList.add("open");
+}
+
 function sendToLiaison(id){
   var r=requests.find(function(x){return x.id===id});
   if(!r)return;
