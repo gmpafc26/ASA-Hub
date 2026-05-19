@@ -912,10 +912,7 @@ function buildCell(y,m,d,om,tiso){
   var iso=isoDate(y,m,d);
   var s=schedule[iso];
   var sa=aflwSchedule[iso];
-  // For AFLW: treat days with no entry as available (weekdays) 
-  var dayOfWeek=new Date(iso+"T12:00:00").getDay();
-  var isWeekend=dayOfWeek===0||dayOfWeek===6;
-  if(!sa&&!isWeekend)sa={a:"available",n:"Available"};
+
   // Determine which schedule to show based on calSquad
   var showAFL=calSquad==="afl"||calSquad==="both";
   var showAFLW=calSquad==="aflw"||calSquad==="both";
