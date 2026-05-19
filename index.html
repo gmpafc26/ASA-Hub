@@ -781,7 +781,7 @@ function deleteRequestOnMonday(reqId){
   mondayApi('mutation($iid:ID!){delete_item(item_id:$iid){id}}',{iid:String(mondayId)});
 }
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
-var pinConfig={admin:"3942","retail-approver":"1870","commercial-approver":"1972","balance-updater":"1559","pcl-approver":"7741"};
+var pinConfig={admin:"3942","retail-approver":"1870","commercial-approver":"1972","balance-updater":"1559","pcl-approver":"1559"};
 function getRoleFromPin(pin){for(var role in pinConfig){if(pinConfig[role]===pin)return role}return null}
 let editingId=null,balEditingId=null,calYear=2026,calMonth=4,calSquad="afl";
 let filterDept="all",filterStatus="all",filterTime="active";
@@ -1103,7 +1103,7 @@ function checkPin(){
     var ts=document.getElementById("filterTimeSel");if(ts)ts.value="active";
     renderPlayers();renderRequests();
     if(lv==="balance-updater")switchTab("balances",null);
-    else if(lv==="retail-approver"||lv==="commercial-approver"||lv==="pcl-approver")switchTab("requests",null);
+    else if(lv==="retail-approver"||lv==="commercial-approver"||lv==="pcl-approver"){switchTab("requests",null);updateApprovalBanner();}
     showToast("Signed in","success");
   } else {
     document.getElementById("pinError").textContent="Incorrect PIN.";pinEntry="";updatePinDots();
@@ -1334,8 +1334,11 @@ function applyAccessLevel(level){
   if(badge&&label){badge.className="access-badge logged-in";label.innerHTML=labels[level]||level;badge.onclick=function(){accessLevel="viewer";badge.className="access-badge";label.textContent="Sign in";badge.onclick=openPinModal;document.getElementById("balancesTabBtn").style.display="none";document.getElementById("addPlayerBtn").style.display="none";renderPlayers();renderRequests()}}
   if(level==="admin"){document.getElementById("balancesTabBtn").style.display="flex";document.getElementById("addPlayerBtn").style.display="flex"}
   else if(level==="balance-updater"){document.getElementById("balancesTabBtn").style.display="flex";}
-  else if(level==="pcl-approver"){document.getElementById("balancesTabBtn").style.display="flex";}
-  renderPlayers();renderRequests();
+  else if(level==="pcl-approver"){
+    document.getElementById("balancesTabBtn").style.display="flex";
+    switchTab("requests",null);
+  }
+  renderPlayers();renderRequests();updateApprovalBanner();
 }
 (function(){
   if(!window.mondaySdk)return;
