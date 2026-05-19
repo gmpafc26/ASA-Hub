@@ -98,7 +98,7 @@
   .status-confirmed{background:#f0fdf4;color:var(--confirmed)}.status-tentative{background:#fffbeb;color:var(--tentative)}
   .status-planned{background:#eff6ff;color:var(--planned)}.status-tbc{background:#f8fafc;color:var(--tbc);border:1px solid var(--border)}
   .type-chip{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
-  .type-commercial{background:#eff6ff;color:#1e40af}.type-retail{background:#f0fdf4;color:#15803d}
+  .type-commercial{background:#eff6ff;color:#1e40af}.type-retail{background:#f0fdf4;color:#15803d}.type-pcl{background:#f5f3ff;color:#6d28d9}
   .player-list-inline{display:flex;flex-wrap:wrap;gap:4px}
   .player-pill{background:var(--off-white);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:11px}
   .action-btns{display:flex;gap:6px}
@@ -476,7 +476,7 @@
     <div class="mreq-form" id="mreqForm">
       <div class="mreq-field full"><label class="mreq-label">Request Name <span class="mreq-req">*</span></label><input type="text" class="mreq-input" id="mreq-name" placeholder="e.g. MG Campaign Shoot"></div>
       <div class="mreq-row">
-        <div class="mreq-field"><label class="mreq-label">Request Type <span class="mreq-req">*</span></label><div class="mreq-type-toggle"><button class="mreq-type-btn active" data-val="Retail" onclick="selectMreqType(this)">&#128717; Retail</button><button class="mreq-type-btn" data-val="Commercial" onclick="selectMreqType(this)">&#128188; Commercial</button></div><div class="mreq-routing-note" id="mreqRoutingNote"></div></div>
+        <div class="mreq-field"><label class="mreq-label">Request Type <span class="mreq-req">*</span></label><div class="mreq-type-toggle"><button class="mreq-type-btn active" data-val="Retail" onclick="selectMreqType(this)">&#128717; Retail</button><button class="mreq-type-btn" data-val="Commercial" onclick="selectMreqType(this)">&#128188; Commercial</button><button class="mreq-type-btn" data-val="PCL" onclick="selectMreqType(this)">&#127775; PCL</button></div><div class="mreq-routing-note" id="mreqRoutingNote"></div></div>
         <div class="mreq-field"><label class="mreq-label">Date <span class="mreq-req">*</span></label><input type="date" class="mreq-input" id="mreq-date" onchange="mreqCheckConflicts()"><div class="mreq-date-avail" id="mreqDateAvail"></div></div>
       </div>
       <div class="mreq-field full"><label class="mreq-label">Location</label><input type="text" class="mreq-input" id="mreq-location" placeholder="e.g. Alberton Oval"></div>
@@ -516,7 +516,7 @@
   <div class="modal-body">
     <div id="conflictAlert" class="conflict-alert"><div class="conflict-alert-title">&#9888;&#65039; Booking Conflict Detected</div><div class="conflict-alert-body" id="conflictAlertBody"></div><div class="conflict-actions"><button class="btn-conflict btn-anyway" onclick="ignoreConflict=true;document.getElementById('conflictAlert').classList.remove('visible')">Book anyway</button><button class="btn-conflict btn-change" onclick="document.getElementById('conflictAlert').classList.remove('visible')">Change details</button><button class="btn-conflict btn-change" onclick="closeModal('requestModal')">Cancel</button></div></div>
     <div class="form-row full"><div class="form-group full"><label class="form-label">Request Name</label><input type="text" class="form-control" id="f-name" placeholder="e.g. MG Campaign Shoot"></div></div>
-    <div class="form-row"><div class="form-group"><label class="form-label">Type</label><select class="form-control" id="f-type"><option>Retail</option><option>Commercial</option></select></div><div class="form-group"><label class="form-label">Date</label><input type="date" class="form-control" id="f-date" onchange="checkConflicts()"></div></div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Type</label><select class="form-control" id="f-type"><option>Retail</option><option>Commercial</option><option>PCL</option></select></div><div class="form-group"><label class="form-label">Date</label><input type="date" class="form-control" id="f-date" onchange="checkConflicts()"></div></div>
     <div class="form-row full"><div class="form-group full"><label class="form-label">Location</label><input type="text" class="form-control" id="f-location"></div></div>
     <div class="form-row"><div class="form-group"><label class="form-label">Start Time</label><input type="time" class="form-control" id="f-start-time"></div><div class="form-group"><label class="form-label">Time Required</label><input type="text" class="form-control" id="f-time" placeholder="e.g. 2 hours, Half day, 90 mins"></div></div>
     <div class="form-group" style="margin-bottom:14px"><label class="form-label">Players</label><div class="players-checkboxes" id="playersCheckboxes"></div></div>
@@ -530,7 +530,7 @@
   <div class="modal"><div class="modal-header"><div class="modal-title">Edit Request</div><button class="modal-close" onclick="closeModal('editModal')">&#215;</button></div>
   <div class="modal-body">
     <div class="form-row full"><div class="form-group full"><label class="form-label">Request Name</label><input type="text" class="form-control" id="ef-name"></div></div>
-    <div class="form-row"><div class="form-group"><label class="form-label">Type</label><select class="form-control" id="ef-type"><option>Retail</option><option>Commercial</option></select></div><div class="form-group"><label class="form-label">Date</label><input type="date" class="form-control" id="ef-date"></div></div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Type</label><select class="form-control" id="ef-type"><option>Retail</option><option>Commercial</option><option>PCL</option></select></div><div class="form-group"><label class="form-label">Date</label><input type="date" class="form-control" id="ef-date"></div></div>
     <div class="form-row full"><div class="form-group full"><label class="form-label">Location</label><input type="text" class="form-control" id="ef-location"></div></div>
     <div class="form-row"><div class="form-group"><label class="form-label">Start Time</label><input type="time" class="form-control" id="ef-start-time"></div><div class="form-group"><label class="form-label">Time Required</label><input type="text" class="form-control" id="ef-time" placeholder="e.g. 2 hours, Half day, 90 mins"></div></div>
     <div class="form-group" style="margin-bottom:14px"><label class="form-label">Players</label><div class="players-checkboxes" id="editPlayersCheckboxes"></div></div>
@@ -552,7 +552,7 @@
       <button class="pin-key" onclick="pinClear()" style="font-size:12px">&#9003;</button><button class="pin-key zero" onclick="pinPress('0')">0</button>
     </div>
     <div class="pin-error" id="pinError"></div>
-    <div class="access-level-info"><strong>Access levels:</strong><br>&#128308; <strong>Admin</strong> - Full access, manage players<br>&#128993; <strong>Retail Approver</strong> - Approve retail requests<br>&#128994; <strong>Commercial Approver</strong> - Approve commercial requests<br>&#129695; <strong>Balance Updater</strong> - Update player ASA/CBA balances<br>&#9898; <strong>Viewer</strong> - Read-only (no login required)</div>
+    <div class="access-level-info"><strong>Access levels:</strong><br>&#128308; <strong>Admin</strong> - Full access, manage players<br>&#128993; <strong>Retail Approver</strong> - Approve retail requests<br>&#128994; <strong>Commercial Approver</strong> - Approve commercial requests<br>&#127775; <strong>PCL Approver</strong> - Approve PCL requests + update balances<br>&#9898; <strong>Viewer</strong> - Read-only (no login required)</div>
   </div></div>
 </div>
 <div class="modal-overlay" id="addPlayerModal">
@@ -700,7 +700,7 @@ const aflwSchedule={
 // AFLW players loaded from board (populated in loadFromBoard)
 var aflwPlayers=[];
 var currentSquad="afl";
-const APPROVAL={Retail:["admin","retail-approver"],Commercial:["admin","commercial-approver"]};
+const APPROVAL={Retail:["admin","retail-approver"],Commercial:["admin","commercial-approver"],PCL:["admin","pcl-approver"]};
 const BOARD_ID="18412284375";
 const REQUESTS_GROUP="group_mm35jzs7";
 const PLAYERS_GROUP="group_mm354464";
@@ -788,7 +788,7 @@ function deleteRequestOnMonday(reqId){
   mondayApi('mutation($iid:ID!){delete_item(item_id:$iid){id}}',{iid:String(mondayId)});
 }
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
-var pinConfig={admin:"3942","retail-approver":"3973","commercial-approver":"1972","balance-updater":"1559"};
+var pinConfig={admin:"3942","retail-approver":"1870","commercial-approver":"1972","balance-updater":"1559","pcl-approver":"7741"};
 function getRoleFromPin(pin){for(var role in pinConfig){if(pinConfig[role]===pin)return role}return null}
 let editingId=null,balEditingId=null,calYear=2026,calMonth=4,calSquad="afl";
 let filterDept="all",filterStatus="all",filterTime="active";
@@ -888,7 +888,7 @@ function openPlayerRequests(pid){
       var dateStr=r.date?'<span class="pr-item-detail">&#128197; '+fmtDate(r.date)+"</span>":'<span class="pr-item-detail" style="color:var(--tbc)">&#128197; TBC</span>';
       var locStr=r.location?'<span class="pr-item-detail">&#128205; '+r.location+"</span>":"";
       var briefStr=r.briefed?'<span class="pr-item-detail" style="color:var(--confirmed)">&#9989; Briefed to Trent</span>':"";
-      var tc=r.type==="Commercial"?"type-commercial":"type-retail";
+      var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
       var editBtn=accessLevel!=="viewer"?'<div style="margin-top:8px"><button class="btn-sm btn-outline" style="flex:none;padding:5px 10px" onclick="closeModal(\'playerRequestsModal\');openEditModal(\''+r.id+'\')">&#9998; Edit</button></div>':"";
       html+='<div class="pr-item"><div class="pr-item-header"><div class="pr-item-name">'+r.name+'</div><span class="status-chip '+sc(r.status)+'">'+r.status+"</span></div>"
         +'<div class="pr-item-meta"><span class="type-chip '+tc+'">'+r.type+"</span>"+dateStr+locStr+briefStr+"</div>"+editBtn+"</div>";
@@ -926,7 +926,7 @@ function buildCell(y,m,d,om,tiso){
   var dr=visReqs().filter(function(r){return r.date===iso});
   var el=document.createElement("div");
   var cls="cal-day"+(om?" other-month":"")+(iso===tiso?" today":"");
-  if(!om&&(activeS||dr.length))cls+=" clickable";
+  if(!om&&(s||sa||dr.length))cls+=" clickable";
   el.className=cls;
   var bm={available:"bar-available",partial:"bar-partial",unavailable:"bar-unavailable",cba:"bar-cba",weekend:"bar-weekend"};
   var tm={available:"Available",partial:s?s.n:"Partial",unavailable:"Not Available",cba:"CBA",weekend:""};
@@ -939,7 +939,7 @@ function buildCell(y,m,d,om,tiso){
     inner+='<div class="day-avail-bar '+bm[sa.a]+'" style="opacity:'+(calSquad==="both"?".65":"1")+'"></div>';
     inner+='<div class="day-avail-text" style="font-size:'+(calSquad==="both"?"9":"10")+'px;color:var(--muted)">'+(calSquad==="both"?"AFLW: ":"")+sa.n+"</div>";
   }
-  if(dr.length){inner+='<div class="day-bookings">';for(var i=0;i<dr.length;i++){var r=dr[i];var cc=r.type==="Commercial"?"chip-commercial":r.status==="TBC"?"chip-tbc":"chip-retail";inner+='<div class="day-booking-chip '+cc+'">'+r.name+"</div>"}inner+="</div>"}
+  if(dr.length){inner+='<div class="day-bookings">';for(var i=0;i<dr.length;i++){var r=dr[i];var cc=r.type==="Commercial"?"chip-commercial":r.type==="PCL"?"chip-commercial":r.status==="TBC"?"chip-tbc":"chip-retail";inner+='<div class="day-booking-chip '+cc+'">'+r.name+"</div>"}inner+="</div>"}
   el.innerHTML=inner;
   if(!om&&(s||dr.length)){(function(iso2,y2,m2,d2){el.addEventListener("click",function(){openDayDetail(iso2,y2,m2,d2)})})(iso,y,m,d)}
   return el;
@@ -953,7 +953,7 @@ function openDayDetail(iso,y,m,d){
   if((calSquad==="afl"||calSquad==="both")&&s)h+='<div class="day-detail-avail '+cm[s.a]+'">'+iem[s.a]+(calSquad==="both"?" AFL:":" ")+s.n+"</div>";
   if((calSquad==="aflw"||calSquad==="both")&&sa&&sa.a!=="weekend")h+='<div class="day-detail-avail '+cm[sa.a]+'" style="margin-top:4px">'+iem[sa.a]+(calSquad==="both"?" AFLW:":" ")+sa.n+"</div>";
   h+='<div class="day-detail-bookings-title" style="margin-top:'+(s?"14px":"0")+'">'+(dr.length?"Requests on this day":"No requests on this day")+"</div>";
-  if(dr.length){h+='<div class="pr-list" style="margin-top:8px">';for(var i=0;i<dr.length;i++){var r=dr[i];var names=r.players.map(function(pid){var ap=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return ap?ap.name:""}).filter(Boolean).join(", ");var tc=r.type==="Commercial"?"type-commercial":"type-retail";h+='<div class="pr-item"><div class="pr-item-header"><div class="pr-item-name">'+r.name+'</div><span class="status-chip '+sc(r.status)+'">'+r.status+"</span></div><div class=\"pr-item-meta\"><span class=\"type-chip "+tc+'">'+r.type+"</span>"+(names?'<span class="pr-item-detail">&#128100; '+names+"</span>":"")+(r.location?'<span class="pr-item-detail">&#128205; '+r.location+"</span>":"")+"</div></div>"}h+="</div>"}
+  if(dr.length){h+='<div class="pr-list" style="margin-top:8px">';for(var i=0;i<dr.length;i++){var r=dr[i];var names=r.players.map(function(pid){var ap=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return ap?ap.name:""}).filter(Boolean).join(", ");var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";h+='<div class="pr-item"><div class="pr-item-header"><div class="pr-item-name">'+r.name+'</div><span class="status-chip '+sc(r.status)+'">'+r.status+"</span></div><div class=\"pr-item-meta\"><span class=\"type-chip "+tc+'">'+r.type+"</span>"+(names?'<span class="pr-item-detail">&#128100; '+names+"</span>":"")+(r.location?'<span class="pr-item-detail">&#128205; '+r.location+"</span>":"")+"</div></div>"}h+="</div>"}
   else h+='<p style="color:var(--muted);font-size:13px;margin-top:8px">Click below to create a request.</p>';
   document.getElementById("dayDetailBody").innerHTML=h;
   document.getElementById("dayNewReqBtn").onclick=function(){closeModal("dayDetailModal");openRequestModal(null,iso)};
@@ -982,7 +982,7 @@ function renderRequests(){
     var aBtn=!r.approved&&canApprove(r.type)?'<button class="btn-icon" title="Approve" onclick="approveRequest(\''+r.id+'\')" style="color:var(--confirmed)">&#9989;</button>':"";
     var pNote=!r.approved&&canApprove(r.type)?'<span class="pending-badge">&#8987; Pending your approval</span>':"";
     var bNote=r.briefed?'<span style="font-size:10px;color:var(--confirmed);display:block;margin-top:2px">&#9989; Briefed to Trent</span>':"";
-    var tc=r.type==="Commercial"?"type-commercial":"type-retail";
+    var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
     var pillsHtml=names.length?names.map(function(n){return'<span class="player-pill">'+n+"</span>"}).join(""):'<span style="color:var(--muted);font-size:12px">--</span>';
     html+='<tr class="'+(r.approved?"":"pending-row")+'">'
       +"<td><strong>"+r.name+"</strong>"+pNote+bNote+"</td>"
@@ -1043,7 +1043,7 @@ function saveRequest(){
   var type=document.getElementById("f-type").value;var status=document.getElementById("f-status").value;
   var pids=[].slice.call(document.querySelectorAll("#playersCheckboxes input:checked")).map(function(i){return i.dataset.pid});
   var fSubmitter=document.getElementById("f-submitter")?document.getElementById("f-submitter").value.trim():"";
-  requests.unshift({id:"r"+Date.now(),name:name,date:document.getElementById("f-date").value||null,location:document.getElementById("f-location").value.trim(),start_time:document.getElementById("f-start-time")?document.getElementById("f-start-time").value:"",time_required:document.getElementById("f-time").value.trim(),submitter:fSubmitter,type:type,status:status,notes:document.getElementById("f-notes").value.trim(),players:pids,approved:canApprove(type),briefed:document.getElementById("f-briefed").checked});
+  requests.unshift({id:"r"+Date.now(),name:name,date:document.getElementById("f-date").value||null,location:document.getElementById("f-location").value.trim(),start_time:document.getElementById("f-start-time")?document.getElementById("f-start-time").value:"",time_required:document.getElementById("f-time").value.trim(),submitter:fSubmitter,type:type,status:status,notes:document.getElementById("f-notes").value.trim(),players:pids,approved:false,briefed:document.getElementById("f-briefed").checked});
   closeModal("requestModal");renderRequests();renderCalendar();renderPlayers();createRequestOnMonday(requests[0]);showToast("Saved!","success");
 }
 function openEditModal(id){
@@ -1086,13 +1086,14 @@ function checkPin(){
     closeModal("pinModal");
     if(lv==="admin"){document.getElementById("balancesTabBtn").style.display="flex";document.getElementById("addPlayerBtn").style.display="flex";}
     else if(lv==="balance-updater"){document.getElementById("balancesTabBtn").style.display="flex";document.getElementById("addPlayerBtn").style.display="none";}
+    else if(lv==="pcl-approver"){document.getElementById("balancesTabBtn").style.display="flex";document.getElementById("addPlayerBtn").style.display="none";}
     else{document.getElementById("balancesTabBtn").style.display="none";document.getElementById("addPlayerBtn").style.display="none";}
     filterDept="all";filterStatus="all";filterTime="active";
     ["filterDeptSel","filterStatusSel"].forEach(function(id){var el=document.getElementById(id);if(el)el.value="all"});
     var ts=document.getElementById("filterTimeSel");if(ts)ts.value="active";
     renderPlayers();renderRequests();
     if(lv==="balance-updater")switchTab("balances",null);
-    else if(lv==="retail-approver"||lv==="commercial-approver")switchTab("requests",null);
+    else if(lv==="retail-approver"||lv==="commercial-approver"||lv==="pcl-approver")switchTab("requests",null);
     showToast("Signed in","success");
   } else {
     document.getElementById("pinError").textContent="Incorrect PIN.";pinEntry="";updatePinDots();
@@ -1125,7 +1126,7 @@ function mreqDesel(pid){var card=document.getElementById("mreqpc-"+pid);var cb=c
 function selectMreqType(btn){
   document.querySelectorAll(".mreq-type-btn").forEach(function(b){b.classList.remove("active")});btn.classList.add("active");
   var t=btn.dataset.val;var note=document.getElementById("mreqRoutingNote");
-  note.textContent=t==="Retail"?"Retail requests go to your Retail Approver for review.":"Commercial requests go to your Commercial Approver for review.";note.classList.add("show");mreqCheckConflicts();
+  note.textContent=t==="Retail"?"Retail requests go to your Retail Approver for review.":t==="PCL"?"PCL requests go to your Commercial Approver for review.":"Commercial requests go to your Commercial Approver for review.";note.classList.add("show");mreqCheckConflicts();
 }
 function mreqStatusChanged(){document.getElementById("mreqBriefedWrap").style.display=document.getElementById("mreq-status").value==="Confirmed"?"flex":"none"}
 function mreqCheckConflicts(){
@@ -1153,7 +1154,7 @@ function submitMakeRequest(){
   var sel=[].slice.call(document.querySelectorAll("#mreqPlayersGrid input:checked")).map(function(i){return i.dataset.pid});
   if(!name){showToast("Enter a request name","error");return}if(!date){showToast("Select a date","error");return}if(!sel.length){showToast("Select at least one player","error");return}
   var timeReq=document.getElementById("mreq-time").value.trim();var startTime=document.getElementById("mreq-start-time")?document.getElementById("mreq-start-time").value:"";
-  var nr={id:"r"+Date.now(),name:name,date:date,players:sel,location:loc,start_time:startTime,time_required:timeReq,type:type,status:status,briefed:briefed,approved:canApprove(type),submitter:sub,notes:notes};
+  var nr={id:"r"+Date.now(),name:name,date:date,players:sel,location:loc,start_time:startTime,time_required:timeReq,type:type,status:status,briefed:briefed,approved:false,submitter:sub,notes:notes};
   requests.unshift(nr);renderRequests();renderCalendar();renderPlayers();createRequestOnMonday(nr);
   var pn=sel.map(function(pid){var ap=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return ap?ap.name:""}).filter(Boolean).join(", ");
   var an=nr.approved?'<br><span style="color:var(--confirmed)">&#9989; Approved</span>':'<br><span style="color:var(--tentative)">&#8987; Pending approval from '+type+' Approver</span>';
@@ -1230,16 +1231,16 @@ function saveAllBalances(){
   renderPlayers();setTimeout(function(){saveStatus.textContent="&#9989; "+changed.length+" balance"+(changed.length>1?"s":"")+" saved to board — "+fmtDate(today)},800);showToast(changed.length+" balance"+(changed.length>1?"s":"")+" saved","success");
 }
 function updateApprovalBanner(){
-  if(accessLevel!=="retail-approver"&&accessLevel!=="commercial-approver"){document.getElementById("approvalBanner").style.display="none";return}
+  if(accessLevel!=="retail-approver"&&accessLevel!=="commercial-approver"&&accessLevel!=="pcl-approver"){document.getElementById("approvalBanner").style.display="none";return}
   var pending=requests.filter(function(r){return !r.approved&&canApprove(r.type)});var banner=document.getElementById("approvalBanner");
   if(!pending.length){banner.style.display="none";return}
-  var typeLabel=accessLevel==="retail-approver"?"Retail":"Commercial";
+  var typeLabel=accessLevel==="retail-approver"?"Retail":accessLevel==="pcl-approver"?"PCL":"Commercial";
   document.getElementById("approvalBannerTitle").textContent=pending.length===1?"You have 1 "+typeLabel+" request pending your approval":"You have "+pending.length+" "+typeLabel+" requests pending your approval";
   document.getElementById("approvalBannerSub").textContent=pending.map(function(r){return r.name}).join(", ");banner.style.display="block";
 }
 function openPendingModal(){
   var pending=requests.filter(function(r){return !r.approved&&canApprove(r.type)});
-  var typeLabel=accessLevel==="retail-approver"?"Retail":"Commercial";
+  var typeLabel=accessLevel==="retail-approver"?"Retail":accessLevel==="pcl-approver"?"PCL":"Commercial";
   document.getElementById("pendingModalSub").textContent=pending.length+" "+typeLabel+" request"+(pending.length!==1?"s":"")+" awaiting your approval";
   var body=document.getElementById("pendingModalBody");
   if(!pending.length){body.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted)">&#127881; No pending requests — all caught up!</div>';document.getElementById("pendingModal").classList.add("open");return}
@@ -1250,7 +1251,7 @@ function openPendingModal(){
       var card=document.createElement("div");card.className="pending-review-card";
       var header=document.createElement("div");header.className="pending-card-header";
       var nameEl=document.createElement("div");nameEl.className="pending-review-name";nameEl.textContent=r.name;
-      var tc=document.createElement("span");tc.className="type-chip "+(r.type==="Commercial"?"type-commercial":"type-retail");tc.textContent=r.type;
+      var tc=document.createElement("span");tc.className="type-chip "+(r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail");tc.textContent=r.type;
       header.appendChild(nameEl);header.appendChild(tc);card.appendChild(header);
       var grid=document.createElement("div");grid.className="pending-info-grid";
       function addInfo(icon,label,val){if(!val)return;var cell=document.createElement("div");cell.className="pending-info-cell";cell.innerHTML='<span class="pending-info-label">'+icon+" "+label+'</span><span class="pending-info-val">'+val+'</span>';grid.appendChild(cell)}
@@ -1304,13 +1305,15 @@ function applyAccessLevel(level){
   var badge=document.getElementById("accessBadge");var label=document.getElementById("accessLabel");
   if(badge&&label){badge.className="access-badge logged-in";label.innerHTML=labels[level]||level;badge.onclick=function(){accessLevel="viewer";badge.className="access-badge";label.textContent="Sign in";badge.onclick=openPinModal;document.getElementById("balancesTabBtn").style.display="none";document.getElementById("addPlayerBtn").style.display="none";renderPlayers();renderRequests()}}
   if(level==="admin"){document.getElementById("balancesTabBtn").style.display="flex";document.getElementById("addPlayerBtn").style.display="flex"}
+  else if(level==="balance-updater"){document.getElementById("balancesTabBtn").style.display="flex";}
+  else if(level==="pcl-approver"){document.getElementById("balancesTabBtn").style.display="flex";}
   renderPlayers();renderRequests();
 }
 (function(){
   if(!window.mondaySdk)return;
   var sdk=window.mondaySdk();monday=sdk;sdk.setApiVersion("2024-01");
   var identityResolved=false;
-  function resolveIdentity(userId){if(identityResolved)return;identityResolved=true;var mondayUserId=parseInt(userId,10);var userRoles={82646896:"admin",41198358:"commercial-approver",62081586:"commercial-approver",29892421:"retail-approver",96759461:"balance-updater"};var role=userRoles[mondayUserId];if(role&&role!=="none")applyAccessLevel(role)}
+  function resolveIdentity(userId){if(identityResolved)return;identityResolved=true;var mondayUserId=parseInt(userId,10);var userRoles={82646896:"admin",41198358:"commercial-approver",62081586:"commercial-approver",29892421:"retail-approver",96759461:"pcl-approver"};var role=userRoles[mondayUserId];if(role&&role!=="none")applyAccessLevel(role)}
   function loadFromBoard(){
     mondayApi('{boards(ids:[18412284375]){items_page(limit:200){items{id name group{id}column_values{id text}}}}}',{}).then(function(res){
       if(!res||!res.data||!res.data.boards){
