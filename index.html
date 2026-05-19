@@ -927,7 +927,15 @@ function buildCell(y,m,d,om,tiso){
   var showAFL=calSquad==="afl"||calSquad==="both";
   var showAFLW=calSquad==="aflw"||calSquad==="both";
   var activeS=showAFL?s:(showAFLW?sa:s); // primary schedule for availability bar
-  var dr=visReqs().filter(function(r){return r.date===iso});
+  var dr=visReqs().filter(function(r){
+    if(r.date!==iso)return false;
+    if(!r.players||r.players.length===0)return true; // show undated/playerless requests always
+    var hasAFL=r.players.some(function(pid){return players.find(function(p){return p.id===pid})});
+    var hasAFLW=r.players.some(function(pid){return aflwPlayers.find(function(p){return p.id===pid})});
+    if(calSquad==="afl")return hasAFL||(!hasAFL&&!hasAFLW);
+    if(calSquad==="aflw")return hasAFLW||(!hasAFL&&!hasAFLW);
+    return true; // both - show all
+  });
   var el=document.createElement("div");
   var cls="cal-day"+(om?" other-month":"")+(iso===tiso?" today":"");
   if(!om&&(s||sa||dr.length))cls+=" clickable";
@@ -949,7 +957,15 @@ function buildCell(y,m,d,om,tiso){
   return el;
 }
 function openDayDetail(iso,y,m,d){
-  var s=schedule[iso];var sa=aflwSchedule[iso];var dr=visReqs().filter(function(r){return r.date===iso});
+  var s=schedule[iso];var sa=aflwSchedule[iso];var dr=visReqs().filter(function(r){
+    if(r.date!==iso)return false;
+    if(!r.players||r.players.length===0)return true; // show undated/playerless requests always
+    var hasAFL=r.players.some(function(pid){return players.find(function(p){return p.id===pid})});
+    var hasAFLW=r.players.some(function(pid){return aflwPlayers.find(function(p){return p.id===pid})});
+    if(calSquad==="afl")return hasAFL||(!hasAFL&&!hasAFLW);
+    if(calSquad==="aflw")return hasAFLW||(!hasAFL&&!hasAFLW);
+    return true; // both - show all
+  });
   document.getElementById("dayDetailTitle").textContent=new Date(y,m,d).toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
   var cm={available:"avail-available",partial:"avail-partial",unavailable:"avail-unavailable",cba:"avail-cba",weekend:"avail-weekend"};
   var iem={available:"&#9989;",partial:"&#128336;",unavailable:"&#10060;",cba:"&#9888;&#65039;",weekend:"&#127958;&#65039;"};
