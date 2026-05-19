@@ -919,6 +919,10 @@ function buildCell(y,m,d,om,tiso){
   var iso=isoDate(y,m,d);
   var s=schedule[iso];
   var sa=aflwSchedule[iso];
+  // For AFLW: treat days with no entry as available (weekdays) 
+  var dayOfWeek=new Date(iso+"T12:00:00").getDay();
+  var isWeekend=dayOfWeek===0||dayOfWeek===6;
+  if(!sa&&!isWeekend)sa={a:"available",n:"Available"};
   // Determine which schedule to show based on calSquad
   var showAFL=calSquad==="afl"||calSquad==="both";
   var showAFLW=calSquad==="aflw"||calSquad==="both";
@@ -945,7 +949,7 @@ function buildCell(y,m,d,om,tiso){
   return el;
 }
 function openDayDetail(iso,y,m,d){
-  var s=schedule[iso];var dr=visReqs().filter(function(r){return r.date===iso});
+  var s=schedule[iso];var sa=aflwSchedule[iso];var dr=visReqs().filter(function(r){return r.date===iso});
   document.getElementById("dayDetailTitle").textContent=new Date(y,m,d).toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
   var cm={available:"avail-available",partial:"avail-partial",unavailable:"avail-unavailable",cba:"avail-cba",weekend:"avail-weekend"};
   var iem={available:"&#9989;",partial:"&#128336;",unavailable:"&#10060;",cba:"&#9888;&#65039;",weekend:"&#127958;&#65039;"};
