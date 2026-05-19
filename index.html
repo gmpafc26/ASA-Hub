@@ -702,7 +702,8 @@ const COL={
   date:"date_mm35z010",location:"text_mm353efc",notes:"long_text_mm352xyz",status:"color_mm351c4p",
   player_number:"text_mm35f5cc",position:"text_mm351tb2",balance:"numeric_mm3571tn",restricted:"boolean_mm35w6eq",photo:"text_mm35jtbf",
   players_text:"text_mm35qb0p",req_type:"color_mm35cenq",briefed:"color_mm359ffs",approved:"color_mm35zm9j",
-  req_type_dropdown:"dropdown_mm38f2g1",time_required:"text_mm388at2"
+  req_type_dropdown:"dropdown_mm38f2g1",time_required:"text_mm388at2",
+  submitted_by:"multiple_person_mm3g7m2g"
 };
 // Dynamic ID maps - populated when board data loads
 var PLAYER_MONDAY_IDS={};
@@ -768,6 +769,10 @@ function createRequestOnMonday(req){
   cv[COL.req_type_dropdown]=req.type;
   var notesText=(req.submitter?"Requested by: "+req.submitter:"")+(req.start_time?" | Start: "+fmtTime(req.start_time):"")+(req.notes?" | "+req.notes:"");cv[COL.notes]={text:notesText||""};
   if(req.time_required)cv[COL.time_required]=req.time_required;
+  // Add submitter as People column if we have their monday ID
+  if(req.submitterMondayId){
+    cv[COL.submitted_by]={personsAndTeams:[{id:parseInt(req.submitterMondayId,10),kind:"person"}]};
+  }
   mondayApi('mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}',
     {bid:BOARD_ID,gid:REQUESTS_GROUP,name:req.name,cv:JSON.stringify(cv)}).then(function(r){
     if(r&&r.data&&r.data.create_item){
@@ -1053,8 +1058,13 @@ function saveRequest(){
   var type=document.getElementById("f-type").value;var status=document.getElementById("f-status").value;
   var pids=[].slice.call(document.querySelectorAll("#playersCheckboxes input:checked")).map(function(i){return i.dataset.pid});
   var fSubmitter=document.getElementById("f-submitter")?document.getElementById("f-submitter").value.trim():"";
-  requests.unshift({id:"r"+Date.now(),name:name,date:document.getElementById("f-date").value||null,location:document.getElementById("f-location").value.trim(),start_time:document.getElementById("f-start-time")?document.getElementById("f-start-time").value:"",time_required:document.getElementById("f-time").value.trim(),submitter:fSubmitter,type:type,status:status,notes:document.getElementById("f-notes").value.trim(),players:pids,approved:false,briefed:document.getElementById("f-briefed").checked});
-  closeModal("requestModal");renderRequests();renderCalendar();renderPlayers();createRequestOnMonday(requests[0]);showToast("Saved!","success");
+  var newReq={id:"r"+Date.now(),name:name,date:document.getElementById("f-date").value||null,location:document.getElementById("f-location").value.trim(),start_time:document.getElementById("f-start-time")?document.getElementById("f-start-time").value:"",time_required:document.getElementById("f-time").value.trim(),submitter:fSubmitter,type:type,status:status,notes:document.getElementById("f-notes").value.trim(),players:pids,approved:false,briefed:document.getElementById("f-briefed").checked};
+  var sdk=getMondayClient();
+  if(sdk){sdk.api("{me{id name}}").then(function(r){if(r&&r.data&&r.data.me){newReq.submitterMondayId=r.data.me.id;newReq.submitter=newReq.submitter||r.data.me.name;}}).catch(function(){});}
+  requests.unshift(newReq);
+  closeModal("requestModal");renderRequests();renderCalendar();renderPlayers();
+  setTimeout(function(){createRequestOnMonday(requests[0]);},300);
+  showToast("Saved!","success");
 }
 function openEditModal(id){
   editingId=id;var r=requests.find(function(x){return x.id===id});if(!r)return;
