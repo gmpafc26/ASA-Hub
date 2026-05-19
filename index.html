@@ -383,6 +383,11 @@
     <div class="cal-title-group">
       <div class="cal-arrows"><button class="cal-arrow" onclick="calNav(-1)">&#8592;</button><button class="cal-arrow" onclick="calNav(1)">&#8594;</button></div>
       <div class="cal-month-title" id="calMonthTitle"></div>
+      <div style="display:flex;gap:6px;margin-left:12px">
+        <button class="squad-tab-btn active" id="calBtn-afl" onclick="switchCalSquad('afl',this)">AFL</button>
+        <button class="squad-tab-btn" id="calBtn-aflw" onclick="switchCalSquad('aflw',this)">AFLW</button>
+        <button class="squad-tab-btn" id="calBtn-both" onclick="switchCalSquad('both',this)">Both</button>
+      </div>
     </div>
     <div class="cal-legend-wrap">
       <div class="cal-legend-group">
@@ -785,7 +790,7 @@ function deleteRequestOnMonday(reqId){
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 var pinConfig={admin:"3942","retail-approver":"3973","commercial-approver":"1972","balance-updater":"1559"};
 function getRoleFromPin(pin){for(var role in pinConfig){if(pinConfig[role]===pin)return role}return null}
-let editingId=null,balEditingId=null,calYear=2026,calMonth=4;
+let editingId=null,balEditingId=null,calYear=2026,calMonth=4,calSquad="afl";
 let filterDept="all",filterStatus="all",filterTime="active";
 let pinEntry="",accessLevel="viewer",ignoreConflict=false,mreqConflictOverride=false;
 function fmtTime(t){if(!t)return"";try{var parts=t.split(":");var h=parseInt(parts[0],10);var m=parts[1];var ampm=h>=12?"PM":"AM";h=h%12||12;return h+":"+m+" "+ampm;}catch(e){return t}}
@@ -816,7 +821,7 @@ function renderPlayers(){
   var html="";
   for(var i=0;i<squadList.length;i++){
     var p=squadList[i];
-    var pR=visReqs().filter(function(r){return r.players.includes(p.id)});
+    var todayP=new Date();todayP.setHours(0,0,0,0);var pR=visReqs().filter(function(r){return r.players.includes(p.id)&&(!r.date||new Date(r.date+"T12:00:00")>=todayP)});
     var restrictedBadge=p.restricted?'<div class="player-restricted-badge">Restricted</div>':"";
     var tags="";
     tags+=p.asa==="Full ASA"?'<span class="tag tag-asa">Full ASA</span>':'<span class="tag tag-photo">Photo Usage Only</span>';
@@ -892,6 +897,12 @@ function openPlayerRequests(pid){
   }
   document.getElementById("playerRequestsModal").classList.add("open");
 }
+function switchCalSquad(squad,btn){
+  calSquad=squad;
+  document.querySelectorAll("#calBtn-afl,#calBtn-aflw,#calBtn-both").forEach(function(b){b.classList.remove("active")});
+  btn.classList.add("active");
+  renderCalendar();
+}
 function calNav(dir){calMonth+=dir;if(calMonth<0){calMonth=11;calYear--}if(calMonth>11){calMonth=0;calYear++}renderCalendar()}
 function renderCalendar(){
   document.getElementById("calMonthTitle").textContent=MONTHS[calMonth]+" "+calYear;
@@ -905,19 +916,29 @@ function renderCalendar(){
   for(var j=1;j<=rem;j++){var dd2=new Date(calYear,calMonth+1,j);c.appendChild(buildCell(dd2.getFullYear(),dd2.getMonth(),dd2.getDate(),true,tiso))}
 }
 function buildCell(y,m,d,om,tiso){
-  var iso=isoDate(y,m,d),s=schedule[iso];
-  var sa=aflwSchedule[iso]; // AFLW schedule for this day
+  var iso=isoDate(y,m,d);
+  var s=schedule[iso];
+  var sa=aflwSchedule[iso];
+  // Determine which schedule to show based on calSquad
+  var showAFL=calSquad==="afl"||calSquad==="both";
+  var showAFLW=calSquad==="aflw"||calSquad==="both";
+  var activeS=showAFL?s:(showAFLW?sa:s); // primary schedule for availability bar
   var dr=visReqs().filter(function(r){return r.date===iso});
   var el=document.createElement("div");
   var cls="cal-day"+(om?" other-month":"")+(iso===tiso?" today":"");
-  if(!om&&(s||dr.length))cls+=" clickable";
+  if(!om&&(activeS||dr.length))cls+=" clickable";
   el.className=cls;
   var bm={available:"bar-available",partial:"bar-partial",unavailable:"bar-unavailable",cba:"bar-cba",weekend:"bar-weekend"};
   var tm={available:"Available",partial:s?s.n:"Partial",unavailable:"Not Available",cba:"CBA",weekend:""};
   var inner='<div class="day-num">'+d+"</div>";
-  if(s&&bm[s.a])inner+='<div class="day-avail-bar '+bm[s.a]+'" title="AFL: '+( s?s.n:"")+'"></div>';
-  if(s&&tm[s.a])inner+='<div class="day-avail-text">AFL: '+tm[s.a]+"</div>";
-  if(sa&&sa.a!=="weekend"&&s&&sa.a!==s.a)inner+='<div class="day-avail-bar '+bm[sa.a]+'" style="opacity:.6" title="AFLW: '+(sa?sa.n:"")+'"></div><div class="day-avail-text" style="font-size:9px;color:var(--muted)">AFLW: '+sa.n+"</div>";
+  if(showAFL&&s&&bm[s.a]){
+    inner+='<div class="day-avail-bar '+bm[s.a]+'"></div>';
+    if(tm[s.a])inner+='<div class="day-avail-text">'+(calSquad==="both"?"AFL: ":"")+tm[s.a]+"</div>";
+  }
+  if(showAFLW&&sa&&sa.a!=="weekend"&&bm[sa.a]){
+    inner+='<div class="day-avail-bar '+bm[sa.a]+'" style="opacity:'+(calSquad==="both"?".65":"1")+'"></div>';
+    inner+='<div class="day-avail-text" style="font-size:'+(calSquad==="both"?"9":"10")+'px;color:var(--muted)">'+(calSquad==="both"?"AFLW: ":"")+sa.n+"</div>";
+  }
   if(dr.length){inner+='<div class="day-bookings">';for(var i=0;i<dr.length;i++){var r=dr[i];var cc=r.type==="Commercial"?"chip-commercial":r.status==="TBC"?"chip-tbc":"chip-retail";inner+='<div class="day-booking-chip '+cc+'">'+r.name+"</div>"}inner+="</div>"}
   el.innerHTML=inner;
   if(!om&&(s||dr.length)){(function(iso2,y2,m2,d2){el.addEventListener("click",function(){openDayDetail(iso2,y2,m2,d2)})})(iso,y,m,d)}
@@ -929,8 +950,8 @@ function openDayDetail(iso,y,m,d){
   var cm={available:"avail-available",partial:"avail-partial",unavailable:"avail-unavailable",cba:"avail-cba",weekend:"avail-weekend"};
   var iem={available:"&#9989;",partial:"&#128336;",unavailable:"&#10060;",cba:"&#9888;&#65039;",weekend:"&#127958;&#65039;"};
   var h="";
-  if(s)h+='<div class="day-detail-avail '+cm[s.a]+'">'+iem[s.a]+" AFL: "+s.n+"</div>";
-  if(sa&&sa.a!=="weekend")h+='<div class="day-detail-avail '+cm[sa.a]+'" style="margin-top:4px">'+iem[sa.a]+" AFLW: "+sa.n+"</div>";
+  if((calSquad==="afl"||calSquad==="both")&&s)h+='<div class="day-detail-avail '+cm[s.a]+'">'+iem[s.a]+(calSquad==="both"?" AFL:":" ")+s.n+"</div>";
+  if((calSquad==="aflw"||calSquad==="both")&&sa&&sa.a!=="weekend")h+='<div class="day-detail-avail '+cm[sa.a]+'" style="margin-top:4px">'+iem[sa.a]+(calSquad==="both"?" AFLW:":" ")+sa.n+"</div>";
   h+='<div class="day-detail-bookings-title" style="margin-top:'+(s?"14px":"0")+'">'+(dr.length?"Requests on this day":"No requests on this day")+"</div>";
   if(dr.length){h+='<div class="pr-list" style="margin-top:8px">';for(var i=0;i<dr.length;i++){var r=dr[i];var names=r.players.map(function(pid){var ap=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return ap?ap.name:""}).filter(Boolean).join(", ");var tc=r.type==="Commercial"?"type-commercial":"type-retail";h+='<div class="pr-item"><div class="pr-item-header"><div class="pr-item-name">'+r.name+'</div><span class="status-chip '+sc(r.status)+'">'+r.status+"</span></div><div class=\"pr-item-meta\"><span class=\"type-chip "+tc+'">'+r.type+"</span>"+(names?'<span class="pr-item-detail">&#128100; '+names+"</span>":"")+(r.location?'<span class="pr-item-detail">&#128205; '+r.location+"</span>":"")+"</div></div>"}h+="</div>"}
   else h+='<p style="color:var(--muted);font-size:13px;margin-top:8px">Click below to create a request.</p>';
@@ -1360,10 +1381,7 @@ function applyAccessLevel(level){
       newAFLW.forEach(function(p){aflwPlayers.push(p)});
       requests=newRequests;
       console.log("Board loaded:",players.length,"AFL players,",aflwPlayers.length,"AFLW players,",requests.length,"requests");
-      // Show loading state while board data loads
-document.getElementById("playersGrid").innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">&#9889; Loading players from board...</div>';
-renderRequests();renderCalendar();
-      // Update balances tab if visible
+      renderPlayers();renderRequests();renderCalendar();
       var balTab=document.getElementById("tab-balances");
       if(balTab&&balTab.classList.contains("active"))renderBalancesTab();
     }).catch(function(e){console.warn("loadFromBoard error:",e);setTimeout(function(){if(players.length===0){console.log("Retrying...");loadFromBoard();}},2000);});
