@@ -1442,11 +1442,21 @@ function saveRequest(){
   var fSubmitter=document.getElementById("f-submitter")?document.getElementById("f-submitter").value.trim():"";
   var newReq={id:"r"+Date.now(),name:name,date:document.getElementById("f-date").value||null,location:document.getElementById("f-location").value.trim(),start_time:document.getElementById("f-start-time")?document.getElementById("f-start-time").value:"",time_required:document.getElementById("f-time").value.trim(),submitter:fSubmitter,type:type,status:status,notes:document.getElementById("f-notes").value.trim(),players:pids,approved:false,briefed:document.getElementById("f-briefed").checked};
   var sdk=getMondayClient();
-  if(sdk){sdk.api("{me{id name}}").then(function(r){if(r&&r.data&&r.data.me){newReq.submitterMondayId=r.data.me.id;newReq.submitter=newReq.submitter||r.data.me.name;}}).catch(function(){});}
   requests.unshift(newReq);
   closeModal("requestModal");renderRequests();renderCalendar();renderPlayers();
-  setTimeout(function(){createRequestOnMonday(requests[0]);},300);
   showToast("Saved!","success");
+  // Get submitter ID then create on board
+  if(sdk){
+    sdk.api("{me{id name}}").then(function(r){
+      if(r&&r.data&&r.data.me){
+        newReq.submitterMondayId=r.data.me.id;
+        newReq.submitter=newReq.submitter||r.data.me.name;
+      }
+      createRequestOnMonday(newReq);
+    }).catch(function(){createRequestOnMonday(newReq);});
+  } else {
+    createRequestOnMonday(newReq);
+  }
 }
 function openEditModal(id){
   editingId=id;var r=requests.find(function(x){return x.id===id});if(!r)return;
@@ -1558,8 +1568,16 @@ function submitMakeRequest(){
   var timeReq=document.getElementById("mreq-time").value.trim();var startTime=document.getElementById("mreq-start-time")?document.getElementById("mreq-start-time").value:"";
   var sdk=getMondayClient();
   var nr={id:"r"+Date.now(),name:name,date:date,players:sel,location:loc,start_time:startTime,time_required:timeReq,type:type,status:status,briefed:briefed,approved:false,submitter:sub,notes:notes};
-  if(sdk){sdk.api("{me{id name}}").then(function(r){if(r&&r.data&&r.data.me){nr.submitterMondayId=r.data.me.id;nr.submitter=nr.submitter||r.data.me.name;}}).catch(function(){});}
-  requests.unshift(nr);renderRequests();renderCalendar();renderPlayers();createRequestOnMonday(nr);
+  requests.unshift(nr);renderRequests();renderCalendar();renderPlayers();
+  // Get submitter ID then create on board
+  if(sdk){
+    sdk.api("{me{id name}}").then(function(r){
+      if(r&&r.data&&r.data.me){nr.submitterMondayId=r.data.me.id;nr.submitter=nr.submitter||r.data.me.name;}
+      createRequestOnMonday(nr);
+    }).catch(function(){createRequestOnMonday(nr);});
+  } else {
+    createRequestOnMonday(nr);
+  }
   var pn=sel.map(function(pid){var ap=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return ap?ap.name:""}).filter(Boolean).join(", ");
   var an=nr.approved?'<br><span style="color:var(--confirmed)">&#9989; Approved</span>':'<br><span style="color:var(--tentative)">&#8987; Pending approval from '+type+' Approver</span>';
   var tc=type==="Commercial"?"type-commercial":"type-retail";
