@@ -941,7 +941,7 @@ function buildCell(y,m,d,om,tiso){
   }
   if(dr.length){inner+='<div class="day-bookings">';for(var i=0;i<dr.length;i++){var r=dr[i];var cc=r.type==="Commercial"?"chip-commercial":r.type==="PCL"?"chip-commercial":r.status==="TBC"?"chip-tbc":"chip-retail";inner+='<div class="day-booking-chip '+cc+'">'+r.name+"</div>"}inner+="</div>"}
   el.innerHTML=inner;
-  if(!om&&(s||dr.length)){(function(iso2,y2,m2,d2){el.addEventListener("click",function(){openDayDetail(iso2,y2,m2,d2)})})(iso,y,m,d)}
+  if(!om&&(s||sa||dr.length)){(function(iso2,y2,m2,d2){el.addEventListener("click",function(){openDayDetail(iso2,y2,m2,d2)})})(iso,y,m,d)}
   return el;
 }
 function openDayDetail(iso,y,m,d){
