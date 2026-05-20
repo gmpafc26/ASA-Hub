@@ -1758,27 +1758,44 @@ function openBlackoutModal(){
 }
 function saveBlackout(){
   var label=document.getElementById("bo-label").value.trim();
-  var date=document.getElementById("bo-date").value;
-  if(!label||!date){showToast("Please enter a label and date","error");return}
-  var mb={id:"mb"+Date.now(),date:date,label:label,mondayId:null};
-  mediaBlackouts.push(mb);
-  // Create on monday board
-  mondayApi('mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}',
-    {bid:BOARD_ID,gid:MEDIA_GROUP,name:label,cv:JSON.stringify({"date_mm35z010":{date:date}})}).then(function(r){
-      if(r&&r.data&&r.data.create_item)mb.mondayId=parseInt(r.data.create_item.id,10);
-    });
+  var startDate=document.getElementById("bo-date").value;
+  var endDateEl=document.getElementById("bo-end-date");
+  var endDate=endDateEl&&endDateEl.value?endDateEl.value:startDate;
+  if(!label||!startDate){showToast("Please enter a label and start date","error");return}
+  if(endDate<startDate){showToast("End date must be after start date","error");return}
+  var dates=[];
+  var cur=new Date(startDate+"T12:00:00");
+  var end=new Date(endDate+"T12:00:00");
+  while(cur<=end){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
+  var groupId="mbo"+Date.now();
+  dates.forEach(function(date,i){
+    var mb={id:"mb"+(Date.now()+i),date:date,label:label,groupId:groupId,mondayId:null};
+    mediaBlackouts.push(mb);
+    mondayApi('mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}',
+      {bid:BOARD_ID,gid:MEDIA_GROUP,name:label+(dates.length>1?" ("+date+")":""),cv:JSON.stringify({"date_mm35z010":{date:date}})}).then(function(r){
+        if(r&&r.data&&r.data.create_item)mb.mondayId=parseInt(r.data.create_item.id,10);
+      });
+  });
   closeModal("blackoutModal");
+  if(endDateEl)endDateEl.value="";
   renderCalendar();
-  showToast("Media blackout added: "+label,"success");
+  showToast(dates.length>1?"Blackout added: "+label+" ("+dates.length+" days)":"Blackout added: "+label,"success");
 }
+
 function deleteBlackout(id){
   var mb=mediaBlackouts.find(function(m){return m.id===id});
   if(!mb)return;
-  if(!confirm("Remove blackout: "+mb.label+"?"))return;
-  mediaBlackouts=mediaBlackouts.filter(function(m){return m.id!==id});
-  if(mb.mondayId){
-    mondayApi('mutation($id:ID!){delete_item(item_id:$id){id}}',{id:String(mb.mondayId)});
-  }
+  // Find all items in same group (date range)
+  var toRemove=mb.groupId?mediaBlackouts.filter(function(m){return m.groupId===mb.groupId}):[mb];
+  var label=mb.label;
+  var msg=toRemove.length>1?"Remove "+toRemove.length+"-day blackout: "+label+"?":"Remove blackout: "+label+"?";
+  if(!confirm(msg))return;
+  toRemove.forEach(function(item){
+    mediaBlackouts=mediaBlackouts.filter(function(m){return m.id!==item.id});
+    if(item.mondayId){
+      mondayApi('mutation($id:ID!){delete_item(item_id:$id){id}}',{id:String(item.mondayId)});
+    }
+  });
   renderCalendar();
   showToast("Blackout removed","success");
 }
@@ -1987,10 +2004,10 @@ renderRequests();renderCalendar();
     </div>
     <div class="modal-body">
       <div class="form-group"><label class="form-label">Label / Reason *</label><input type="text" class="form-control" id="bo-label" placeholder="e.g. Finals Week, Media embargo"></div>
-      <div class="form-group"><label class="form-label">Date *</label><input type="date" class="form-control" id="bo-date"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="form-group"><label class="form-label">Start Date *</label><input type="date" class="form-control" id="bo-date"></div><div class="form-group"><label class="form-label">End Date</label><input type="date" class="form-control" id="bo-end-date"></div></div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('blackoutModal')">Cancel</button>
+      <button class="btn-secondary" style="background:#f1f5f9;border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer" onclick="closeModal('blackoutModal')">Cancel</button>
       <button class="btn-primary" onclick="saveBlackout()">&#128247; Add Blackout</button>
     </div>
   </div>
