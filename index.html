@@ -1041,7 +1041,9 @@ const COL={
 };
 // Dynamic ID maps - populated when board data loads
 var PLAYER_MONDAY_IDS={};
+var mediaBlackouts=[]; // {id, date, label, mondayId}
 var SETTINGS_ITEM_ID="12058437766";
+var MEDIA_GROUP="group_mm3hxc7y"; // Media Blackouts group on board
 var REQUEST_MONDAY_IDS={};
 var newItemIds={};
 var monday=null;
@@ -1343,7 +1345,8 @@ function buildCell(y,m,d,om,tiso){
   el.className=cls;
   var bm={available:"bar-available",partial:"bar-partial",unavailable:"bar-unavailable",cba:"bar-cba",weekend:"bar-weekend"};
   var tm={available:"Available",partial:s?s.n:"Partial",unavailable:"Not Available",cba:"CBA",weekend:""};
-  var inner='<div class="day-num">'+d+"</div>";
+  var mb=mediaBlackouts.find(function(m){return m.date===iso});
+  var inner='<div class="day-num">'+d+(mb?'<span style="font-size:8px;background:#fee2e2;color:#dc2626;border-radius:3px;padding:0 3px;margin-left:2px;font-weight:700">MEDIA</span>':"")+"</div>";
   if(showAFL&&s&&bm[s.a]){
     inner+='<div class="day-avail-bar '+bm[s.a]+'"></div>';
     if(tm[s.a])inner+='<div class="day-avail-text">'+(calSquad==="both"?"AFL: ":"")+tm[s.a]+"</div>";
@@ -1371,6 +1374,7 @@ function openDayDetail(iso,y,m,d){
   var cm={available:"avail-available",partial:"avail-partial",unavailable:"avail-unavailable",cba:"avail-cba",weekend:"avail-weekend"};
   var iem={available:"&#9989;",partial:"&#128336;",unavailable:"&#10060;",cba:"&#9888;&#65039;",weekend:"&#127958;&#65039;"};
   var h="";
+  if(mb){var canDelBo=accessLevel==="admin"||accessLevel==="retail-approver"||accessLevel==="commercial-approver"||accessLevel==="pcl-approver";h+='<div class="day-detail-avail" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;padding:6px 10px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between"><span style="font-weight:600">&#128247; Media Blackout: '+mb.label+'</span>'+(canDelBo?'<button onclick="deleteBlackout(\'"+mb.id+"\')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:16px">&#128465;</button>':"")+"</div>";}
   if((calSquad==="afl"||calSquad==="both")&&s)h+='<div class="day-detail-avail '+cm[s.a]+'">'+iem[s.a]+(calSquad==="both"?" AFL:":" ")+s.n+"</div>";
   if((calSquad==="aflw"||calSquad==="both")&&sa&&sa.a!=="weekend")h+='<div class="day-detail-avail '+cm[sa.a]+'" style="margin-top:4px">'+iem[sa.a]+(calSquad==="both"?" AFLW:":" ")+sa.n+"</div>";
   h+='<div class="day-detail-bookings-title" style="margin-top:'+(s?"14px":"0")+'">'+(dr.length?"Requests on this day":"No requests on this day")+"</div>";
@@ -1397,9 +1401,9 @@ function renderRequests(){
   for(var i=0;i<vis.length;i++){
     var r=vis[i];
     var names=r.players.map(function(pid){var ap=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return ap?ap.name:""}).filter(Boolean);
-    var canEd=accessLevel!=="viewer"&&canApprove(r.type);
+    var canEd=accessLevel!=="viewer"&&(accessLevel==="admin"||canApprove(r.type));
     var eBtn=canEd?'<button class="btn-icon" onclick="openEditModal(\''+r.id+'\')">&#9998;</button>':"";
-    var dBtn=accessLevel==="admin"?'<button class="btn-icon danger" onclick="deleteRequest(\''+r.id+'\')">&#128465;</button>':"";
+    var dBtn=(accessLevel==="admin"||canApprove(r.type))?'<button class="btn-icon danger" onclick="deleteRequest(\''+r.id+'\')">&#128465;</button>':"";
     var aBtn=!r.approved&&canApprove(r.type)?'<button class="btn-icon" title="Approve" onclick="approveRequest(\''+r.id+'\')" style="color:var(--confirmed)">&#9989;</button>':"";
     var aflCount=r.players.filter(function(pid){return players.find(function(p){return p.id===pid})}).length;
     var aflwCount=r.players.filter(function(pid){return aflwPlayers.find(function(p){return p.id===pid})}).length;
@@ -1746,6 +1750,38 @@ function markFullyConfirmed(id){
   document.getElementById("confirmModal").classList.add("open");
 }
 
+function openBlackoutModal(){
+  document.getElementById("bo-label").value="";
+  document.getElementById("bo-date").value="";
+  document.getElementById("blackoutModal").classList.add("open");
+}
+function saveBlackout(){
+  var label=document.getElementById("bo-label").value.trim();
+  var date=document.getElementById("bo-date").value;
+  if(!label||!date){showToast("Please enter a label and date","error");return}
+  var mb={id:"mb"+Date.now(),date:date,label:label,mondayId:null};
+  mediaBlackouts.push(mb);
+  // Create on monday board
+  mondayApi('mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}',
+    {bid:BOARD_ID,gid:MEDIA_GROUP,name:label,cv:JSON.stringify({"date_mm35z010":{date:date}})}).then(function(r){
+      if(r&&r.data&&r.data.create_item)mb.mondayId=parseInt(r.data.create_item.id,10);
+    });
+  closeModal("blackoutModal");
+  renderCalendar();
+  showToast("Media blackout added: "+label,"success");
+}
+function deleteBlackout(id){
+  var mb=mediaBlackouts.find(function(m){return m.id===id});
+  if(!mb)return;
+  if(!confirm("Remove blackout: "+mb.label+"?"))return;
+  mediaBlackouts=mediaBlackouts.filter(function(m){return m.id!==id});
+  if(mb.mondayId){
+    mondayApi('mutation($id:ID!){delete_item(item_id:$id){id}}',{id:String(mb.mondayId)});
+  }
+  renderCalendar();
+  showToast("Blackout removed","success");
+}
+
 function sendToLiaison(id){
   var r=requests.find(function(x){return x.id===id});
   if(!r)return;
@@ -1824,7 +1860,7 @@ function applyAccessLevel(level){
   var labels={admin:"&#128308; Admin","retail-approver":"&#128993; Retail Approver","commercial-approver":"&#128994; Commercial Approver","balance-updater":"&#129695; Balance Updater",viewer:"&#9898; Viewer"};
   var badge=document.getElementById("accessBadge");var label=document.getElementById("accessLabel");
   if(badge&&label){badge.className="access-badge logged-in";label.innerHTML=labels[level]||level;badge.onclick=function(){accessLevel="viewer";badge.className="access-badge";label.textContent="Sign in";badge.onclick=openPinModal;document.getElementById("balancesTabBtn").style.display="none";document.getElementById("addPlayerBtn").style.display="none";renderPlayers();renderRequests()}}
-  if(level==="admin"){document.getElementById("balancesTabBtn").style.display="flex";document.getElementById("addPlayerBtn").style.display="flex";var heb=document.getElementById("hiwEditBtn");if(heb)heb.style.display="flex";var peb=document.getElementById("processEditBtn");if(peb)peb.style.display="flex";}
+  if(level==="admin"){document.getElementById("balancesTabBtn").style.display="flex";document.getElementById("addPlayerBtn").style.display="flex";var heb=document.getElementById("hiwEditBtn");if(heb)heb.style.display="flex";var peb=document.getElementById("processEditBtn");if(peb)peb.style.display="flex";var bb=document.getElementById("addBlackoutBtn");if(bb)bb.style.display="flex";}
   else if(level==="balance-updater"){document.getElementById("balancesTabBtn").style.display="flex";}
   else if(level==="pcl-approver"){
     document.getElementById("balancesTabBtn").style.display="flex";
@@ -1868,6 +1904,16 @@ function applyAccessLevel(level){
             img:cv["text_mm35jtbf"]||""
           };
           if(isAFLW){p.squad="aflw";newAFLW.push(p)}else{newPlayers.push(p)}
+        } else if(item.group.id==="group_mm35media"){
+          // Media blackout date
+          if(item.name&&item.name!=="New item"){
+            mediaBlackouts.push({
+              id:"mb"+mondayId,
+              mondayId:parseInt(mondayId,10),
+              date:cv["date_mm35z010"]||null,
+              label:item.name
+            });
+          }
         } else if(item.group.id==="group_mm35jzs7"){
           // Request item — skip blank "New item" placeholders
           if(!item.name||item.name==="New item")return;
