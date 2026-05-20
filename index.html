@@ -386,11 +386,11 @@
     <div class="cal-title-group">
       <div class="cal-arrows"><button class="cal-arrow" onclick="calNav(-1)">&#8592;</button><button class="cal-arrow" onclick="calNav(1)">&#8594;</button></div>
       <div class="cal-month-title" id="calMonthTitle"></div>
-      <div style="display:flex;gap:6px;margin-left:12px">
+      <div style="display:flex;gap:6px;margin-left:12px;align-items:center">
         <button class="squad-tab-btn active" id="calBtn-afl" onclick="switchCalSquad('afl',this)">AFL</button>
         <button class="squad-tab-btn" id="calBtn-aflw" onclick="switchCalSquad('aflw',this)">AFLW</button>
         <button class="squad-tab-btn" id="calBtn-both" onclick="switchCalSquad('both',this)">Both</button>
-      <button onclick="openBlackoutModal()" class="btn-primary" style="margin-left:12px;font-size:12px;padding:5px 12px;white-space:nowrap">&#128247; + Media Blackout</button>
+        <button onclick="openBlackoutModal()" class="btn-primary" style="margin-left:8px;font-size:12px;padding:5px 12px;white-space:nowrap">&#128247; + Media Blackout</button>
       </div>
     </div>
     <div class="cal-legend-wrap">
@@ -1349,11 +1349,11 @@ function buildCell(y,m,d,om,tiso){
   var tm={available:"Available",partial:s?s.n:"Partial",unavailable:"Not Available",cba:"CBA",weekend:""};
   var inner='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;pointer-events:none"><span style="font-size:13px;font-weight:700;color:var(--text2)">'+d+'</span>'+(mb?'<span style="font-size:9px;background:#fee2e2;color:#dc2626;border-radius:3px;padding:1px 4px;font-weight:700">&#128247;</span>':'')+'</div>';
   if(showAFL&&s&&bm[s.a]){
-    inner+='<div class="day-avail-bar" style="pointer-events:none" class="day-avail-bar '+bm[s.a]+'"></div>';
+    inner+='<div class="day-avail-bar '+bm[s.a]+'"></div>';
     if(tm[s.a])inner+='<div class="day-avail-text">'+(calSquad==="both"?"AFL: ":"")+tm[s.a]+"</div>";
   }
   if(showAFLW&&sa&&sa.a!=="weekend"&&bm[sa.a]){
-    inner+='<div class="day-avail-bar" style="pointer-events:none" class="day-avail-bar '+bm[sa.a]+'" style="opacity:'+(calSquad==="both"?".65":"1")+'"></div>';
+    inner+='<div class="day-avail-bar '+bm[sa.a]+'" style="opacity:'+(calSquad==="both"?".65":"1")+'"></div>';
     inner+='<div class="day-avail-text" style="font-size:'+(calSquad==="both"?"9":"10")+'px;color:var(--muted)">'+(calSquad==="both"?"AFLW: ":"")+sa.n+"</div>";
   }
   if(dr.length){inner+='<div class="day-bookings">';for(var i=0;i<dr.length;i++){var r=dr[i];var cc=r.type==="Commercial"?"chip-commercial":r.type==="PCL"?"chip-commercial":r.status==="TBC"?"chip-tbc":"chip-retail";inner+='<div class="day-booking-chip '+cc+'">'+r.name+"</div>"}inner+="</div>"}
