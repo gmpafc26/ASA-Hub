@@ -68,7 +68,7 @@
   .cal-day{min-height:88px;padding:6px 7px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);transition:background .12s}
   .cal-day:nth-child(7n){border-right:none}.cal-day.other-month{opacity:.3;pointer-events:none}
   .cal-day.today .day-num{background:var(--teal);color:#fff;border-radius:50%}
-  .cal-day.clickable{cursor:pointer}.cal-day.clickable:hover{background:#f0fafb}
+  .cal-day.clickable{cursor:pointer}.cal-day.clickable:hover{background:#f0fafb}.cal-day *{pointer-events:none}
   .day-num{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;margin-bottom:3px}
   .day-avail-bar{height:4px;border-radius:2px;margin-bottom:4px}
   .bar-available{background:#4ade80}.bar-partial{background:#facc15}.bar-unavailable{background:#f87171}.bar-cba{background:#a78bfa}.bar-weekend{background:#cbd5e1}
@@ -1347,13 +1347,13 @@ function buildCell(y,m,d,om,tiso){
   el.className=cls;
   var bm={available:"bar-available",partial:"bar-partial",unavailable:"bar-unavailable",cba:"bar-cba",weekend:"bar-weekend"};
   var tm={available:"Available",partial:s?s.n:"Partial",unavailable:"Not Available",cba:"CBA",weekend:""};
-  var inner='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-size:13px;font-weight:700;color:var(--text2)">'+d+'</span>'+(mb?'<span style="font-size:9px;background:#fee2e2;color:#dc2626;border-radius:3px;padding:1px 4px;font-weight:700">&#128247;</span>':'')+'</div>';
+  var inner='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;pointer-events:none"><span style="font-size:13px;font-weight:700;color:var(--text2)">'+d+'</span>'+(mb?'<span style="font-size:9px;background:#fee2e2;color:#dc2626;border-radius:3px;padding:1px 4px;font-weight:700">&#128247;</span>':'')+'</div>';
   if(showAFL&&s&&bm[s.a]){
-    inner+='<div class="day-avail-bar '+bm[s.a]+'"></div>';
+    inner+='<div class="day-avail-bar" style="pointer-events:none" class="day-avail-bar '+bm[s.a]+'"></div>';
     if(tm[s.a])inner+='<div class="day-avail-text">'+(calSquad==="both"?"AFL: ":"")+tm[s.a]+"</div>";
   }
   if(showAFLW&&sa&&sa.a!=="weekend"&&bm[sa.a]){
-    inner+='<div class="day-avail-bar '+bm[sa.a]+'" style="opacity:'+(calSquad==="both"?".65":"1")+'"></div>';
+    inner+='<div class="day-avail-bar" style="pointer-events:none" class="day-avail-bar '+bm[sa.a]+'" style="opacity:'+(calSquad==="both"?".65":"1")+'"></div>';
     inner+='<div class="day-avail-text" style="font-size:'+(calSquad==="both"?"9":"10")+'px;color:var(--muted)">'+(calSquad==="both"?"AFLW: ":"")+sa.n+"</div>";
   }
   if(dr.length){inner+='<div class="day-bookings">';for(var i=0;i<dr.length;i++){var r=dr[i];var cc=r.type==="Commercial"?"chip-commercial":r.type==="PCL"?"chip-commercial":r.status==="TBC"?"chip-tbc":"chip-retail";inner+='<div class="day-booking-chip '+cc+'">'+r.name+"</div>"}inner+="</div>"}
@@ -1577,6 +1577,7 @@ function selectMreqType(btn){
 function mreqStatusChanged(){document.getElementById("mreqBriefedWrap").style.display=document.getElementById("mreq-status").value==="Confirmed"?"flex":"none"}
 function mreqCheckConflicts(){
   var date=document.getElementById("mreq-date").value;var ae=document.getElementById("mreqDateAvail");
+  var mbDate=date?mediaBlackouts.find(function(m){return m.date===date}):null;
   if(date&&schedule[date]){var s=schedule[date];var sa=aflwSchedule[date];var cls={available:"mreq-date-available",partial:"mreq-date-partial",unavailable:"mreq-date-unavailable",cba:"mreq-date-cba",weekend:"mreq-date-weekend"};var ic={available:"&#9989;",partial:"&#128336;",unavailable:"&#10060;",cba:"&#9888;&#65039;",weekend:"&#127958;&#65039;"};ae.className="mreq-date-avail "+(cls[s.a]||"");ae.innerHTML=ic[s.a]+" AFL: "+s.n+(sa&&sa.a!=="weekend"?"<br>"+ic[sa.a]+" AFLW: "+sa.n:"")+(mbDate?"<br>&#128247; Media Blackout: "+mbDate.label:"");}else if(mbDate){ae.className="mreq-date-avail mreq-date-unavailable";ae.innerHTML="&#128247; Media Blackout: "+mbDate.label;}else{ae.textContent=""}
   if(!date)return;
   var bounds=wkBounds(date),monISO=bounds[0],sunISO=bounds[1];
