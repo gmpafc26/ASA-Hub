@@ -561,21 +561,40 @@
   </div>
 </div>
 <div class="tab-pane" id="tab-how-it-works">
-  <div class="hiw-wrap">
+  <div style="max-width:100%">
+
     <div class="hiw-hero" style="justify-content:space-between;flex-wrap:wrap">
-  <div style="display:flex;align-items:center;gap:16px"><div class="hiw-hero-icon">&#128203;</div><div><h2 class="hiw-hero-title">ASA / CBA Player Requests Hub</h2><p class="hiw-hero-sub">Internal use only &mdash; Port Adelaide Football Club</p></div></div>
-  <button id="hiwEditBtn" class="btn-primary" style="display:none" onclick="toggleHiwEdit()">&#9998; Edit Content</button>
-</div>
+      <div style="display:flex;align-items:center;gap:16px"><div class="hiw-hero-icon">&#128203;</div><div><h2 class="hiw-hero-title">ASA / CBA Player Requests Hub</h2><p class="hiw-hero-sub">Internal use only &mdash; Port Adelaide Football Club</p></div></div>
+      <button id="hiwEditBtn" class="btn-primary" style="display:none" onclick="toggleHiwEdit()">&#9998; Edit Content</button>
+    </div>
+
     <div class="hiw-notice"><span class="hiw-notice-icon">&#128274;</span><strong>Internal Use Only.</strong> This portal is strictly for internal PAFC staff. Do not share access or request information outside the organisation.</div>
-    <div class="hiw-grid">
-      <div class="hiw-card"><div class="hiw-card-icon" style="background:#eff6ff">&#129295;</div><div class="hiw-card-body"><div class="hiw-card-title">What is this hub?</div><div class="hiw-card-text">The ASA / CBA Player Requests Hub is a centralised portal for managing AFL and AFLW player appearance requests across Retail and Commercial streams. It tracks player availability, ASA/CBA balance usage, request status, and approval workflows &mdash; all in one place and synced live with the team&rsquo;s monday.com board.</div></div></div>
-      <div class="hiw-card hiw-card-amber"><div class="hiw-card-icon" style="background:#fef3c7">&#9888;&#65039;</div><div class="hiw-card-body"><div class="hiw-card-title">Briefing Trent</div><div class="hiw-card-text">Trent must still be briefed <strong>individually and directly via email</strong> for every confirmed appearance &mdash; this portal does not automatically notify him. Once a request is approved and confirmed, the relevant approver is responsible for following up with Trent outside of this system. The &ldquo;Briefed to Trent&rdquo; checkbox is a manual record only.</div></div></div>
-      <div class="hiw-card"><div class="hiw-card-icon" style="background:#f0fdf4">&#9997;&#65039;</div><div class="hiw-card-body"><div class="hiw-card-title">ASA Balance Updates</div><div class="hiw-card-text"><strong>Jacob</strong> is responsible for keeping player ASA/CBA balances up to date. He has a dedicated Balance Updater access PIN which gives him direct access to the Balances tab to update all player percentages and sync them to the board. If you believe a balance is incorrect, please contact Jacob directly.</div></div></div>
-      <div class="hiw-card"><div class="hiw-card-icon" style="background:#f5f3ff">&#128272;</div><div class="hiw-card-body"><div class="hiw-card-title">Access Levels</div><div class="hiw-card-text">Anyone can open and view this hub &mdash; no login required to browse. Different actions are unlocked based on your access level:</div><div class="hiw-access-table"><div class="hiw-access-row"><span class="hiw-access-badge viewer">&#9898; Viewer</span><span class="hiw-access-desc">Browse players, calendar and approved requests. No login needed.</span></div><div class="hiw-access-row"><span class="hiw-access-badge retail">&#128993; Retail Approver</span><span class="hiw-access-desc">View, approve and deny Retail ASA requests.</span></div><div class="hiw-access-row"><span class="hiw-access-badge commercial">&#128994; Commercial Approver</span><span class="hiw-access-desc">View, approve and deny Commercial ASA requests.</span></div><div class="hiw-access-row"><span class="hiw-access-badge balance">&#129695; Balance Updater</span><span class="hiw-access-desc">Update player ASA/CBA balance percentages (Jacob).</span></div><div class="hiw-access-row"><span class="hiw-access-badge admin">&#128308; Admin</span><span class="hiw-access-desc">Full access &mdash; manage players, edit requests, manage PINs.</span></div></div></div></div>
-      <div class="hiw-card"><div class="hiw-card-icon" style="background:#fdf0ff">&#9993;&#65039;</div><div class="hiw-card-body"><div class="hiw-card-title">How to Submit a Request</div><div class="hiw-card-text">Click <strong>+ New Request</strong> in the top navigation. Fill in the request name, type (Retail or Commercial), date, location, time required, players and any relevant notes. Once submitted, the request is automatically routed to the relevant approver and added to the monday.com board. Unapproved requests are only visible to approvers and admins.</div></div></div>
-      <div class="hiw-card"><div class="hiw-card-icon" style="background:#f0fdf4">&#9989;</div><div class="hiw-card-body"><div class="hiw-card-title">Approval Process</div><div class="hiw-card-text">When a new request is submitted, the relevant approver will see an amber banner at the top of the hub prompting them to review. Clicking <strong>Review &amp; Approve</strong> opens a summary of all pending requests with Approve and Deny buttons and an optional comment field. Approved requests become visible to all viewers and are updated on the monday.com board in real time.</div></div></div>
-      <div class="hiw-card hiw-card-teal"><div class="hiw-card-icon" style="background:#e0f5f9">&#128276;</div><div class="hiw-card-body"><div class="hiw-card-title">Email Notifications <span class="hiw-coming-soon">Coming Soon</span></div><div class="hiw-card-text">We are currently working on an automated email notification system so that approvers are notified directly via Outlook when a new request comes through for their stream. In the meantime, approvers should check the hub regularly or will be notified via monday.com bell notifications when a new request is submitted.</div></div></div>
-      <div class="hiw-card"><div class="hiw-card-icon" style="background:#f8fafc">&#128203;</div><div class="hiw-card-body"><div class="hiw-card-title">monday.com Board Sync</div><div class="hiw-card-text">All changes made in this hub &mdash; new requests, approvals, balance updates, player edits &mdash; are synced live to the <strong>ASA / CBA HUB</strong> board on monday.com. This means the board always reflects the current state of the hub and can be used as a source of truth for reporting or auditing.</div></div></div>
+
+    <div class="hiw-grid" style="grid-template-columns:repeat(3,1fr)">
+
+      <div class="hiw-card"><div class="hiw-card-icon" style="background:#eff6ff">&#129295;</div><div class="hiw-card-body"><div class="hiw-card-title">What is this hub?</div><div class="hiw-card-text">The ASA / CBA Player Requests Hub is a centralised portal for managing AFL and AFLW player appearance requests across Retail, Commercial and PCL streams. It tracks player availability, ASA/CBA balance usage, request status, and approval workflows &mdash; all in one place and synced live with the team&rsquo;s monday.com board.</div></div></div>
+
+      <div class="hiw-card hiw-card-amber"><div class="hiw-card-icon" style="background:#fef3c7">&#9888;&#65039;</div><div class="hiw-card-body"><div class="hiw-card-title">Briefing Trent &amp; Rachel</div><div class="hiw-card-text">Once a request is <strong>Internally Approved</strong>, the approver is responsible for notifying <strong>Trent</strong> (AFL) or <strong>Rachel</strong> (AFLW) directly. This can be done via the <strong>&#128231; Trent / &#128231; Rachel</strong> button on the request, or handled offline and manually marked as Confirmed. Mixed AFL/AFLW requests go to both.</div></div></div>
+
+      <div class="hiw-card"><div class="hiw-card-icon" style="background:#f0fdf4">&#9997;&#65039;</div><div class="hiw-card-body"><div class="hiw-card-title">ASA Balance Updates</div><div class="hiw-card-text"><strong>Jacob</strong> is responsible for keeping player ASA/CBA balances up to date. He auto-logs in as PCL Approver which also gives him access to the Balances tab. If you believe a balance is incorrect, please contact Jacob directly.</div></div></div>
+
+      <div class="hiw-card"><div class="hiw-card-icon" style="background:#f5f3ff">&#128272;</div><div class="hiw-card-body"><div class="hiw-card-title">Access Levels</div><div class="hiw-card-text">Anyone can open and view this hub &mdash; no login required to browse.</div><div class="hiw-access-table"><div class="hiw-access-row"><span class="hiw-access-badge viewer">&#9898; Viewer</span><span class="hiw-access-desc">Browse players, calendar and approved requests.</span></div><div class="hiw-access-row"><span class="hiw-access-badge retail">&#128993; Retail Approver</span><span class="hiw-access-desc">Approve and deny Retail requests — Georgie &amp; Andrew.</span></div><div class="hiw-access-row"><span class="hiw-access-badge commercial">&#128994; Commercial Approver</span><span class="hiw-access-desc">Approve and deny Commercial requests — Jodie &amp; John.</span></div><div class="hiw-access-row"><span class="hiw-access-badge balance">&#127775; PCL Approver</span><span class="hiw-access-desc">Approve PCL requests + update balances — Jacob.</span></div><div class="hiw-access-row"><span class="hiw-access-badge admin">&#128308; Admin</span><span class="hiw-access-desc">Full access &mdash; manage players, edit requests, manage PINs.</span></div></div></div></div>
+
+      <div class="hiw-card"><div class="hiw-card-icon" style="background:#fdf0ff">&#9993;&#65039;</div><div class="hiw-card-body"><div class="hiw-card-title">How to Submit a Request</div><div class="hiw-card-text">Click <strong>+ New Request</strong> in the top navigation. Fill in the request name, type (Retail, Commercial or PCL), date, start time, time required, players and notes. Select <strong>TBC</strong> if you&rsquo;re not yet certain, or <strong>Planned</strong> if you&rsquo;re ready to go. Once submitted the request is routed to the relevant approver automatically.</div></div></div>
+
+      <div class="hiw-card"><div class="hiw-card-icon" style="background:#f0fdf4">&#9989;</div><div class="hiw-card-body"><div class="hiw-card-title">Approval Process</div><div class="hiw-card-text">The relevant approver will see an amber banner prompting them to review pending requests. They can approve or deny with an optional comment. Approved requests move to <strong>Internally Approved</strong> status. Denied requests move to <strong>Not Approved</strong>. Once Trent or Rachel confirms, the status updates to <strong>Confirmed</strong> — fully locked in.</div></div></div>
+
+      <div class="hiw-card hiw-card-teal" style="grid-column:span 2"><div class="hiw-card-icon" style="background:#e0f5f9">&#128276;</div><div class="hiw-card-body"><div class="hiw-card-title">Email Notifications</div><div class="hiw-card-text">Automated emails are sent at every key stage of the request process:<br><br>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-top:4px">
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">1.</span><span><strong>Request submitted</strong> — you receive an email confirming your request has been submitted and is pending review, including a summary of all details entered.</span></div>
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">2.</span><span><strong>Internally approved or not approved</strong> — you receive an email with the outcome from the approver, including any comments they have left.</span></div>
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">3.</span><span><strong>Fully confirmed</strong> — once Trent or Rachel has signed off and the status is updated to Confirmed, you receive a final email confirming the request is fully locked in.</span></div>
+          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--muted);font-size:12px">All emails are sent automatically via monday.com to the email address associated with your PAFC account.</span></div>
+        </div>
+      </div></div></div>
+
+      <div class="hiw-card"><div class="hiw-card-icon" style="background:#f8fafc">&#128203;</div><div class="hiw-card-body"><div class="hiw-card-title">monday.com Board Sync</div><div class="hiw-card-text">All changes made in this hub &mdash; new requests, approvals, balance updates, player edits &mdash; are synced live to the <strong>ASA / CBA HUB</strong> board on monday.com. The board is always up to date and can be used as a source of truth for reporting or auditing.</div></div></div>
+
     </div>
   </div>
 </div>
@@ -1017,10 +1036,12 @@ const COL={
   player_number:"text_mm35f5cc",position:"text_mm351tb2",balance:"numeric_mm3571tn",restricted:"boolean_mm35w6eq",photo:"text_mm35jtbf",
   players_text:"text_mm35qb0p",req_type:"color_mm35cenq",briefed:"color_mm359ffs",approved:"color_mm35zm9j",
   req_type_dropdown:"dropdown_mm38f2g1",time_required:"text_mm388at2",
-  submitted_by:"multiple_person_mm3g7m2g"
+  submitted_by:"multiple_person_mm3g7m2g",
+  balance_stamp:"date_mm3hme1r"
 };
 // Dynamic ID maps - populated when board data loads
 var PLAYER_MONDAY_IDS={};
+var SETTINGS_ITEM_ID="12058437766";
 var REQUEST_MONDAY_IDS={};
 var newItemIds={};
 var monday=null;
@@ -1114,7 +1135,7 @@ function showToast(msg,type){var t=document.getElementById("toast");t.textConten
 function canApprove(type){if(accessLevel==="admin")return true;return(APPROVAL[type]||[]).includes(accessLevel)}
 function visReqs(){return requests.filter(function(r){return !r.denied&&(r.approved||canApprove(r.type))})}
 function wkBounds(dateStr){var d=new Date(dateStr+"T12:00:00"),dow=d.getDay(),diff=dow===0?-6:1-dow;var mon=new Date(d);mon.setDate(d.getDate()+diff);var sun=new Date(mon);sun.setDate(mon.getDate()+6);return[mon.toISOString().slice(0,10),sun.toISOString().slice(0,10)]}
-(function(){var n=new Date();document.getElementById("stampDate").value=n.toISOString().slice(0,10)})();
+// Stamp date loaded from board in loadFromBoard
 function toggleProcessEdit(){
   var btn=document.getElementById("processEditBtn");
   var editing=btn.dataset.editing==="true";
@@ -1178,7 +1199,15 @@ function toggleHiwEdit(){
   }
 }
 
-function saveStamp(){var d=document.getElementById("stampDate").value;if(!d){showToast("Pick a date","error");return}showToast("Balance date saved: "+fmtDate(d),"success")}
+function saveStamp(){
+  var d=document.getElementById("stampDate").value;
+  if(!d){showToast("Pick a date","error");return}
+  mondayApi('mutation($iid:ID!,$bid:ID!,$cv:JSON!){change_multiple_column_values(item_id:$iid,board_id:$bid,column_values:$cv){id}}',
+    {iid:SETTINGS_ITEM_ID,bid:BOARD_ID,cv:JSON.stringify({[COL.balance_stamp]:{date:d}})});
+  var stampDisplay=document.getElementById("balancesStampDisplay");
+  if(stampDisplay)stampDisplay.textContent=fmtDate(d);
+  showToast("Balance last updated: "+fmtDate(d),"success");
+}
 function switchTab(tab,btn){
   document.querySelectorAll(".tab-pane").forEach(function(p){p.classList.remove("active")});
   document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});
@@ -1648,6 +1677,8 @@ function saveAllBalances(){
   for(var i=0;i<allSquad.length;i++){var p=allSquad[i];var input=document.getElementById("balinput-"+p.id);if(!input)continue;var v=parseInt(input.value,10);if(!isNaN(v)&&v>=0&&v<=100&&v!==p.bal)changed.push({p:p,newVal:v,input:input})}
   if(!changed.length){showToast("No changes to save","error");return}
   var today=new Date().toISOString().slice(0,10);document.getElementById("stampDate").value=today;document.getElementById("balancesStampDisplay").textContent=fmtDate(today);
+  mondayApi('mutation($iid:ID!,$bid:ID!,$cv:JSON!){change_multiple_column_values(item_id:$iid,board_id:$bid,column_values:$cv){id}}',
+    {iid:SETTINGS_ITEM_ID,bid:BOARD_ID,cv:JSON.stringify({[COL.balance_stamp]:{date:today}})});
   var saveStatus=document.getElementById("balancesSaveStatus");saveStatus.textContent="Saving "+changed.length+" change"+(changed.length>1?"s":"")+"...";
   for(var j=0;j<changed.length;j++){(function(item){item.p.bal=item.newVal;var bar=document.getElementById("balbar-"+item.p.id);if(bar)bar.style.width=item.newVal+"%";item.input.classList.remove("changed");item.input.classList.add("saved");var dot=document.getElementById("baldot-"+item.p.id);if(dot)dot.classList.remove("show");syncBalanceToMonday(item.p.id,item.newVal)})(changed[j])}
   renderPlayers();setTimeout(function(){saveStatus.textContent="&#9989; "+changed.length+" balance"+(changed.length>1?"s":"")+" saved to board — "+fmtDate(today)},800);showToast(changed.length+" balance"+(changed.length>1?"s":"")+" saved","success");
@@ -1820,7 +1851,7 @@ function applyAccessLevel(level){
         var cv={};
         item.column_values.forEach(function(col){cv[col.id]=col.text||""});
         var mondayId=String(item.id);
-        if(item.group.id==="group_mm354464"||item.group.id==="group_mm35q3j5"){
+        if((item.group.id==="group_mm354464"||item.group.id==="group_mm35q3j5")&&item.name!=="__settings__"){
           // Player item
           var pid="p"+pidCounter++;
           PLAYER_MONDAY_IDS[pid]=parseInt(mondayId,10);
@@ -1876,6 +1907,17 @@ function applyAccessLevel(level){
       newAFLW.forEach(function(p){aflwPlayers.push(p)});
       requests=newRequests;
       console.log("Board loaded:",players.length,"AFL players,",aflwPlayers.length,"AFLW players,",requests.length,"requests");
+      // Load balance stamp date from settings item
+      var settingsItem=items.find(function(item){return item.name==="__settings__"});
+      if(settingsItem){
+        var stampCol=settingsItem.column_values.find(function(cv){return cv.id===COL.balance_stamp});
+        if(stampCol&&stampCol.text){
+          var stampDate=document.getElementById("stampDate");
+          if(stampDate)stampDate.value=stampCol.text;
+          var stampDisplay=document.getElementById("balancesStampDisplay");
+          if(stampDisplay)stampDisplay.textContent=fmtDate(stampCol.text);
+        }
+      }
       renderPlayers();renderRequests();renderCalendar();
       var balTab=document.getElementById("tab-balances");
       if(balTab&&balTab.classList.contains("active"))renderBalancesTab();
