@@ -1341,7 +1341,7 @@ function buildCell(y,m,d,om,tiso){
   });
   var el=document.createElement("div");
   var cls="cal-day"+(om?" other-month":"")+(iso===tiso?" today":"");
-  if(!om&&(s||sa||dr.length))cls+=" clickable";
+  if(!om&&(s||sa||dr.length||mb))cls+=" clickable";
   el.className=cls;
   var bm={available:"bar-available",partial:"bar-partial",unavailable:"bar-unavailable",cba:"bar-cba",weekend:"bar-weekend"};
   var tm={available:"Available",partial:s?s.n:"Partial",unavailable:"Not Available",cba:"CBA",weekend:""};
@@ -1357,7 +1357,7 @@ function buildCell(y,m,d,om,tiso){
   }
   if(dr.length){inner+='<div class="day-bookings">';for(var i=0;i<dr.length;i++){var r=dr[i];var cc=r.type==="Commercial"?"chip-commercial":r.type==="PCL"?"chip-commercial":r.status==="TBC"?"chip-tbc":"chip-retail";inner+='<div class="day-booking-chip '+cc+'">'+r.name+"</div>"}inner+="</div>"}
   el.innerHTML=inner;
-  if(!om&&(s||sa||dr.length)){(function(iso2,y2,m2,d2){el.addEventListener("click",function(){openDayDetail(iso2,y2,m2,d2)})})(iso,y,m,d)}
+  if(!om&&(s||sa||dr.length||mb)){(function(iso2,y2,m2,d2){el.addEventListener("click",function(){openDayDetail(iso2,y2,m2,d2)})})(iso,y,m,d)}
   return el;
 }
 function openDayDetail(iso,y,m,d){
