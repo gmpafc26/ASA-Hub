@@ -1577,7 +1577,7 @@ function selectMreqType(btn){
 function mreqStatusChanged(){document.getElementById("mreqBriefedWrap").style.display=document.getElementById("mreq-status").value==="Confirmed"?"flex":"none"}
 function mreqCheckConflicts(){
   var date=document.getElementById("mreq-date").value;var ae=document.getElementById("mreqDateAvail");
-  if(date&&schedule[date]){var s=schedule[date];var sa=aflwSchedule[date];var cls={available:"mreq-date-available",partial:"mreq-date-partial",unavailable:"mreq-date-unavailable",cba:"mreq-date-cba",weekend:"mreq-date-weekend"};var ic={available:"&#9989;",partial:"&#128336;",unavailable:"&#10060;",cba:"&#9888;&#65039;",weekend:"&#127958;&#65039;"};ae.className="mreq-date-avail "+(cls[s.a]||"");ae.innerHTML=ic[s.a]+" AFL: "+s.n+(sa&&sa.a!=="weekend"?"<br>"+ic[sa.a]+" AFLW: "+sa.n:"");}else{ae.textContent=""}
+  if(date&&schedule[date]){var s=schedule[date];var sa=aflwSchedule[date];var cls={available:"mreq-date-available",partial:"mreq-date-partial",unavailable:"mreq-date-unavailable",cba:"mreq-date-cba",weekend:"mreq-date-weekend"};var ic={available:"&#9989;",partial:"&#128336;",unavailable:"&#10060;",cba:"&#9888;&#65039;",weekend:"&#127958;&#65039;"};ae.className="mreq-date-avail "+(cls[s.a]||"");ae.innerHTML=ic[s.a]+" AFL: "+s.n+(sa&&sa.a!=="weekend"?"<br>"+ic[sa.a]+" AFLW: "+sa.n:"")+(mbDate?"<br>&#128247; Media Blackout: "+mbDate.label:"");}else if(mbDate){ae.className="mreq-date-avail mreq-date-unavailable";ae.innerHTML="&#128247; Media Blackout: "+mbDate.label;}else{ae.textContent=""}
   if(!date)return;
   var bounds=wkBounds(date),monISO=bounds[0],sunISO=bounds[1];
   var sel=[].slice.call(document.querySelectorAll("#mreqPlayersGrid input:checked")).map(function(i){return i.dataset.pid});
