@@ -1340,13 +1340,13 @@ function buildCell(y,m,d,om,tiso){
     if(calSquad==="aflw")return hasAFLW||(!hasAFL&&!hasAFLW);
     return true; // both - show all
   });
+  var mb=mediaBlackouts.find(function(m){return m.date===iso});
   var el=document.createElement("div");
   var cls="cal-day"+(om?" other-month":"")+(iso===tiso?" today":"");
   if(!om&&(s||sa||dr.length||mb))cls+=" clickable";
   el.className=cls;
   var bm={available:"bar-available",partial:"bar-partial",unavailable:"bar-unavailable",cba:"bar-cba",weekend:"bar-weekend"};
   var tm={available:"Available",partial:s?s.n:"Partial",unavailable:"Not Available",cba:"CBA",weekend:""};
-  var mb=mediaBlackouts.find(function(m){return m.date===iso});
   var inner='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-size:13px;font-weight:700;color:var(--text2)">'+d+'</span>'+(mb?'<span style="font-size:9px;background:#fee2e2;color:#dc2626;border-radius:3px;padding:1px 4px;font-weight:700">&#128247;</span>':'')+'</div>';
   if(showAFL&&s&&bm[s.a]){
     inner+='<div class="day-avail-bar '+bm[s.a]+'"></div>';
