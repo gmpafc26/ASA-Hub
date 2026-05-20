@@ -1347,7 +1347,7 @@ function buildCell(y,m,d,om,tiso){
   var bm={available:"bar-available",partial:"bar-partial",unavailable:"bar-unavailable",cba:"bar-cba",weekend:"bar-weekend"};
   var tm={available:"Available",partial:s?s.n:"Partial",unavailable:"Not Available",cba:"CBA",weekend:""};
   var mb=mediaBlackouts.find(function(m){return m.date===iso});
-  var inner='<div class="day-num">'+d+(mb?'<span style="font-size:8px;background:#fee2e2;color:#dc2626;border-radius:3px;padding:0 3px;margin-left:2px;font-weight:700">MEDIA</span>':"")+"</div>";
+  var inner='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-size:13px;font-weight:700;color:var(--text2)">'+d+'</span>'+(mb?'<span style="font-size:9px;background:#fee2e2;color:#dc2626;border-radius:3px;padding:1px 4px;font-weight:700">&#128247;</span>':'')+'</div>';
   if(showAFL&&s&&bm[s.a]){
     inner+='<div class="day-avail-bar '+bm[s.a]+'"></div>';
     if(tm[s.a])inner+='<div class="day-avail-text">'+(calSquad==="both"?"AFL: ":"")+tm[s.a]+"</div>";
@@ -1997,14 +1997,17 @@ renderRequests();renderCalendar();
 </script>
 
 <div class="modal-overlay" id="blackoutModal">
-  <div class="modal" style="max-width:420px">
+  <div class="modal" style="max-width:440px">
     <div class="modal-header">
       <div class="modal-title">&#128247; Add Media Blackout Date</div>
       <button class="modal-close" onclick="closeModal('blackoutModal')">&#10005;</button>
     </div>
-    <div class="modal-body">
-      <div class="form-group"><label class="form-label">Label / Reason *</label><input type="text" class="form-control" id="bo-label" placeholder="e.g. Finals Week, Media embargo"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="form-group"><label class="form-label">Start Date *</label><input type="date" class="form-control" id="bo-date"></div><div class="form-group"><label class="form-label">End Date</label><input type="date" class="form-control" id="bo-end-date"></div></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:16px;padding:24px">
+      <div class="form-group" style="margin:0"><label class="form-label">Label / Reason *</label><input type="text" class="form-control" id="bo-label" placeholder="e.g. Finals Week, Media embargo" style="margin-top:6px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group" style="margin:0"><label class="form-label">Start Date *</label><input type="date" class="form-control" id="bo-date" style="margin-top:6px"></div>
+        <div class="form-group" style="margin:0"><label class="form-label">End Date <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input type="date" class="form-control" id="bo-end-date" style="margin-top:6px"></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" style="background:#f1f5f9;border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer" onclick="closeModal('blackoutModal')">Cancel</button>
