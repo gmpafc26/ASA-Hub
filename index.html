@@ -445,7 +445,7 @@
 
   <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px 20px;margin-bottom:20px">
     <div style="font-weight:700;font-size:13px;color:#15803d;margin-bottom:8px">&#128276; How Requests Work</div>
-    <div style="font-size:13px;color:#166534;line-height:1.7" id="processIntroText">Submit your request via the <strong>+ New Request</strong> tab. Select <strong>Tentative</strong> if you're not yet certain, or <strong>Planned</strong> if you're 100% sure and just need player confirmation. You'll receive an email confirmation when submitted, and a further email once your request is approved or not approved by the relevant approver.</div>
+    <div style="font-size:13px;color:#166534;line-height:1.7" id="processIntroText">Submit your request via the <strong>+ New Request</strong> tab. Select <strong>TBC</strong> if you're not yet certain, or <strong>Planned</strong> if you're ready to go. You'll receive a confirmation email when submitted, and a further email once your request is approved or not approved. Once internally approved, the relevant approver will notify the football department for final sign-off.</div>
   </div>
 
   <div id="streamsGrid" style="margin-bottom:20px;display:block;">
@@ -513,10 +513,10 @@
           <div class="step-num">5</div>
         </div>
         <div style="padding:16px 20px;flex:1">
-          <div class="step-title process-editable">Approver notifies Trent or Rachel</div>
-          <div class="step-desc process-editable" style="margin-top:4px">For internally approved requests, the approver sends the details to the relevant player liaison for final confirmation. AFL requests go to <strong>Trent</strong>, AFLW requests go to <strong>Rachel</strong>, mixed requests go to both with players split accordingly.</div>
+          <div class="step-title process-editable">Approver notifies the football department</div>
+          <div class="step-desc process-editable" style="margin-top:4px">For internally approved requests, the approver contacts the relevant football department liaison for final player confirmation. AFL requests go to Trent, AFLW to Rachel, mixed requests go to both — with players listed separately.</div>
           <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:#92400e" class="process-editable">
-            This can be done directly from the Requests tab — click the <strong>&#128231; Trent</strong> or <strong>&#128231; Rachel</strong> button on any Internally Approved request. Alternatively, the approver can confirm directly with them offline and manually mark the request as Confirmed.
+            Do this directly from the Requests tab — click <strong>&#128231; Football Dept</strong> on any Internally Approved request. Alternatively confirm offline and click <strong>&#9989; Confirm</strong> to manually mark as Confirmed.
           </div>
         </div>
       </div>
@@ -528,7 +528,7 @@
         </div>
         <div style="padding:16px 20px;flex:1">
           <div class="step-title process-editable" style="color:var(--confirmed)">Confirmed — fully locked in</div>
-          <div class="step-desc process-editable" style="margin-top:4px">Once Trent or Rachel has confirmed, the approver updates the status to <strong>Confirmed</strong>. The submitter is notified and the request is locked in on the calendar.</div>
+          <div class="step-desc process-editable" style="margin-top:4px">Once the football department has confirmed, the approver updates the status to <strong>Confirmed</strong>. The submitter receives a final email notification and the request is locked in on the calendar.</div>
         </div>
       </div>
 
@@ -538,12 +538,13 @@
   <div class="cal-info-card">
     <div class="cal-info-title"><div class="icon">&#128197;</div>Request Status Guide</div>
     <ul class="cal-info-list">
-      <li><strong>Tentative</strong> — You'd like to make this request but aren't 100% certain yet. Submitted for review but may change.</li>
-      <li><strong>Planned</strong> — You're certain this request needs to go ahead and just need Trent (AFL) or Rachel (AFLW) to confirm player availability.</li>
-      <li><strong>Confirmed</strong> — Approved by the relevant approver and confirmed by Trent or Rachel. Fully locked in.</li>
-      <li><strong>TBC</strong> — Request is pending further information or has been sent back for review.</li>
+      <li><strong>TBC</strong> — Submitted but not yet certain. The request is in the system and pending review by the relevant approver.</li>
+      <li><strong>Planned</strong> — You are certain this request needs to go ahead. Submitted and ready for the approver to review.</li>
+      <li><strong>Internally Approved</strong> — Approved by the relevant approver (Retail, Commercial or PCL). The approver will now notify the football department for final sign-off.</li>
+      <li><strong>Not Approved</strong> — The request was declined by the approver. Check any comments left for the reason.</li>
+      <li><strong>Confirmed</strong> — Fully locked in. The football department has confirmed and the request is finalised.</li>
     </ul>
-    <div class="cal-info-note">Always check the calendar before submitting to avoid conflicts. Approvers will review requests and you'll be notified by email of the outcome.</div>
+    <div class="cal-info-note">Always check the calendar before submitting to avoid conflicts. You will receive email notifications at each stage of the approval process.</div>
   </div>
 </div>
 <div class="tab-pane" id="tab-balances">
@@ -576,39 +577,103 @@
 <div class="tab-pane" id="tab-how-it-works">
   <div style="max-width:100%">
 
-    <div class="hiw-hero" style="justify-content:space-between;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:16px"><div class="hiw-hero-icon">&#128203;</div><div><h2 class="hiw-hero-title">ASA / CBA Player Requests Hub</h2><p class="hiw-hero-sub">Internal use only &mdash; Port Adelaide Football Club</p></div></div>
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h2 style="font-size:18px;font-weight:700;margin:0 0 4px">How It Works</h2>
+        <p style="font-size:13px;color:var(--text2);margin:0">ASA / CBA Player Requests Hub — Port Adelaide Football Club</p>
+      </div>
       <button id="hiwEditBtn" class="btn-primary" style="display:none" onclick="toggleHiwEdit()">&#9998; Edit Content</button>
     </div>
 
-    <div class="hiw-notice"><span class="hiw-notice-icon">&#128274;</span><strong>Internal Use Only.</strong> This portal is strictly for internal PAFC staff. Do not share access or request information outside the organisation.</div>
+    <div style="background:var(--brand-bg2);border:1px solid var(--brand-light);border-radius:var(--radius);padding:10px 16px;margin-bottom:20px;font-size:12px;color:var(--brand-dark);font-weight:500">
+      &#128274; Internal use only — do not share access or request information outside the organisation.
+    </div>
 
-    <div class="hiw-grid" style="grid-template-columns:repeat(3,1fr)">
+    <!-- 2-col grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
 
-      <div class="hiw-card"><div class="hiw-card-icon" style="background:#eff6ff">&#129295;</div><div class="hiw-card-body"><div class="hiw-card-title">What is this hub?</div><div class="hiw-card-text">The ASA / CBA Player Requests Hub is a centralised portal for managing AFL and AFLW player appearance requests across Retail, Commercial and PCL streams. It tracks player availability, ASA/CBA balance usage, request status, and approval workflows &mdash; all in one place and synced live with the team&rsquo;s monday.com board.</div></div></div>
-
-      <div class="hiw-card hiw-card-amber"><div class="hiw-card-icon" style="background:#fef3c7">&#9888;&#65039;</div><div class="hiw-card-body"><div class="hiw-card-title">Briefing Trent &amp; Rachel</div><div class="hiw-card-text">Once a request is <strong>Internally Approved</strong>, the approver is responsible for notifying <strong>Trent</strong> (AFL) or <strong>Rachel</strong> (AFLW) directly. This can be done via the <strong>&#128231; Trent / &#128231; Rachel</strong> button on the request, or handled offline and manually marked as Confirmed. Mixed AFL/AFLW requests go to both.</div></div></div>
-
-      <div class="hiw-card"><div class="hiw-card-icon" style="background:#f0fdf4">&#9997;&#65039;</div><div class="hiw-card-body"><div class="hiw-card-title">ASA Balance Updates</div><div class="hiw-card-text"><strong>Jacob</strong> is responsible for keeping player ASA/CBA balances up to date. He auto-logs in as PCL Approver which also gives him access to the Balances tab. If you believe a balance is incorrect, please contact Jacob directly.</div></div></div>
-
-      <div class="hiw-card"><div class="hiw-card-icon" style="background:#f5f3ff">&#128272;</div><div class="hiw-card-body"><div class="hiw-card-title">Access Levels</div><div class="hiw-card-text">Anyone can open and view this hub &mdash; no login required to browse.</div><div class="hiw-access-table"><div class="hiw-access-row"><span class="hiw-access-badge viewer">&#9898; Viewer</span><span class="hiw-access-desc">Browse players, calendar and approved requests.</span></div><div class="hiw-access-row"><span class="hiw-access-badge retail">&#128993; Retail Approver</span><span class="hiw-access-desc">Approve and deny Retail requests — Georgie &amp; Andrew.</span></div><div class="hiw-access-row"><span class="hiw-access-badge commercial">&#128994; Commercial Approver</span><span class="hiw-access-desc">Approve and deny Commercial requests — Jodie &amp; John.</span></div><div class="hiw-access-row"><span class="hiw-access-badge balance">&#127775; PCL Approver</span><span class="hiw-access-desc">Approve PCL requests + update balances — Jacob.</span></div><div class="hiw-access-row"><span class="hiw-access-badge admin">&#128308; Admin</span><span class="hiw-access-desc">Full access &mdash; manage players, edit requests, manage PINs.</span></div></div></div></div>
-
-      <div class="hiw-card"><div class="hiw-card-icon" style="background:#fdf0ff">&#9993;&#65039;</div><div class="hiw-card-body"><div class="hiw-card-title">How to Submit a Request</div><div class="hiw-card-text">Click <strong>+ New Request</strong> in the top navigation. Fill in the request name, type (Retail, Commercial or PCL), date, start time, time required, players and notes. Select <strong>TBC</strong> if you&rsquo;re not yet certain, or <strong>Planned</strong> if you&rsquo;re ready to go. Once submitted the request is routed to the relevant approver automatically.</div></div></div>
-
-      <div class="hiw-card"><div class="hiw-card-icon" style="background:#f0fdf4">&#9989;</div><div class="hiw-card-body"><div class="hiw-card-title">Approval Process</div><div class="hiw-card-text">The relevant approver will see an amber banner prompting them to review pending requests. They can approve or deny with an optional comment. Approved requests move to <strong>Internally Approved</strong> status. Denied requests move to <strong>Not Approved</strong>. Once Trent or Rachel confirms, the status updates to <strong>Confirmed</strong> — fully locked in.</div></div></div>
-
-      <div class="hiw-card hiw-card-teal" style="grid-column:span 2"><div class="hiw-card-icon" style="background:#e0f5f9">&#128276;</div><div class="hiw-card-body"><div class="hiw-card-title">Email Notifications</div><div class="hiw-card-text">Automated emails are sent at every key stage of the request process:<br><br>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-top:4px">
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">1.</span><span><strong>Request submitted</strong> — you receive an email confirming your request has been submitted and is pending review, including a summary of all details entered.</span></div>
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">2.</span><span><strong>Internally approved or not approved</strong> — you receive an email with the outcome from the approver, including any comments they have left.</span></div>
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">3.</span><span><strong>Fully confirmed</strong> — once Trent or Rachel has signed off and the status is updated to Confirmed, you receive a final email confirming the request is fully locked in.</span></div>
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--muted);font-size:12px">All emails are sent automatically via monday.com to the email address associated with your PAFC account.</span></div>
+      <!-- What is this hub -->
+      <div class="hiw-card">
+        <div style="width:36px;height:36px;border-radius:8px;background:#e0f2fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#129295;</div>
+        <div>
+          <div class="hiw-card-title hiw-editable">What is this hub?</div>
+          <div class="hiw-card-text hiw-editable">A centralised portal for managing AFL and AFLW player appearance requests across Retail, Commercial and PCL streams. All requests, approvals, player availability and ASA/CBA balances are tracked in one place and synced live to the monday.com board.</div>
         </div>
-      </div></div></div>
+      </div>
 
-      <div class="hiw-card"><div class="hiw-card-icon" style="background:#f8fafc">&#128203;</div><div class="hiw-card-body"><div class="hiw-card-title">monday.com Board Sync</div><div class="hiw-card-text">All changes made in this hub &mdash; new requests, approvals, balance updates, player edits &mdash; are synced live to the <strong>ASA / CBA HUB</strong> board on monday.com. The board is always up to date and can be used as a source of truth for reporting or auditing.</div></div></div>
+      <!-- Access Levels -->
+      <div class="hiw-card">
+        <div style="width:36px;height:36px;border-radius:8px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128272;</div>
+        <div style="flex:1">
+          <div class="hiw-card-title hiw-editable">Access levels</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px" class="hiw-editable">Anyone can view — no login needed. Approvers auto-login via their monday account.</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#f8fafc;border:1px solid var(--border);color:var(--text2)">&#9898; Viewer</span><span style="font-size:12px;color:var(--text2)">Browse players, calendar and requests</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#fef3c7;border:1px solid #fcd34d;color:#92400e">&#128993; Retail</span><span style="font-size:12px;color:var(--text2)">Georgie Morris & Andrew Fuss</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#f0fdf4;border:1px solid #86efac;color:#15803d">&#128994; Commercial</span><span style="font-size:12px;color:var(--text2)">Jodie Cairns & John Kleeman</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#f5f3ff;border:1px solid #c4b5fd;color:#3C3489">&#127775; PCL</span><span style="font-size:12px;color:var(--text2)">Jacob — also manages balances</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:var(--brand-bg);border:1px solid var(--brand-light);color:var(--brand-dark)">&#128308; Admin</span><span style="font-size:12px;color:var(--text2)">Full access — Georgie Morris</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Players tab -->
+      <div class="hiw-card">
+        <div style="width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128101;</div>
+        <div>
+          <div class="hiw-card-title hiw-editable">Players tab</div>
+          <div class="hiw-card-text hiw-editable">Browse all AFL and AFLW players with their photo, jersey number, position, ASA type and remaining balance. Toggle between squads using the AFL / AFLW buttons. Click <strong>Requests</strong> on a player card to see their upcoming bookings. Admins and approvers can edit player details directly.</div>
+        </div>
+      </div>
+
+      <!-- Calendar tab -->
+      <div class="hiw-card">
+        <div style="width:36px;height:36px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128197;</div>
+        <div>
+          <div class="hiw-card-title hiw-editable">Calendar tab</div>
+          <div class="hiw-card-text hiw-editable">View player availability and existing requests at a glance. Toggle between AFL, AFLW and Both views. Colour-coded bars show availability (green = available, yellow = partial, red = not available, purple = CBA). Request chips show confirmed bookings. Use <strong>+ Media Blackout</strong> to block out dates when the media team is unavailable.</div>
+        </div>
+      </div>
+
+      <!-- Making a request -->
+      <div class="hiw-card">
+        <div style="width:36px;height:36px;border-radius:8px;background:#fdf0ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#9993;&#65039;</div>
+        <div>
+          <div class="hiw-card-title hiw-editable">Making a request</div>
+          <div class="hiw-card-text hiw-editable">Click <strong>+ New Request</strong> in the top nav. Fill in the request name, type (Retail, Commercial or PCL), date, start time, duration, players and any notes. Select <strong>TBC</strong> if you are not yet certain, or <strong>Planned</strong> if you are ready to proceed. The request is automatically routed to the relevant approver once submitted.</div>
+        </div>
+      </div>
+
+      <!-- Requests & approvals -->
+      <div class="hiw-card">
+        <div style="width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#9989;</div>
+        <div>
+          <div class="hiw-card-title hiw-editable">Requests & approvals</div>
+          <div class="hiw-card-text hiw-editable">The <strong>Requests</strong> tab shows all upcoming requests sorted by date. Approvers see an amber banner when requests are pending their review. They can approve or deny with an optional comment. Approved requests move to <strong>Internally Approved</strong> — the approver then notifies the football department, after which status updates to <strong>Confirmed</strong>.</div>
+        </div>
+      </div>
 
     </div>
+
+    <!-- Full width - Balances -->
+    <div class="hiw-card" style="margin-bottom:14px">
+      <div style="width:36px;height:36px;border-radius:8px;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#9997;&#65039;</div>
+      <div style="flex:1">
+        <div class="hiw-card-title hiw-editable">ASA / CBA balances</div>
+        <div class="hiw-card-text hiw-editable">The <strong>Balances</strong> tab (visible to Admin and Jacob) shows each player's remaining ASA/CBA percentage as a visual bar. Jacob is responsible for keeping these up to date — enter the new percentage and click <strong>Save All to Board</strong> to sync. The last updated date is shown at the top and stamped on the board. If you believe a balance is incorrect, contact Jacob directly.</div>
+      </div>
+    </div>
+
+    <!-- Full width - Board sync -->
+    <div class="hiw-card">
+      <div style="width:36px;height:36px;border-radius:8px;background:#f8fafc;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128203;</div>
+      <div style="flex:1">
+        <div class="hiw-card-title hiw-editable">monday.com board sync</div>
+        <div class="hiw-card-text hiw-editable">Every change made in this hub — new requests, approvals, balance updates, player edits, media blackouts — is synced live to the <strong>ASA / CBA HUB</strong> board on monday.com. The board is always up to date and can be used as a source of truth for reporting or auditing.</div>
+      </div>
+    </div>
+
   </div>
 </div>
 <div class="tab-pane" id="tab-make-request">
