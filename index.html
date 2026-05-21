@@ -548,11 +548,27 @@
 </div>
 <div class="tab-pane" id="tab-balances">
   <div class="balances-wrap">
-    <div class="balances-header"><div><h2 class="balances-title">&#9997;&#65039; Update ASA / CBA Balances</h2><p class="balances-sub">Edit all player balances in one place. Changes are saved to the board when you click Save All.</p></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="balances-stamp-display">Last updated: <strong id="balancesStampDisplay">&#8212;</strong></div><button class="btn-primary" onclick="saveAllBalances()">&#128190; Save All to Board</button></div></div>
-    <div class="balances-squads">
-      <div class="balances-squad-block"><div class="balances-squad-title"><span class="balances-squad-badge afl">AFL</span>AFL Players</div><div class="balances-table-wrap"><table class="balances-table"><thead><tr><th></th><th>Player</th><th>ASA Type</th><th>Current Balance</th><th>New Balance %</th><th></th></tr></thead><tbody id="balancesAFLBody"></tbody></table></div></div>
-      <div class="balances-squad-block" style="margin-top:28px"><div class="balances-squad-title"><span class="balances-squad-badge aflw">AFLW</span>AFLW Players</div><div class="balances-table-wrap"><table class="balances-table"><thead><tr><th></th><th>Player</th><th>ASA Type</th><th>Current Balance</th><th>New Balance %</th><th></th></tr></thead><tbody id="balancesAFLWBody"></tbody></table></div></div>
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h2 class="balances-title">&#9997;&#65039; Update ASA / CBA Balances</h2>
+        <p class="balances-sub">Edit player balances. Changes save to the board when you click Save All.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="balances-stamp-display">Last updated: <strong id="balancesStampDisplay">&#8212;</strong></div>
+        <input type="date" class="players-stamp-date" id="stampDate">
+        <button class="players-stamp-save" onclick="saveStamp()">Save</button>
+        <button class="btn-primary" onclick="saveAllBalances()">&#128190; Save All to Board</button>
+      </div>
     </div>
+    <!-- Squad toggle -->
+    <div style="display:flex;gap:6px;margin-bottom:16px">
+      <button class="squad-tab-btn active" id="balBtn-afl" onclick="switchBalSquad('afl',this)">AFL</button>
+      <button class="squad-tab-btn" id="balBtn-aflw" onclick="switchBalSquad('aflw',this)">AFLW</button>
+    </div>
+    <!-- Card containers -->
+    <div id="balancesAFLBody" style="display:block"></div>
+    <div id="balancesAFLWBody" style="display:none"></div>
     <div class="balances-footer"><button class="btn-primary" onclick="saveAllBalances()">&#128190; Save All to Board</button><span class="balances-footer-note" id="balancesSaveStatus"></span></div>
     </div>
   </div>
@@ -1676,6 +1692,12 @@ function updateRolePin(role,newId,confirmId){
   pinConfig[role]=newPin;document.getElementById(newId).value="";document.getElementById(confirmId).value="";
   var labels={"retail-approver":"Retail Approver","commercial-approver":"Commercial Approver","balance-updater":"Balance Updater"};
   showToast((labels[role]||role)+" PIN updated","success");
+}
+function switchBalSquad(squad,btn){
+  document.querySelectorAll("#balBtn-afl,#balBtn-aflw").forEach(function(b){b.classList.remove("active")});
+  btn.classList.add("active");
+  document.getElementById("balancesAFLBody").style.display=squad==="afl"?"block":"none";
+  document.getElementById("balancesAFLWBody").style.display=squad==="aflw"?"block":"none";
 }
 function updateBalFromInput(inp){
   var pid=inp.dataset.pid;
