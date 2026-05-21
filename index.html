@@ -23,7 +23,9 @@
   .tab-btn-cta:hover{background:var(--teal-light) !important}.tab-btn-cta.active{background:var(--teal-light);border-bottom:none !important}
   .tab-btn-balances{color:#059669;font-weight:600}.tab-btn-balances.active{border-bottom-color:#059669;color:#059669}
   .tab-pane{display:none;padding:24px}.tab-pane.active{display:block}
-  .players-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .players-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+  @media(max-width:1200px){.players-grid{grid-template-columns:repeat(4,1fr)}}
+  @media(max-width:600px){.players-grid{grid-template-columns:repeat(2,1fr)}}
   .player-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s;display:flex;flex-direction:column}
   .player-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
   .player-img-wrap{background:var(--navy);height:200px;position:relative;overflow:hidden}
@@ -46,7 +48,7 @@
   .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-outline:hover{border-color:var(--teal);color:var(--teal)}
   .btn-teal{background:var(--teal);color:#fff}.btn-teal:hover{background:var(--teal-light)}
   .req-count-badge{background:var(--teal);color:#fff;border-radius:10px;padding:0 6px;font-size:10px;margin-left:4px;font-weight:700}
-  .cal-controls{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+  .cal-controls{display:none}
   .cal-title-group{display:flex;align-items:center;gap:14px}.cal-month-title{font-weight:800;font-size:20px}
   .cal-arrows{display:flex;gap:6px}
   .cal-arrow{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
@@ -382,39 +384,42 @@
   <div id="playersGrid" class="players-grid"></div>
 </div>
 <div class="tab-pane" id="tab-calendar">
-  <div class="cal-controls">
-    <div class="cal-title-group">
-      <div class="cal-arrows"><button class="cal-arrow" onclick="calNav(-1)">&#8592;</button><button class="cal-arrow" onclick="calNav(1)">&#8594;</button></div>
-      <div class="cal-month-title" id="calMonthTitle"></div>
-      <div style="display:flex;gap:6px;margin-left:12px;align-items:center">
-        <button class="squad-tab-btn active" id="calBtn-afl" onclick="switchCalSquad('afl',this)">AFL</button>
-        <button class="squad-tab-btn" id="calBtn-aflw" onclick="switchCalSquad('aflw',this)">AFLW</button>
-        <button class="squad-tab-btn" id="calBtn-both" onclick="switchCalSquad('both',this)">Both</button>
-        <button onclick="openBlackoutModal()" class="btn-primary" style="margin-left:8px;font-size:12px;padding:5px 12px;white-space:nowrap">&#128247; + Media Blackout</button>
-      </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow)">
+
+  <!-- Controls row -->
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="cal-arrow" onclick="calNav(-1)">&#8592;</button>
+      <div class="cal-month-title" id="calMonthTitle" style="min-width:120px;text-align:center"></div>
+      <button class="cal-arrow" onclick="calNav(1)">&#8594;</button>
     </div>
-    <div class="cal-legend-wrap">
-      <div class="cal-legend-group">
-        <span class="cal-legend-heading">Player Availability</span>
-        <div class="cal-legend">
-          <div class="legend-item"><div class="legend-dot ld-available"></div>Available</div>
-          <div class="legend-item"><div class="legend-dot ld-partial"></div>Partial</div>
-          <div class="legend-item"><div class="legend-dot ld-unavailable"></div>Not Available</div>
-          <div class="legend-item"><div class="legend-dot ld-cba"></div>CBA Booked</div>
-          <div class="legend-item"><div class="legend-dot ld-weekend"></div>Weekend</div>
-        </div>
-      </div>
-      <div class="cal-legend-group">
-        <span class="cal-legend-heading">Requests</span>
-        <div class="cal-legend">
-          <div class="legend-item"><div class="legend-dot ld-booked" style="background:#dbeafe;border-color:#93c5fd"></div>Commercial</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#dcfce7;border:1px solid #86efac"></div>Retail</div>
-          <div class="legend-item"><div class="legend-dot ld-weekend"></div>TBC</div>
-        </div>
-      </div>
+    <div style="display:flex;gap:4px;margin-left:4px">
+      <button class="squad-tab-btn active" id="calBtn-afl" onclick="switchCalSquad('afl',this)">AFL</button>
+      <button class="squad-tab-btn" id="calBtn-aflw" onclick="switchCalSquad('aflw',this)">AFLW</button>
+      <button class="squad-tab-btn" id="calBtn-both" onclick="switchCalSquad('both',this)">Both</button>
     </div>
+    <button onclick="openBlackoutModal()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 12px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:5px;font-weight:600">&#128247; Media Blackout</button>
   </div>
-  <div class="cal-grid-wrap">
+
+  <!-- Legend strip -->
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:7px 16px;background:var(--bg);border-top:1px solid var(--border)">
+    <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0">Availability</span>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:12px;height:4px;border-radius:2px;background:#4ade80"></div>Available</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:12px;height:4px;border-radius:2px;background:#facc15"></div>Partial</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:12px;height:4px;border-radius:2px;background:#f87171"></div>Not Available</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:12px;height:4px;border-radius:2px;background:#a78bfa"></div>CBA</div>
+    <div style="width:1px;height:14px;background:var(--border);flex-shrink:0"></div>
+    <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0">Requests</span>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:#dbeafe;border:1px solid #93c5fd"></div>Commercial</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:#dcfce7;border:1px solid #86efac"></div>Retail</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:#f5f3ff;border:1px solid #ddd6fe"></div>PCL</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:#f8fafc;border:1px solid var(--border)"></div>TBC</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:#fee2e2;border:1px solid #fca5a5"></div>Media Blackout</div>
+  </div>
+
+</div>
+
+<div class="cal-grid-wrap">
     <div class="cal-dow-header"><div class="cal-dow">Mon</div><div class="cal-dow">Tue</div><div class="cal-dow">Wed</div><div class="cal-dow">Thu</div><div class="cal-dow">Fri</div><div class="cal-dow">Sat</div><div class="cal-dow">Sun</div></div>
     <div class="cal-days" id="calDays"></div>
   </div>
