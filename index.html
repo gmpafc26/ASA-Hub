@@ -1736,10 +1736,11 @@ function deleteBlackout(id){
 // ── Access / Auth ──────────────────────────────────────────────────────────
 function applyAccessLevel(level){
   accessLevel=level;
-  var loginBtn=document.getElementById("loginBtn");if(loginBtn)loginBtn.style.display="none";
-  var lockIcon=document.getElementById("lockIcon");if(lockIcon)lockIcon.textContent=level==="viewer"?"🔒":"🔓";
-  var roleLabel=document.getElementById("roleLabel");
-  if(roleLabel)roleLabel.textContent=level==="admin"?"Admin":level==="retail-approver"?"Retail":level==="commercial-approver"?"Commercial":level==="pcl-approver"?"PCL":level==="balance-updater"?"Balances":"";
+  var accessLabel=document.getElementById("accessLabel");
+  var accessBadge=document.getElementById("accessBadge");
+  var roleText=level==="admin"?"🔓 Admin":level==="retail-approver"?"🔓 Retail":level==="commercial-approver"?"🔓 Commercial":level==="pcl-approver"?"🔓 PCL":"🔒 Sign in";
+  if(accessLabel)accessLabel.textContent=roleText;
+  if(accessBadge)accessBadge.className="access-badge"+(level!=="viewer"?" logged-in":"");
   if(level==="admin"||level==="balance-updater"||level==="pcl-approver"){var bt=document.getElementById("balancesTabBtn");if(bt)bt.style.display="flex";}
   if(level==="admin"){var apb=document.getElementById("addPlayerBtn");if(apb)apb.style.display="flex";var heb=document.getElementById("hiwEditBtn");if(heb)heb.style.display="flex";var peb=document.getElementById("processEditBtn");if(peb)peb.style.display="flex";var bb=document.getElementById("addBlackoutBtn");if(bb)bb.style.display="flex";}
   renderPlayers();renderRequests();updateApprovalBanner();
@@ -1755,18 +1756,34 @@ function updateApprovalBanner(){
   if(pending.length>0){banner.style.display="flex";var msg=document.getElementById("bannerMsg");if(msg)msg.textContent=pending.length+" request"+(pending.length>1?"s":"")+" pending your approval";}
   else{banner.style.display="none";}
 }
+function updatePinDots(){
+  for(var i=0;i<4;i++){var pd=document.getElementById("pd"+i);if(pd)pd.classList.toggle("filled",i<pinEntry.length);}
+}
+function openPinModal(){
+  if(accessLevel!=="viewer"){
+    accessLevel="viewer";
+    var al=document.getElementById("accessLabel");if(al)al.textContent="Sign in";
+    var ab=document.getElementById("accessBadge");if(ab)ab.className="access-badge";
+    var bt=document.getElementById("balancesTabBtn");if(bt)bt.style.display="none";
+    var apb=document.getElementById("addPlayerBtn");if(apb)apb.style.display="none";
+    showToast("Signed out");renderPlayers();renderRequests();return;
+  }
+  pinEntry="";updatePinDots();
+  var pe=document.getElementById("pinError");if(pe)pe.textContent="";
+  document.getElementById("pinModal").classList.add("open");
+}
 function checkPin(){
-  var pin=document.getElementById("pinInput").value;var lv=null;
+  var pin=pinEntry;var lv=null;
   Object.keys(pinConfig).forEach(function(role){if(pinConfig[role]===pin)lv=role});
   if(!lv){showToast("Incorrect PIN","error");return}
-  closeModal("pinModal");document.getElementById("pinInput").value="";
+  closeModal("pinModal");pinEntry="";updatePinDots();
   applyAccessLevel(lv);
   if(lv==="balance-updater")switchTab("balances",null);
   else if(lv==="retail-approver"||lv==="commercial-approver"||lv==="pcl-approver"){switchTab("requests",null);updateApprovalBanner();}
   showToast("Signed in as "+lv.replace("-"," "),"success");
 }
-function pinPress(d){var pi=document.getElementById("pinInput");if(pi&&pi.value.length<8)pi.value+=d;}
-function pinClear(){var pi=document.getElementById("pinInput");if(pi)pi.value=pi.value.slice(0,-1);}
+function pinPress(d){if(pinEntry.length>=4)return;pinEntry+=d;updatePinDots();if(pinEntry.length===4)setTimeout(checkPin,150);}
+function pinClear(){pinEntry=pinEntry.slice(0,-1);updatePinDots();}
 
 // ── Process / HIW edit ─────────────────────────────────────────────────────
 function toggleProcessEdit(){
