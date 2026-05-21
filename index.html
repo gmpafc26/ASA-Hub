@@ -1362,7 +1362,7 @@ function buildCell(y,m,d,om,tiso){
   return el;
 }
 function openDayDetail(iso,y,m,d){
-  var s=schedule[iso];var sa=aflwSchedule[iso];var dr=visReqs().filter(function(r){
+  var s=schedule[iso];var sa=aflwSchedule[iso];var mb=mediaBlackouts.find(function(m){return m.date===iso});var dr=visReqs().filter(function(r){
     if(r.date!==iso)return false;
     if(!r.players||r.players.length===0)return true; // show undated/playerless requests always
     var hasAFL=r.players.some(function(pid){return players.find(function(p){return p.id===pid})});
