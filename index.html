@@ -554,15 +554,6 @@
       <div class="balances-squad-block" style="margin-top:28px"><div class="balances-squad-title"><span class="balances-squad-badge aflw">AFLW</span>AFLW Players</div><div class="balances-table-wrap"><table class="balances-table"><thead><tr><th></th><th>Player</th><th>ASA Type</th><th>Current Balance</th><th>New Balance %</th><th></th></tr></thead><tbody id="balancesAFLWBody"></tbody></table></div></div>
     </div>
     <div class="balances-footer"><button class="btn-primary" onclick="saveAllBalances()">&#128190; Save All to Board</button><span class="balances-footer-note" id="balancesSaveStatus"></span></div>
-    <div class="pin-mgmt-wrap">
-      
-<div class="pin-mgmt-header"><div class="pin-mgmt-title">&#128272; PIN Management</div><div class="pin-mgmt-sub">Update access PINs. Admin PIN requires current PIN to change.</div></div>
-      <div class="pin-mgmt-grid">
-        <div class="pin-mgmt-card"><div class="pin-mgmt-card-title">&#128308; Admin PIN</div><div class="pin-mgmt-fields"><div class="form-group"><label class="form-label">Current PIN</label><input type="password" class="form-control" id="adminPinCurrent" maxlength="8" placeholder="Current PIN"></div><div class="form-group"><label class="form-label">New PIN</label><input type="password" class="form-control" id="adminPinNew" maxlength="8" placeholder="New PIN"></div><div class="form-group"><label class="form-label">Confirm</label><input type="password" class="form-control" id="adminPinConfirm" maxlength="8" placeholder="Confirm PIN"></div></div><button class="btn-primary" style="margin-top:10px;width:100%" onclick="updateAdminPin()">Update Admin PIN</button></div>
-        <div class="pin-mgmt-card"><div class="pin-mgmt-card-title">&#128993; Retail Approver PIN</div><div class="pin-mgmt-fields" style="grid-template-columns:1fr 1fr"><div class="form-group"><label class="form-label">New PIN</label><input type="password" class="form-control" id="retailPinNew" maxlength="8" placeholder="New PIN"></div><div class="form-group"><label class="form-label">Confirm</label><input type="password" class="form-control" id="retailPinConfirm" maxlength="8" placeholder="Confirm PIN"></div></div><button class="btn-primary" style="margin-top:10px;width:100%" onclick="updateRolePin('retail-approver','retailPinNew','retailPinConfirm')">Update Retail PIN</button></div>
-        <div class="pin-mgmt-card" style="margin-top:12px"><div class="pin-mgmt-card-title">&#128994; Commercial Approver PIN</div><div class="pin-mgmt-fields" style="grid-template-columns:1fr 1fr"><div class="form-group"><label class="form-label">New PIN</label><input type="password" class="form-control" id="commPinNew" maxlength="8" placeholder="New PIN"></div><div class="form-group"><label class="form-label">Confirm</label><input type="password" class="form-control" id="commPinConfirm" maxlength="8" placeholder="Confirm PIN"></div></div><button class="btn-primary" style="margin-top:10px;width:100%" onclick="updateRolePin('commercial-approver','commPinNew','commPinConfirm')">Update Commercial PIN</button></div>
-        <div class="pin-mgmt-card" style="margin-top:12px"><div class="pin-mgmt-card-title">&#129695; Balance Updater PIN</div><div class="pin-mgmt-fields" style="grid-template-columns:1fr 1fr"><div class="form-group"><label class="form-label">New PIN</label><input type="password" class="form-control" id="balPinNew" maxlength="8" placeholder="New PIN"></div><div class="form-group"><label class="form-label">Confirm</label><input type="password" class="form-control" id="balPinConfirm" maxlength="8" placeholder="Confirm PIN"></div></div><button class="btn-primary" style="margin-top:10px;width:100%" onclick="updateRolePin('balance-updater','balPinNew','balPinConfirm')">Update Balance Updater PIN</button></div>
-      </div>
     </div>
   </div>
 </div>
@@ -1421,7 +1412,7 @@ function renderRequests(){
     var aBtn=!r.approved&&canApprove(r.type)?'<button onclick="approveRequest(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Approve</button>':"";
     var aflCount=r.players.filter(function(pid){return players.find(function(p){return p.id===pid})}).length;
     var aflwCount=r.players.filter(function(pid){return aflwPlayers.find(function(p){return p.id===pid})}).length;
-    var sendBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="sendToLiaison(\''+r.id+'\')" style="background:#f5f3ff;border:0.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer;color:#6d28d9;font-size:12px;font-weight:600">&#128231; Send to Dept</button>':"";
+    var sendBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="sendToLiaison(\''+r.id+'\')" style="background:#f5f3ff;border:0.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer;color:#6d28d9;font-size:12px;font-weight:600">&#128231; Football Dept</button>':"";
     var confirmBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="markFullyConfirmed(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Confirm</button>':"";
     var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
     var isPast=r.date&&new Date(r.date+"T12:00:00")<today2;
@@ -1686,30 +1677,68 @@ function updateRolePin(role,newId,confirmId){
   var labels={"retail-approver":"Retail Approver","commercial-approver":"Commercial Approver","balance-updater":"Balance Updater"};
   showToast((labels[role]||role)+" PIN updated","success");
 }
+function updateBalFromInput(inp){
+  var pid=inp.dataset.pid;
+  var val=parseInt(inp.value,10)||0;
+  val=Math.min(100,Math.max(0,val));
+  inp.value=val;
+  var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});
+  if(p)p.bal=val;
+  var bar=document.getElementById("bal-bar-"+pid);
+  if(bar){bar.style.width=val+"%";bar.style.background=val>60?"#1D9E75":val>30?"#EF9F27":"#E24B4A";}
+}
 function renderBalancesTab(){
   renderBalancesTable("balancesAFLBody",players);renderBalancesTable("balancesAFLWBody",aflwPlayers);
   var stamp=document.getElementById("stampDate").value;document.getElementById("balancesStampDisplay").textContent=stamp?fmtDate(stamp):"Not set";
 }
-function renderBalancesTable(tbodyId,squad){
-  var tbody=document.getElementById(tbodyId);if(!tbody)return;tbody.innerHTML="";
-  for(var i=0;i<squad.length;i++){
-    (function(p){
-      var tr=document.createElement("tr");tr.id="balrow-"+p.id;
-      var tdPhoto=document.createElement("td");var img=document.createElement("img");img.className="bal-player-photo";img.src=p.img;img.onerror=function(){this.style.opacity=.2};tdPhoto.appendChild(img);tr.appendChild(tdPhoto);
-      var tdName=document.createElement("td");tdName.innerHTML='<div><strong>'+p.name+'</strong></div><div style="margin-top:3px"><span class="bal-number">#'+p.num+'</span></div>';tr.appendChild(tdName);
-      var tdAsa=document.createElement("td");tdAsa.textContent=p.asa;tr.appendChild(tdAsa);
-      var tdCur=document.createElement("td");tdCur.innerHTML='<div class="bal-bar-wrap"><div class="bal-bar"><div class="bal-bar-fill" id="balbar-'+p.id+'" style="width:'+p.bal+'%"></div></div><span>'+p.bal+'%</span></div>';tr.appendChild(tdCur);
-      var tdInput=document.createElement("td");var wrap=document.createElement("div");wrap.style.cssText="display:flex;align-items:center;gap:8px";
-      var inp=document.createElement("input");inp.type="number";inp.min=0;inp.max=100;inp.className="bal-input";inp.id="balinput-"+p.id;inp.value=p.bal;inp.setAttribute("data-pid",p.id);
-      inp.addEventListener("input",function(){balInputChanged(this.getAttribute("data-pid"),this)});
-      var pct=document.createElement("span");pct.className="bal-pct";pct.textContent="%";
-      var dot=document.createElement("span");dot.className="bal-changed-badge";dot.id="baldot-"+p.id;dot.innerHTML="&#9679; Changed";
-      wrap.appendChild(inp);wrap.appendChild(pct);wrap.appendChild(dot);tdInput.appendChild(wrap);tr.appendChild(tdInput);
-      var tdReset=document.createElement("td");var resetBtn=document.createElement("button");resetBtn.className="btn-icon";resetBtn.title="Reset";resetBtn.innerHTML="&#8635;";resetBtn.setAttribute("data-pid",p.id);
-      resetBtn.addEventListener("click",function(){balReset(this.getAttribute("data-pid"))});tdReset.appendChild(resetBtn);tr.appendChild(tdReset);
-      tbody.appendChild(tr);
-    })(squad[i]);
-  }
+function renderBalancesTable(containerId,squad){
+  var container=document.getElementById(containerId);
+  if(!container)return;
+  container.innerHTML="";
+  squad.forEach(function(p){
+    var pct=Math.min(100,Math.max(0,p.bal||0));
+    var barColor=pct>60?"#1D9E75":pct>30?"#EF9F27":"#E24B4A";
+    var card=document.createElement("div");
+    card.style.cssText="background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:8px";
+    card.id="balrow-"+p.id;
+    var img=document.createElement("img");
+    img.style.cssText="width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:top center;border:2px solid #f3f4f6;flex-shrink:0";
+    img.src=p.img;img.onerror=function(){this.style.opacity=.2};
+    var nameEl=document.createElement("div");
+    nameEl.innerHTML='<span style="font-size:14px;font-weight:600;color:#111827">'+p.name+'</span>'
+      +'<span style="font-size:11px;color:#6b7280;margin-left:8px">#'+p.num+' · '+p.pos+'</span>';
+    var inp=document.createElement("input");
+    inp.type="number";inp.min=0;inp.max=100;inp.value=pct;
+    inp.id="bal-input-"+p.id;
+    inp.style.cssText="width:56px;font-size:13px;padding:4px 6px;border-radius:6px;border:0.5px solid #d1d5db;text-align:center;font-weight:600";
+    inp.dataset.pid=p.id;
+    inp.addEventListener("change",function(){updateBalFromInput(this)});
+    var pctLabel=document.createElement("span");
+    pctLabel.style.cssText="font-size:12px;color:#6b7280";pctLabel.textContent="%";
+    var resetBtn=document.createElement("button");
+    resetBtn.style.cssText="background:none;border:0.5px solid #e5e7eb;border-radius:6px;width:28px;height:28px;cursor:pointer;color:#9ca3af;font-size:13px";
+    resetBtn.innerHTML="&#8635;";resetBtn.title="Reset";
+    resetBtn.dataset.pid=p.id;
+    resetBtn.addEventListener("click",function(){resetBal(this.dataset.pid)});
+    var bar=document.createElement("div");bar.id="bal-bar-"+p.id;
+    bar.style.cssText="width:"+pct+"%;height:100%;background:"+barColor+";border-radius:4px;transition:width .3s,background .3s";
+    var barWrap=document.createElement("div");
+    barWrap.style.cssText="height:8px;border-radius:4px;background:#f3f4f6;overflow:hidden;margin-top:10px";
+    barWrap.appendChild(bar);
+    var inputRow=document.createElement("div");
+    inputRow.style.cssText="display:flex;align-items:center;gap:6px";
+    inputRow.appendChild(inp);inputRow.appendChild(pctLabel);inputRow.appendChild(resetBtn);
+    var topRow=document.createElement("div");
+    topRow.style.cssText="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px";
+    topRow.appendChild(nameEl);topRow.appendChild(inputRow);
+    var textCol=document.createElement("div");textCol.style.cssText="flex:1;min-width:0";
+    textCol.appendChild(topRow);textCol.appendChild(barWrap);
+    var inner=document.createElement("div");
+    inner.style.cssText="display:flex;align-items:center;gap:12px";
+    inner.appendChild(img);inner.appendChild(textCol);
+    card.appendChild(inner);
+    container.appendChild(card);
+  });
 }
 function balInputChanged(pid,input){var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});if(!p)return;var v=parseInt(input.value,10);var changed=!isNaN(v)&&v!==p.bal;input.classList.toggle("changed",changed);var dot=document.getElementById("baldot-"+pid);if(dot)dot.classList.toggle("show",changed)}
 function balReset(pid){var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});if(!p)return;var input=document.getElementById("balinput-"+pid);if(input){input.value=p.bal;input.classList.remove("changed","saved")}var dot=document.getElementById("baldot-"+pid);if(dot)dot.classList.remove("show")}
