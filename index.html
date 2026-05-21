@@ -87,6 +87,7 @@
   .requests-filters-wrap{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
   .filter-group{display:flex;flex-direction:column;gap:5px}
   .filter-group-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px;display:block}
+  .btn-secondary{padding:9px 18px;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
   .btn-primary{padding:9px 18px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
   .btn-primary:hover{background:var(--teal-light)}
   .requests-table-wrap{background:#fff;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
@@ -401,7 +402,7 @@
       <button class="squad-tab-btn" id="calBtn-aflw" onclick="switchCalSquad('aflw',this)">AFLW</button>
       <button class="squad-tab-btn" id="calBtn-both" onclick="switchCalSquad('both',this)">Both</button>
     </div>
-    <button onclick="openBlackoutModal()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 12px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:5px;font-weight:600">&#128247; Media Blackout</button>
+    <button id="addBlackoutBtn" onclick="openBlackoutModal()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 12px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:5px;font-weight:600">&#128247; + Blackout</button>
   </div>
 
   <!-- Legend strip -->
@@ -1199,7 +1200,7 @@ function switchTab(tab,btn){
   var pane=document.getElementById("tab-"+tab);if(pane)pane.classList.add("active");
   if(!btn)btn=document.querySelector('.tab-btn[data-tab="'+tab+'"]');
   if(btn)btn.classList.add("active");
-  if(tab==="calendar")renderCalendar();
+  if(tab==="calendar"){renderCalendar();}
   if(tab==="balances")renderBalancesTab();
 }
 
@@ -1454,7 +1455,8 @@ function openPendingModalForId(id){
   showPendingReviewCard(r);
 }
 function openPendingModal(){
-  var pending=requests.filter(function(r){return !r.approved&&canApprove(r.type)});
+  var ACTIONED=["Internally Approved","Confirmed","Not Approved"];
+  var pending=requests.filter(function(r){return !r.approved&&!r.denied&&ACTIONED.indexOf(r.status)<0&&canApprove(r.type)});
   if(!pending.length)return;showPendingReviewCard(pending[0]);
 }
 function showPendingReviewCard(r){
@@ -1741,6 +1743,7 @@ function saveBlackout(){
   closeModal("blackoutModal");renderCalendar();showToast(dates.length>1?"Blackout added ("+dates.length+" days)":"Blackout added: "+label,"success");
 }
 function deleteBlackout(id){
+  if(accessLevel!=="admin"){showToast("Admin access required","error");return;}
   var mb=mediaBlackouts.find(function(m){return m.id===id});if(!mb)return;
   var toRemove=mb.groupId?mediaBlackouts.filter(function(m){return m.groupId===mb.groupId}):[mb];
   if(!confirm("Remove "+mb.label+"?"))return;
@@ -1757,7 +1760,7 @@ function applyAccessLevel(level){
   if(accessLabel)accessLabel.textContent=roleText;
   if(accessBadge)accessBadge.className="access-badge"+(level!=="viewer"?" logged-in":"");
   if(level==="admin"||level==="balance-updater"||level==="pcl-approver"){var bt=document.getElementById("balancesTabBtn");if(bt)bt.style.display="flex";}
-  if(level==="admin"){var apb=document.getElementById("addPlayerBtn");if(apb)apb.style.display="flex";var heb=document.getElementById("hiwEditBtn");if(heb)heb.style.display="flex";var peb=document.getElementById("processEditBtn");if(peb)peb.style.display="flex";var bb=document.getElementById("addBlackoutBtn");if(bb)bb.style.display="flex";}
+  if(level==="admin"){var apb=document.getElementById("addPlayerBtn");if(apb)apb.style.display="flex";var heb=document.getElementById("hiwEditBtn");if(heb)heb.style.display="flex";var peb=document.getElementById("processEditBtn");if(peb)peb.style.display="flex";}
   renderPlayers();renderRequests();updateApprovalBanner();
 }
 function resolveIdentity(mondayUserId){
@@ -1767,7 +1770,8 @@ function resolveIdentity(mondayUserId){
 function updateApprovalBanner(){
   var banner=document.getElementById("approvalBanner");if(!banner)return;
   if(accessLevel!=="retail-approver"&&accessLevel!=="commercial-approver"&&accessLevel!=="pcl-approver"&&accessLevel!=="admin"){banner.style.display="none";return;}
-  var pending=requests.filter(function(r){return !r.approved&&canApprove(r.type)});
+  var ACTIONED=["Internally Approved","Confirmed","Not Approved"];
+  var pending=requests.filter(function(r){return !r.approved&&!r.denied&&ACTIONED.indexOf(r.status)<0&&canApprove(r.type)});
   if(pending.length>0){banner.style.display="flex";var msg=document.getElementById("bannerMsg");if(msg)msg.textContent=pending.length+" request"+(pending.length>1?"s":"")+" pending your approval";}
   else{banner.style.display="none";}
 }
@@ -1831,5 +1835,34 @@ if(pg)pg.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;
 renderRequests();renderCalendar();
 
 </script>
+<div class="modal-overlay" id="blackoutModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">&#128247; Add Media Blackout</div>
+      <button class="modal-close" onclick="closeModal('blackoutModal')">&#215;</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+      <div class="mreq-field">
+        <label class="mreq-label">Label <span class="mreq-req">*</span></label>
+        <input id="bo-label" class="mreq-input" placeholder="e.g. AFL Finals Media Blackout" type="text">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="mreq-field">
+          <label class="mreq-label">Start Date <span class="mreq-req">*</span></label>
+          <input id="bo-date" class="mreq-input" type="date">
+        </div>
+        <div class="mreq-field">
+          <label class="mreq-label">End Date <span style="font-size:10px;font-weight:400;color:var(--muted)">(optional)</span></label>
+          <input id="bo-end-date" class="mreq-input" type="date">
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin:0">Leave end date empty for a single-day blackout. A blackout will be created for each day in the range.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('blackoutModal')">Cancel</button>
+      <button class="btn-primary" onclick="saveBlackout()">&#128247; Add Blackout</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
