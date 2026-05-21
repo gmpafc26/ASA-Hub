@@ -1788,389 +1788,46 @@ function renderBalancesTable(containerId,squad){
   container.style.cssText="display:grid;grid-template-columns:repeat(4,1fr);gap:12px";
   squad.forEach(function(p){
     var pct=Math.min(100,Math.max(0,p.bal||0));
-    var barColor=pct>60?"#1D9E75":pct>30?"#EF9F27":"#E24B4A";
     var card=document.createElement("div");
-    card.style.cssText="background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;padding:14px;";
+    card.style.cssText="background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px";
     card.id="balrow-"+p.id;
+    // Photo
     var img=document.createElement("img");
-    img.style.cssText="width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:top center;border:2px solid #f3f4f6;flex-shrink:0";
+    img.style.cssText="width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:top center;flex-shrink:0;border:2px solid #f3f4f6";
     img.src=p.img;img.onerror=function(){this.style.opacity=.2};
-    var nameEl=document.createElement("div");
-    nameEl.innerHTML='<span style="font-size:14px;font-weight:600;color:#111827">'+p.name+'</span>'
-      +'<span style="font-size:11px;color:#6b7280;margin-left:8px">#'+p.num+' · '+p.pos+'</span>';
+    // Right col
+    var right=document.createElement("div");
+    right.style.cssText="flex:1;min-width:0";
+    // Name row
+    var nameRow=document.createElement("div");
+    nameRow.style.cssText="display:flex;align-items:baseline;gap:6px;margin-bottom:4px;flex-wrap:wrap";
+    var nameSpan=document.createElement("span");
+    nameSpan.style.cssText="font-size:13px;font-weight:600;color:#111827;white-space:nowrap";
+    nameSpan.textContent=p.name;
+    var numSpan=document.createElement("span");
+    numSpan.style.cssText="font-size:11px;color:#9ca3af;white-space:nowrap";
+    numSpan.textContent="#"+p.num+" · "+p.pos;
+    nameRow.appendChild(nameSpan);nameRow.appendChild(numSpan);
+    // Input row
+    var inputRow=document.createElement("div");
+    inputRow.style.cssText="display:flex;align-items:center;gap:5px";
     var inp=document.createElement("input");
     inp.type="number";inp.min=0;inp.max=100;inp.value=pct;
     inp.id="bal-input-"+p.id;
-    inp.style.cssText="width:56px;font-size:13px;padding:4px 6px;border-radius:6px;border:0.5px solid #d1d5db;text-align:center;font-weight:600";
+    inp.style.cssText="width:52px;font-size:14px;font-weight:700;padding:4px 6px;border-radius:6px;border:0.5px solid #d1d5db;text-align:center;color:#111827";
     inp.dataset.pid=p.id;
     inp.addEventListener("change",function(){updateBalFromInput(this)});
     var pctLabel=document.createElement("span");
-    pctLabel.style.cssText="font-size:12px;color:#6b7280";pctLabel.textContent="%";
+    pctLabel.style.cssText="font-size:12px;color:#6b7280;font-weight:500";
+    pctLabel.textContent="% remaining";
     var resetBtn=document.createElement("button");
-    resetBtn.style.cssText="background:none;border:0.5px solid #e5e7eb;border-radius:6px;width:28px;height:28px;cursor:pointer;color:#9ca3af;font-size:13px";
+    resetBtn.style.cssText="background:none;border:none;cursor:pointer;color:#d1d5db;font-size:14px;padding:2px 4px;margin-left:auto";
     resetBtn.innerHTML="&#8635;";resetBtn.title="Reset";
     resetBtn.dataset.pid=p.id;
     resetBtn.addEventListener("click",function(){resetBal(this.dataset.pid)});
-    var bar=document.createElement("div");bar.id="bal-bar-"+p.id;
-    bar.style.cssText="width:"+pct+"%;height:100%;background:"+barColor+";border-radius:4px;transition:width .3s,background .3s";
-    var barWrap=document.createElement("div");
-    barWrap.style.cssText="height:8px;border-radius:4px;background:#f3f4f6;overflow:hidden;margin-top:10px";
-    barWrap.appendChild(bar);
-    var inputRow=document.createElement("div");
-    inputRow.style.cssText="display:flex;align-items:center;gap:6px";
     inputRow.appendChild(inp);inputRow.appendChild(pctLabel);inputRow.appendChild(resetBtn);
-    var topRow=document.createElement("div");
-    topRow.style.cssText="display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:4px";
-    topRow.appendChild(nameEl);topRow.appendChild(inputRow);
-    var textCol=document.createElement("div");textCol.style.cssText="width:100%";
-    textCol.appendChild(topRow);textCol.appendChild(barWrap);
-    var inner=document.createElement("div");
-    inner.style.cssText="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px";
-    img.style.cssText="width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:top center;border:2px solid #f3f4f6;flex-shrink:0";
-    inner.appendChild(img);inner.appendChild(textCol);
-    card.appendChild(inner);
+    right.appendChild(nameRow);right.appendChild(inputRow);
+    card.appendChild(img);card.appendChild(right);
     container.appendChild(card);
   });
-}
-function balInputChanged(pid,input){var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});if(!p)return;var v=parseInt(input.value,10);var changed=!isNaN(v)&&v!==p.bal;input.classList.toggle("changed",changed);var dot=document.getElementById("baldot-"+pid);if(dot)dot.classList.toggle("show",changed)}
-function balReset(pid){var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});if(!p)return;var input=document.getElementById("balinput-"+pid);if(input){input.value=p.bal;input.classList.remove("changed","saved")}var dot=document.getElementById("baldot-"+pid);if(dot)dot.classList.remove("show")}
-function saveAllBalances(){
-  var allSquad=players.concat(aflwPlayers);var changed=[];
-  for(var i=0;i<allSquad.length;i++){var p=allSquad[i];var input=document.getElementById("balinput-"+p.id);if(!input)continue;var v=parseInt(input.value,10);if(!isNaN(v)&&v>=0&&v<=100&&v!==p.bal)changed.push({p:p,newVal:v,input:input})}
-  if(!changed.length){showToast("No changes to save","error");return}
-  var today=new Date().toISOString().slice(0,10);document.getElementById("stampDate").value=today;document.getElementById("balancesStampDisplay").textContent=fmtDate(today);
-  mondayApi('mutation($iid:ID!,$bid:ID!,$cv:JSON!){change_multiple_column_values(item_id:$iid,board_id:$bid,column_values:$cv){id}}',
-    {iid:SETTINGS_ITEM_ID,bid:BOARD_ID,cv:JSON.stringify({[COL.balance_stamp]:{date:today}})});
-  var saveStatus=document.getElementById("balancesSaveStatus");saveStatus.textContent="Saving "+changed.length+" change"+(changed.length>1?"s":"")+"...";
-  for(var j=0;j<changed.length;j++){(function(item){item.p.bal=item.newVal;var bar=document.getElementById("balbar-"+item.p.id);if(bar)bar.style.width=item.newVal+"%";item.input.classList.remove("changed");item.input.classList.add("saved");var dot=document.getElementById("baldot-"+item.p.id);if(dot)dot.classList.remove("show");syncBalanceToMonday(item.p.id,item.newVal)})(changed[j])}
-  renderPlayers();setTimeout(function(){saveStatus.textContent="&#9989; "+changed.length+" balance"+(changed.length>1?"s":"")+" saved to board — "+fmtDate(today)},800);showToast(changed.length+" balance"+(changed.length>1?"s":"")+" saved","success");
-}
-function updateApprovalBanner(){
-  if(accessLevel!=="retail-approver"&&accessLevel!=="commercial-approver"&&accessLevel!=="pcl-approver"){document.getElementById("approvalBanner").style.display="none";return}
-  var pending=requests.filter(function(r){return !r.approved&&canApprove(r.type)});var banner=document.getElementById("approvalBanner");
-  if(!pending.length){banner.style.display="none";return}
-  var typeLabel=accessLevel==="retail-approver"?"Retail":accessLevel==="pcl-approver"?"PCL":"Commercial";
-  document.getElementById("approvalBannerTitle").textContent=pending.length===1?"You have 1 "+typeLabel+" request pending your approval":"You have "+pending.length+" "+typeLabel+" requests pending your approval";
-  document.getElementById("approvalBannerSub").textContent=pending.map(function(r){return r.name}).join(", ");banner.style.display="block";
-}
-function openPendingModal(){
-  var pending=requests.filter(function(r){return !r.approved&&canApprove(r.type)});
-  var typeLabel=accessLevel==="retail-approver"?"Retail":accessLevel==="pcl-approver"?"PCL":"Commercial";
-  document.getElementById("pendingModalSub").textContent=pending.length+" "+typeLabel+" request"+(pending.length!==1?"s":"")+" awaiting your approval";
-  var body=document.getElementById("pendingModalBody");
-  if(!pending.length){body.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted)">&#127881; No pending requests — all caught up!</div>';document.getElementById("pendingModal").classList.add("open");return}
-  body.innerHTML="";var wrap=document.createElement("div");wrap.style.cssText="display:flex;flex-direction:column;gap:12px";
-  for(var i=0;i<pending.length;i++){
-    (function(r){
-      var names=r.players.map(function(pid){var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return p?p.name:""}).filter(Boolean).join(", ");
-      var card=document.createElement("div");card.className="pending-review-card";
-      var header=document.createElement("div");header.className="pending-card-header";
-      var nameEl=document.createElement("div");nameEl.className="pending-review-name";nameEl.textContent=r.name;
-      var tc=document.createElement("span");tc.className="type-chip "+(r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail");tc.textContent=r.type;
-      header.appendChild(nameEl);header.appendChild(tc);card.appendChild(header);
-      var grid=document.createElement("div");grid.className="pending-info-grid";
-      function addInfo(icon,label,val){if(!val)return;var cell=document.createElement("div");cell.className="pending-info-cell";cell.innerHTML='<span class="pending-info-label">'+icon+" "+label+'</span><span class="pending-info-val">'+val+'</span>';grid.appendChild(cell)}
-      addInfo("📅","Date",r.date?fmtDate(r.date):null);addInfo("🕐","Start Time",r.start_time?fmtTime(r.start_time):null);addInfo("⏰","Time Required",r.time_required);addInfo("📍","Location",r.location);addInfo("👤","Players",names);addInfo("🙋","Requested By",r.submitter);addInfo("📋","Notes",r.notes);
-      card.appendChild(grid);
-      var commentWrap=document.createElement("div");commentWrap.className="pending-comment-wrap";
-      var commentLabel=document.createElement("label");commentLabel.className="pending-comment-label";commentLabel.textContent="Add a comment (optional)";
-      var commentInput=document.createElement("textarea");commentInput.className="pending-comment-input";commentInput.id="pcomment-"+r.id;commentInput.placeholder="e.g. Approved — please confirm with Trent by Friday";
-      commentWrap.appendChild(commentLabel);commentWrap.appendChild(commentInput);card.appendChild(commentWrap);
-      var actions=document.createElement("div");actions.className="pending-action-row";
-      var approveBtn=document.createElement("button");approveBtn.className="pending-approve-btn2";approveBtn.innerHTML='<span>✓</span> Approve';
-      approveBtn.addEventListener("click",(function(rid){return function(){var comment=document.getElementById("pcomment-"+rid);pendingApproveWithComment(rid,comment?comment.value.trim():"")}})(r.id));
-      var denyBtn=document.createElement("button");denyBtn.className="pending-deny-btn2";denyBtn.innerHTML='<span>✕</span> Deny';
-      denyBtn.addEventListener("click",(function(rid){return function(){var comment=document.getElementById("pcomment-"+rid);pendingDenyWithComment(rid,comment?comment.value.trim():"")}})(r.id));
-      actions.appendChild(approveBtn);actions.appendChild(denyBtn);card.appendChild(actions);wrap.appendChild(card);
-    })(pending[i]);
-  }
-  body.appendChild(wrap);document.getElementById("pendingModal").classList.add("open");
-}
-function markFullyConfirmed(id){
-  var r=requests.find(function(x){return x.id===id});
-  if(!r)return;
-  // Confirm dialog
-  document.getElementById("confirmTitle").textContent="Mark as Confirmed";
-  document.getElementById("confirmSubtitle").textContent=r.name;
-  document.getElementById("confirmMessage").textContent="This will mark the request as fully Confirmed, bypassing the Trent/Rachel notification step. Use this if you have already confirmed with them directly.";
-  document.getElementById("confirmOkBtn").textContent="Confirm";
-  document.getElementById("confirmOkBtn").style.background="var(--confirmed)";
-  document.getElementById("confirmOkBtn").onclick=function(){
-    r.status="Confirmed";
-    syncRequestToMonday(id,{status:"Confirmed",notes:(r.notes||"")+" | Manually confirmed by approver"});
-    closeModal("confirmModal");
-    // Reset confirm button style
-    document.getElementById("confirmOkBtn").textContent="Delete";
-    document.getElementById("confirmOkBtn").style.background="var(--red)";
-    renderRequests();renderCalendar();
-    showToast(r.name+" marked as Confirmed","success");
-  };
-  document.getElementById("confirmModal").classList.add("open");
-}
-
-function openBlackoutModal(){
-  document.getElementById("bo-label").value="";
-  document.getElementById("bo-date").value="";
-  document.getElementById("blackoutModal").classList.add("open");
-}
-function saveBlackout(){
-  var label=document.getElementById("bo-label").value.trim();
-  var startDate=document.getElementById("bo-date").value;
-  var endDateEl=document.getElementById("bo-end-date");
-  var endDate=endDateEl&&endDateEl.value?endDateEl.value:startDate;
-  if(!label||!startDate){showToast("Please enter a label and start date","error");return}
-  if(endDate<startDate){showToast("End date must be after start date","error");return}
-  var dates=[];
-  var cur=new Date(startDate+"T12:00:00");
-  var end=new Date(endDate+"T12:00:00");
-  while(cur<=end){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
-  var groupId="mbo"+Date.now();
-  dates.forEach(function(date,i){
-    var mb={id:"mb"+(Date.now()+i),date:date,label:label,groupId:groupId,mondayId:null};
-    mediaBlackouts.push(mb);
-    mondayApi('mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}',
-      {bid:BOARD_ID,gid:MEDIA_GROUP,name:label+(dates.length>1?" ("+date+")":""),cv:JSON.stringify({"date_mm35z010":{date:date}})}).then(function(r){
-        if(r&&r.data&&r.data.create_item)mb.mondayId=parseInt(r.data.create_item.id,10);
-      });
-  });
-  closeModal("blackoutModal");
-  if(endDateEl)endDateEl.value="";
-  renderCalendar();
-  showToast(dates.length>1?"Blackout added: "+label+" ("+dates.length+" days)":"Blackout added: "+label,"success");
-}
-
-function deleteBlackout(id){
-  var mb=mediaBlackouts.find(function(m){return m.id===id});
-  if(!mb)return;
-  // Find all items in same group (date range)
-  var toRemove=mb.groupId?mediaBlackouts.filter(function(m){return m.groupId===mb.groupId}):[mb];
-  var label=mb.label;
-  var msg=toRemove.length>1?"Remove "+toRemove.length+"-day blackout: "+label+"?":"Remove blackout: "+label+"?";
-  if(!confirm(msg))return;
-  toRemove.forEach(function(item){
-    mediaBlackouts=mediaBlackouts.filter(function(m){return m.id!==item.id});
-    if(item.mondayId){
-      mondayApi('mutation($id:ID!){delete_item(item_id:$id){id}}',{id:String(item.mondayId)});
-    }
-  });
-  renderCalendar();
-  showToast("Blackout removed","success");
-}
-
-function sendToLiaison(id){
-  var r=requests.find(function(x){return x.id===id});
-  if(!r)return;
-  // Split players into AFL and AFLW
-  var aflPlayerNames=r.players.map(function(pid){
-    var p=players.find(function(pl){return pl.id===pid});
-    return p?p.name:null;
-  }).filter(Boolean);
-  var aflwPlayerNames=r.players.map(function(pid){
-    var p=aflwPlayers.find(function(pl){return pl.id===pid});
-    return p?p.name:null;
-  }).filter(Boolean);
-  var hasBoth=aflPlayerNames.length>0&&aflwPlayerNames.length>0;
-  var hasAFL=aflPlayerNames.length>0;
-  var hasAFLW=aflwPlayerNames.length>0;
-  // Build liaison label and note
-  var liaison=hasBoth?"Trent & Rachel":hasAFLW?"Rachel":"Trent";
-  var noteAddition=" | Sent to "+liaison+" for final confirmation";
-  if(hasBoth){
-    noteAddition+=" | AFL players: "+aflPlayerNames.join(", ")+" (Trent) | AFLW players: "+aflwPlayerNames.join(", ")+" (Rachel)";
-  }
-  r.status="Confirmed";
-  syncRequestToMonday(id,{status:"Confirmed",notes:(r.notes||"")+noteAddition});
-  renderRequests();renderCalendar();
-  var toastMsg=hasBoth
-    ?"Sent to Trent ("+aflPlayerNames.join(", ")+") & Rachel ("+aflwPlayerNames.join(", ")+") — Confirmed"
-    :"Sent to "+liaison+" — status updated to Confirmed";
-  showToast(toastMsg,"success");
-}
-function pendingApproveWithComment(id,comment){
-  var r=requests.find(function(x){return x.id===id});if(!r)return;r.approved=true;r.status="Internally Approved";if(comment)r.approverComment=comment;
-  syncRequestToMonday(id,{approved:true,status:"Internally Approved",notes:(r.notes?(r.notes+(comment?" | Approver: "+comment:"")):(comment?"Approver: "+comment:""))});
-  // Notify submitter via monday if we have their ID
-  if(r.submitterMondayId){
-    mondayApi('mutation($uid:ID!,$txt:String!,$tid:ID!){create_notification(user_id:$uid,target_id:$tid,text:$txt,target_type:Project){text}}',
-      {uid:String(r.submitterMondayId),tid:String(BOARD_ID),txt:"Your request "+r.name+" has been approved!"+(comment?" - "+comment:"")});
-  }
-  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" approved","success");updateApprovalBanner();
-  var stillPending=requests.filter(function(x){return !x.approved&&canApprove(x.type)});if(stillPending.length)openPendingModal();else closeModal("pendingModal");
-}
-function pendingDenyWithComment(id,comment){
-  var r=requests.find(function(x){return x.id===id});if(!r)return;r.denied=true;r.status="Not Approved";if(comment)r.approverComment=comment;
-  syncRequestToMonday(id,{status:"Not Approved",approved:false,notes:(r.notes?(r.notes+(comment?" | Denied: "+comment:"")):(comment?"Denied: "+comment:""))});
-  // Notify submitter via monday if we have their ID
-  if(r.submitterMondayId){
-    mondayApi('mutation($uid:ID!,$txt:String!,$tid:ID!){create_notification(user_id:$uid,target_id:$tid,text:$txt,target_type:Project){text}}',
-      {uid:String(r.submitterMondayId),tid:String(BOARD_ID),txt:"Your request "+r.name+" was not approved."+(comment?" Reason: "+comment:"")});
-  }
-  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" denied","error");updateApprovalBanner();
-  var stillPending=requests.filter(function(x){return !x.approved&&!x.denied&&canApprove(x.type)});if(stillPending.length)openPendingModal();else closeModal("pendingModal");
-}
-function switchSquad(squad,btn){currentSquad=squad;document.querySelectorAll(".squad-tab-btn").forEach(function(b){b.classList.remove("active")});btn.classList.add("active");renderPlayers()}
-function openAddPlayerModal(){["ap-name","ap-photo"].forEach(function(id){document.getElementById(id).value=""});document.getElementById("ap-number").value="";document.getElementById("ap-position").value="";document.getElementById("ap-asa").value="Full ASA";document.getElementById("ap-balance").value="50";document.getElementById("ap-sponsor").value="None";document.getElementById("ap-restricted").checked=false;document.getElementById("addPlayerModal").classList.add("open")}
-function saveNewPlayer(){
-  var name=document.getElementById("ap-name").value.trim();var num=document.getElementById("ap-number").value.trim();var pos=document.getElementById("ap-position").value;
-  if(!name){showToast("Enter player name","error");return}if(!num){showToast("Enter jersey number","error");return}if(!pos){showToast("Select a position","error");return}
-  var bal=parseInt(document.getElementById("ap-balance").value,10)||50;var asa=document.getElementById("ap-asa").value;var sponsor=document.getElementById("ap-sponsor").value;var restricted=document.getElementById("ap-restricted").checked;
-  var photo=document.getElementById("ap-photo").value.trim();if(!photo)photo="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_1.png";
-  var newId="p"+Date.now();var newPlayer={id:newId,name:name,num:String(num),pos:pos,asa:asa,bal:bal,restricted:restricted,sponsor:sponsor,img:photo};
-  if(currentSquad==="aflw"){newPlayer.squad="aflw";aflwPlayers.push(newPlayer)}else players.push(newPlayer);
-  closeModal("addPlayerModal");renderPlayers();createPlayerOnMonday(newPlayer);showToast(name+" added","success");
-}
-function createPlayerOnMonday(p){
-  var cv={};cv[COL.player_number]=String(p.num);cv[COL.position]=p.pos;cv[COL.balance]=String(p.bal);cv[COL.restricted]={checked:p.restricted?"true":"false"};if(p.img)cv[COL.photo]=p.img;
-  mondayApi("mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv){id}}",
-    {bid:BOARD_ID,gid:(p.squad==="aflw"?AFLW_PLAYERS_GROUP:PLAYERS_GROUP),name:p.name,cv:JSON.stringify(cv)}).then(function(r){if(r&&r.data&&r.data.create_item)PLAYER_MONDAY_IDS[p.id]=parseInt(r.data.create_item.id,10)});
-}
-function applyAccessLevel(level){
-  // Auto-populate submitter name in make a request form
-  var submitterField=document.getElementById("mreq-submitter");
-  if(submitterField&&!submitterField.value){
-    var sdk=getMondayClient();
-    if(sdk){sdk.api("{me{name}}").then(function(r){if(r&&r.data&&r.data.me){submitterField.value=r.data.me.name;document.getElementById("f-submitter")&&(document.getElementById("f-submitter").value=r.data.me.name);}}).catch(function(){});}
-  }
-  if(!level||level==="none")return;accessLevel=level;
-  var labels={admin:"&#128308; Admin","retail-approver":"&#128993; Retail Approver","commercial-approver":"&#128994; Commercial Approver","balance-updater":"&#129695; Balance Updater",viewer:"&#9898; Viewer"};
-  var badge=document.getElementById("accessBadge");var label=document.getElementById("accessLabel");
-  if(badge&&label){badge.className="access-badge logged-in";label.innerHTML=labels[level]||level;badge.onclick=function(){accessLevel="viewer";badge.className="access-badge";label.textContent="Sign in";badge.onclick=openPinModal;document.getElementById("balancesTabBtn").style.display="none";document.getElementById("addPlayerBtn").style.display="none";renderPlayers();renderRequests()}}
-  if(level==="admin"){document.getElementById("balancesTabBtn").style.display="flex";document.getElementById("addPlayerBtn").style.display="flex";var heb=document.getElementById("hiwEditBtn");if(heb)heb.style.display="flex";var peb=document.getElementById("processEditBtn");if(peb)peb.style.display="flex";var bb=document.getElementById("addBlackoutBtn");if(bb)bb.style.display="flex";}
-  else if(level==="balance-updater"){document.getElementById("balancesTabBtn").style.display="flex";}
-  else if(level==="pcl-approver"){
-    document.getElementById("balancesTabBtn").style.display="flex";
-    switchTab("requests",null);
-  }
-  renderPlayers();renderRequests();updateApprovalBanner();
-}
-(function(){
-  if(!window.mondaySdk)return;
-  var sdk=window.mondaySdk();monday=sdk;sdk.setApiVersion("2024-01");
-  var identityResolved=false;
-  function resolveIdentity(userId){if(identityResolved)return;identityResolved=true;var mondayUserId=parseInt(userId,10);var userRoles={82646896:"admin",41198358:"commercial-approver",62081586:"commercial-approver",29892421:"retail-approver",96759461:"pcl-approver"};var role=userRoles[mondayUserId];if(role&&role!=="none")applyAccessLevel(role)}
-  function loadFromBoard(){
-    mondayApi('{boards(ids:[18412284375]){items_page(limit:200){items{id name group{id}column_values{id text}}}}}',{}).then(function(res){
-      if(!res||!res.data||!res.data.boards){
-      console.warn("Board load returned no data, retrying in 2s...");
-      setTimeout(function(){if(players.length===0)loadFromBoard();},2000);
-      return;
-    }
-      var items=res.data.boards[0].items_page.items;
-      var newPlayers=[];var newAFLW=[];var newRequests=[];
-      var pidCounter=1;
-      items.forEach(function(item){
-        var cv={};
-        item.column_values.forEach(function(col){cv[col.id]=col.text||""});
-        var mondayId=String(item.id);
-        if((item.group.id==="group_mm354464"||item.group.id==="group_mm35q3j5")&&item.name!=="__settings__"){
-          // Player item
-          var pid="p"+pidCounter++;
-          PLAYER_MONDAY_IDS[pid]=parseInt(mondayId,10);
-          var isAFLW=item.group.id==="group_mm35q3j5";
-          var p={
-            id:pid,
-            name:item.name,
-            num:cv["text_mm35f5cc"]||"",
-            pos:cv["text_mm351tb2"]||"",
-            asa:PLAYER_ASA_TYPES[mondayId]||"Full ASA",
-            bal:parseInt(cv["numeric_mm3571tn"],10)||0,
-            restricted:cv["boolean_mm35w6eq"]==="v"||cv["boolean_mm35w6eq"]==="true",
-            sponsor:PLAYER_SPONSORS[mondayId]||"None",
-            img:cv["text_mm35jtbf"]||""
-          };
-          if(isAFLW){p.squad="aflw";newAFLW.push(p)}else{newPlayers.push(p)}
-        } else if(item.group.id==="group_mm3hxc7y"){
-          // Media blackout date
-          if(item.name&&item.name!=="New item"){
-            mediaBlackouts.push({
-              id:"mb"+mondayId,
-              mondayId:parseInt(mondayId,10),
-              date:cv["date_mm35z010"]||null,
-              label:item.name
-            });
-          }
-        } else if(item.group.id==="group_mm35jzs7"){
-          // Request item — skip blank "New item" placeholders
-          if(!item.name||item.name==="New item")return;
-          var rid="r"+mondayId;
-          REQUEST_MONDAY_IDS[rid]=parseInt(mondayId,10);
-          var playerNames=(cv["text_mm35qb0p"]||"").split(",").map(function(n){return n.trim()}).filter(Boolean);
-          // Map player names to IDs (will be resolved after players are built)
-          newRequests.push({
-            id:rid,
-            mondayId:parseInt(mondayId,10),
-            name:item.name,
-            type:cv["color_mm35cenq"]||"Retail",
-            date:cv["date_mm35z010"]||null,
-            location:cv["text_mm353efc"]||"",
-            time_required:cv["text_mm388at2"]||"",
-            status:cv["color_mm351c4p"]||"TBC",
-            approved:cv["color_mm35zm9j"]==="Approved",
-            briefed:cv["color_mm359ffs"]==="Yes",
-            notes:cv["long_text_mm352xyz"]||"",
-            _playerNames:playerNames
-          });
-        }
-      });
-      // Resolve player names to IDs
-      var allPlayers=newPlayers.concat(newAFLW);
-      newRequests.forEach(function(r){
-        r.players=r._playerNames.map(function(name){
-          var p=allPlayers.find(function(pl){return pl.name===name});
-          return p?p.id:null;
-        }).filter(Boolean);
-        delete r._playerNames;
-      });
-      // Update global arrays
-      players=newPlayers;
-      // Update AFLW - keep existing if board returns none (preserve static AFLW data as fallback)
-      if(newAFLW.length>0)aflwPlayers.splice(0,aflwPlayers.length);
-      newAFLW.forEach(function(p){aflwPlayers.push(p)});
-      requests=newRequests;
-      console.log("Board loaded:",players.length,"AFL players,",aflwPlayers.length,"AFLW players,",requests.length,"requests");
-      // Load balance stamp date from settings item
-      var settingsItem=items.find(function(item){return item.name==="__settings__"});
-      if(settingsItem){
-        var stampCol=settingsItem.column_values.find(function(cv){return cv.id===COL.balance_stamp});
-        if(stampCol&&stampCol.text){
-          var stampDate=document.getElementById("stampDate");
-          if(stampDate)stampDate.value=stampCol.text;
-          var stampDisplay=document.getElementById("balancesStampDisplay");
-          if(stampDisplay)stampDisplay.textContent=fmtDate(stampCol.text);
-        }
-      }
-      renderPlayers();renderRequests();renderCalendar();
-      var balTab=document.getElementById("tab-balances");
-      if(balTab&&balTab.classList.contains("active"))renderBalancesTab();
-    }).catch(function(e){console.warn("loadFromBoard error:",e);setTimeout(function(){if(players.length===0){console.log("Retrying...");loadFromBoard();}},2000);});
-  }
-  sdk.listen("context",function(res){var ctx=res.data||res;SDK_READY=true;console.log("monday SDK ready");if(ctx&&ctx.user&&ctx.user.id)resolveIdentity(ctx.user.id);loadFromBoard()});
-  sdk.get("context").then(function(res){var ctx=res.data||res;if(ctx&&ctx.user&&ctx.user.id)resolveIdentity(ctx.user.id)}).catch(function(){});
-  setTimeout(function(){sdk.api("{me{id name}}").then(function(res){if(res&&res.data&&res.data.me)resolveIdentity(res.data.me.id)}).catch(function(){})},600);setTimeout(function(){if(players.length===0)loadFromBoard()},1500);
-})();
-// Show loading state while board data loads
-document.getElementById("playersGrid").innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">&#9889; Loading players from board...</div>';
-renderRequests();renderCalendar();
-</script>
-
-<div class="modal-overlay" id="blackoutModal">
-  <div class="modal" style="max-width:440px">
-    <div class="modal-header">
-      <div class="modal-title">&#128247; Add Media Blackout Date</div>
-      <button class="modal-close" onclick="closeModal('blackoutModal')">&#10005;</button>
-    </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:16px;padding:24px">
-      <div class="form-group" style="margin:0"><label class="form-label">Label / Reason *</label><input type="text" class="form-control" id="bo-label" placeholder="e.g. Finals Week, Media embargo" style="margin-top:6px"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div class="form-group" style="margin:0"><label class="form-label">Start Date *</label><input type="date" class="form-control" id="bo-date" style="margin-top:6px"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">End Date <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input type="date" class="form-control" id="bo-end-date" style="margin-top:6px"></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" style="background:#f1f5f9;border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer" onclick="closeModal('blackoutModal')">Cancel</button>
-      <button class="btn-primary" onclick="saveBlackout()">&#128247; Add Blackout</button>
-    </div>
-  </div>
-</div>
-</body>
-</html>
+}>
