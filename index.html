@@ -1830,4 +1830,634 @@ function renderBalancesTable(containerId,squad){
     card.appendChild(img);card.appendChild(right);
     container.appendChild(card);
   });
-}>
+}
+
+
+function getMondayClient(){try{return window.mondaySdk?mondaySdk():null}catch(e){return null}}
+
+function mondayApi(query,vars){
+  var sdk=getMondayClient();
+  var sdkPromise=sdk?sdk.api(query,{variables:vars||{}}).catch(function(){return null}):Promise.resolve(null);
+  return sdkPromise.then(function(r){
+    if(r&&!r.errors)return r;
+    if(!MONDAY_TOKEN)return null;
+    return fetch("https://api.monday.com/v2",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":MONDAY_TOKEN,"API-Version":"2024-01"},
+      body:JSON.stringify({query:query,variables:vars||{}})
+    }).then(function(res){return res.json()}).then(function(r){
+      if(r&&r.errors)console.warn("monday API errors:",r.errors);
+      return r;
+    }).catch(function(e){console.warn("monday fetch error:",e);return null});
+  });
+}
+
+function loadFromBoard(){
+  mondayApi('{boards(ids:[18412284375]){items_page(limit:200){items{id name group{id}column_values{id text}}}}}',{}).then(function(res){
+    if(!res||!res.data||!res.data.boards){
+      setTimeout(function(){if(players.length===0)loadFromBoard();},2000);return;
+    }
+    var items=res.data.boards[0].items_page.items;
+    var newPlayers=[];var newAFLW=[];var newRequests=[];
+    var pidCounter=1;
+    items.forEach(function(item){
+      var cv={};
+      item.column_values.forEach(function(col){cv[col.id]=col.text||""});
+      var mondayId=String(item.id);
+      if((item.group.id==="group_mm354464"||item.group.id==="group_mm35q3j5")&&item.name!=="__settings__"){
+        var pid="p"+pidCounter++;
+        PLAYER_MONDAY_IDS[pid]=parseInt(mondayId,10);
+        var isAFLW=item.group.id==="group_mm35q3j5";
+        var p={id:pid,name:item.name,num:cv["text_mm35f5cc"]||"",pos:cv["text_mm351tb2"]||"",
+          asa:PLAYER_ASA_TYPES[mondayId]||"Full ASA",bal:parseInt(cv["numeric_mm3571tn"],10)||0,
+          restricted:cv["boolean_mm35w6eq"]==="v"||cv["boolean_mm35w6eq"]==="true",
+          sponsor:PLAYER_SPONSORS[mondayId]||"None",img:cv["text_mm35jtbf"]||""};
+        if(isAFLW){p.squad="aflw";newAFLW.push(p)}else{newPlayers.push(p)}
+      } else if(item.group.id==="group_mm3hxc7y"){
+        if(item.name&&item.name!=="New item"){
+          mediaBlackouts.push({id:"mb"+mondayId,mondayId:parseInt(mondayId,10),date:cv["date_mm35z010"]||null,label:item.name,groupId:"mbo"+mondayId});
+        }
+      } else if(item.group.id==="group_mm35jzs7"){
+        if(!item.name||item.name==="New item")return;
+        var rid="r"+mondayId;
+        REQUEST_MONDAY_IDS[rid]=parseInt(mondayId,10);
+        var playerNames=(cv["text_mm35qb0p"]||"").split(",").map(function(n){return n.trim()}).filter(Boolean);
+        newRequests.push({id:rid,mondayId:parseInt(mondayId,10),name:item.name,
+          type:cv["color_mm35cenq"]||"Retail",date:cv["date_mm35z010"]||null,
+          location:cv["text_mm353efc"]||"",time_required:cv["text_mm388at2"]||"",
+          status:cv["color_mm351c4p"]||"TBC",approved:cv["color_mm35zm9j"]==="Approved",
+          briefed:cv["color_mm359ffs"]==="Yes",notes:cv["long_text_mm352xyz"]||"",
+          _playerNames:playerNames});
+      } else if(item.name==="__settings__"){
+        var stampCol=item.column_values.find(function(cv2){return cv2.id===COL.balance_stamp});
+        if(stampCol&&stampCol.text){
+          var stampDate=document.getElementById("stampDate");
+          if(stampDate)stampDate.value=stampCol.text;
+          var stampDisplay=document.getElementById("balancesStampDisplay");
+          if(stampDisplay)stampDisplay.textContent=fmtDate(stampCol.text);
+        }
+      }
+    });
+    var allPlayers=newPlayers.concat(newAFLW);
+    newRequests.forEach(function(r){
+      r.players=r._playerNames.map(function(name){
+        var p=allPlayers.find(function(pl){return pl.name===name});return p?p.id:null;
+      }).filter(Boolean);delete r._playerNames;
+    });
+    players=newPlayers;
+    if(newAFLW.length>0)aflwPlayers.splice(0,aflwPlayers.length);
+    newAFLW.forEach(function(p){aflwPlayers.push(p)});
+    requests=newRequests;
+    console.log("Board loaded:",players.length,"AFL players,",aflwPlayers.length,"AFLW players,",requests.length,"requests");
+    renderPlayers();renderRequests();renderCalendar();
+    var balTab=document.getElementById("tab-balances");
+    if(balTab&&balTab.classList.contains("active"))renderBalancesTab();
+  }).catch(function(e){
+    console.warn("loadFromBoard error:",e);
+    setTimeout(function(){if(players.length===0)loadFromBoard();},2000);
+  });
+}
+
+function canApprove(type){if(accessLevel==="admin")return true;return(APPROVAL[type]||[]).includes(accessLevel)}
+function visReqs(){return requests.filter(function(r){return !r.denied&&(r.approved||canApprove(r.type)||accessLevel==="admin")})}
+
+function fmtDate(d){if(!d)return"";try{var p=d.split("-");return p[2]+"/"+p[1]+"/"+p[0]}catch(e){return d}}
+function fmtTime(t){if(!t)return"";try{var parts=t.split(":");var h=parseInt(parts[0],10);var m=parts[1];var ampm=h>=12?"PM":"AM";h=h%12||12;return h+":"+m+" "+ampm;}catch(e){return t}}
+function isoDate(y,m,d){return y+"-"+(m+1<10?"0":"")+(m+1)+"-"+(d<10?"0":"")+d}
+function sc(s){return s==="Confirmed"?"status-confirmed":s==="Tentative"?"status-tentative":s==="Planned"?"status-planned":s==="Internally Approved"?"status-internally-approved":s==="Not Approved"?"status-not-approved":"status-tbc"}
+function showToast(msg,type){var t=document.getElementById("toast");if(!t)return;t.textContent=msg;t.className="toast show"+(type?" "+type:"");setTimeout(function(){t.className="toast"},2800)}
+function closeModal(id){var el=document.getElementById(id);if(el)el.classList.remove("open")}
+
+function applyAccessLevel(level){
+  accessLevel=level;
+  var loginBtn=document.getElementById("loginBtn");
+  if(loginBtn){loginBtn.style.display="none";}
+  var pinDisplay=document.getElementById("pinDisplay");
+  if(pinDisplay)pinDisplay.style.display="none";
+  var lockIcon=document.getElementById("lockIcon");
+  if(lockIcon){lockIcon.textContent=level==="viewer"?"🔒":"🔓";}
+  var roleLabel=document.getElementById("roleLabel");
+  if(roleLabel)roleLabel.textContent=level==="admin"?"Admin":level==="retail-approver"?"Retail":level==="commercial-approver"?"Commercial":level==="pcl-approver"?"PCL":level==="balance-updater"?"Balances":"";
+  if(level==="admin"){
+    document.getElementById("balancesTabBtn").style.display="flex";
+    document.getElementById("addPlayerBtn").style.display="flex";
+    var heb=document.getElementById("hiwEditBtn");if(heb)heb.style.display="flex";
+    var peb=document.getElementById("processEditBtn");if(peb)peb.style.display="flex";
+    var bb=document.getElementById("addBlackoutBtn");if(bb)bb.style.display="flex";
+  } else if(level==="balance-updater"){
+    document.getElementById("balancesTabBtn").style.display="flex";
+  } else if(level==="pcl-approver"){
+    document.getElementById("balancesTabBtn").style.display="flex";
+    switchTab("requests",null);
+  } else if(level==="retail-approver"||level==="commercial-approver"){
+    var bb2=document.getElementById("addBlackoutBtn");if(bb2)bb2.style.display="flex";
+  }
+  renderPlayers();renderRequests();updateApprovalBanner();
+}
+
+function resolveIdentity(mondayUserId){
+  var role=userRoles[parseInt(mondayUserId,10)];
+  if(role)applyAccessLevel(role);
+}
+
+function checkPin(){
+  var pin=document.getElementById("pinInput").value;
+  var lv=null;
+  Object.keys(pinConfig).forEach(function(role){if(pinConfig[role]===pin)lv=role});
+  if(!lv){showToast("Incorrect PIN","error");return}
+  document.getElementById("pinModal").classList.remove("open");
+  document.getElementById("pinInput").value="";
+  applyAccessLevel(lv);
+  if(lv==="admin"){document.getElementById("balancesTabBtn").style.display="flex";document.getElementById("addPlayerBtn").style.display="flex";var heb2=document.getElementById("hiwEditBtn");if(heb2)heb2.style.display="flex";var peb2=document.getElementById("processEditBtn");if(peb2)peb2.style.display="flex";}
+  else if(lv==="balance-updater"){document.getElementById("balancesTabBtn").style.display="flex";document.getElementById("addPlayerBtn").style.display="none";}
+  else if(lv==="pcl-approver"){document.getElementById("balancesTabBtn").style.display="flex";document.getElementById("addPlayerBtn").style.display="none";}
+  else{document.getElementById("balancesTabBtn").style.display="none";document.getElementById("addPlayerBtn").style.display="none";}
+  if(lv==="balance-updater")switchTab("balances",null);
+  else if(lv==="retail-approver"||lv==="commercial-approver"||lv==="pcl-approver"){switchTab("requests",null);updateApprovalBanner();}
+  showToast("Signed in as "+lv.replace("-"," "),"success");
+}
+
+function updateApprovalBanner(){
+  if(accessLevel!=="retail-approver"&&accessLevel!=="commercial-approver"&&accessLevel!=="pcl-approver"&&accessLevel!=="admin"){
+    document.getElementById("approvalBanner").style.display="none";return;
+  }
+  var pending=requests.filter(function(r){return !r.approved&&canApprove(r.type)});
+  var banner=document.getElementById("approvalBanner");
+  if(!banner)return;
+  if(pending.length>0){
+    banner.style.display="flex";
+    var msg=document.getElementById("bannerMsg");
+    if(msg)msg.textContent=pending.length+" request"+(pending.length>1?"s":"")+" pending your approval";
+  } else {
+    banner.style.display="none";
+  }
+}
+
+// ── Sync functions ─────────────────────────────────────────────────────────
+function syncRequestToMonday(id,updates){
+  var mondayId=REQUEST_MONDAY_IDS[id];
+  if(!mondayId)return;
+  var cv={};
+  if(updates.status)cv[COL.status]={label:updates.status};
+  if(updates.approved!==undefined)cv[COL.approved]={label:updates.approved?"Approved":"Pending"};
+  if(updates.notes!==undefined)cv[COL.notes]={text:updates.notes};
+  mondayApi('mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv,create_labels_if_missing:true){id}}',
+    {bid:BOARD_ID,iid:String(mondayId),cv:JSON.stringify(cv)});
+}
+
+function createRequestOnMonday(req){
+  var playerNames=req.players.map(function(pid){var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return p?p.name:""}).filter(Boolean).join(", ");
+  var cv={};
+  cv[COL.date]=req.date?{date:req.date}:"";cv[COL.location]=req.location||"";cv[COL.players_text]=playerNames;
+  cv[COL.status]={label:req.status};cv[COL.req_type]={label:req.type};
+  cv[COL.approved]={label:req.approved?"Approved":"Pending"};cv[COL.briefed]={label:req.briefed?"Yes":"No"};
+  cv[COL.req_type_dropdown]=req.type;
+  var notesText=(req.submitter?"Requested by: "+req.submitter:"")+(req.start_time?" | Start: "+fmtTime(req.start_time):"")+(req.notes?" | "+req.notes:"");
+  cv[COL.notes]={text:notesText||""};
+  if(req.time_required)cv[COL.time_required]=req.time_required;
+  if(req.submitterMondayId){cv[COL.submitted_by]={personsAndTeams:[{id:parseInt(req.submitterMondayId,10),kind:"person"}]};}
+  mondayApi('mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}',
+    {bid:BOARD_ID,gid:REQUESTS_GROUP,name:req.name,cv:JSON.stringify(cv)}).then(function(r){
+      if(r&&r.data&&r.data.create_item){
+        var newId=parseInt(r.data.create_item.id,10);
+        REQUEST_MONDAY_IDS[req.id]=newId;req.mondayId=newId;
+      }
+    });
+}
+
+function deleteRequestOnMonday(id){
+  var mondayId=REQUEST_MONDAY_IDS[id];
+  if(!mondayId)return;
+  mondayApi('mutation($id:ID!){delete_item(item_id:$id){id}}',{id:String(mondayId)});
+}
+
+// ── Approval functions ─────────────────────────────────────────────────────
+function approveRequest(id){openPendingModalForId(id)}
+function openPendingModalForId(id){
+  var r=requests.find(function(x){return x.id===id});if(!r)return;
+  showPendingReviewCard(r);
+}
+
+function openPendingModal(){
+  var pending=requests.filter(function(r){return !r.approved&&canApprove(r.type)});
+  if(!pending.length)return;
+  showPendingReviewCard(pending[0]);
+}
+
+function showPendingReviewCard(r){
+  document.getElementById("pendingModalSub").textContent=r.name;
+  var body=document.getElementById("pendingModalBody");body.innerHTML="";
+  var wrap=document.createElement("div");wrap.style.cssText="display:flex;flex-direction:column;gap:12px";
+  function addInfo(icon,label,val){if(!val)return;var row=document.createElement("div");row.style.cssText="display:flex;gap:8px;font-size:13px";row.innerHTML='<span>'+icon+'</span><span style="color:#6b7280;min-width:80px">'+label+'</span><span>'+val+'</span>';wrap.appendChild(row);}
+  var names=r.players.map(function(pid){var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return p?p.name:""}).filter(Boolean).join(", ");
+  addInfo("📋","Request",r.name);addInfo("📂","Type",r.type);addInfo("📅","Date",r.date?fmtDate(r.date):"TBC");
+  addInfo("📍","Location",r.location);addInfo("🕐","Start Time",r.start_time?fmtTime(r.start_time):null);
+  addInfo("⏰","Duration",r.time_required);addInfo("👥","Players",names||"None specified");
+  addInfo("📝","Notes",r.notes);
+  var commentWrap=document.createElement("div");
+  commentWrap.innerHTML='<label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Add comment (optional)</label><textarea id="approvalComment" style="width:100%;padding:8px;border:0.5px solid #d1d5db;border-radius:6px;font-size:12px;resize:vertical;min-height:60px" placeholder="e.g. Approved — please confirm with football dept"></textarea>';
+  wrap.appendChild(commentWrap);
+  body.appendChild(wrap);
+  var approveBtn=document.getElementById("pendingApproveBtn");
+  var denyBtn=document.getElementById("pendingDenyBtn");
+  if(approveBtn)approveBtn.onclick=function(){pendingApproveWithComment(r.id,document.getElementById("approvalComment").value.trim())};
+  if(denyBtn)denyBtn.onclick=function(){pendingDenyWithComment(r.id,document.getElementById("approvalComment").value.trim())};
+  document.getElementById("pendingModal").classList.add("open");
+}
+
+function markFullyConfirmed(id){
+  var r=requests.find(function(x){return x.id===id});if(!r)return;
+  document.getElementById("confirmTitle").textContent="Mark as Confirmed";
+  document.getElementById("confirmSubtitle").textContent=r.name;
+  document.getElementById("confirmMessage").textContent="This will mark the request as fully Confirmed, bypassing the Football Dept notification step.";
+  document.getElementById("confirmOkBtn").textContent="Confirm";
+  document.getElementById("confirmOkBtn").style.background="var(--confirmed)";
+  document.getElementById("confirmOkBtn").onclick=function(){
+    r.status="Confirmed";
+    syncRequestToMonday(id,{status:"Confirmed",notes:(r.notes||"")+" | Manually confirmed by approver"});
+    closeModal("confirmModal");
+    document.getElementById("confirmOkBtn").textContent="Delete";
+    document.getElementById("confirmOkBtn").style.background="var(--red)";
+    renderRequests();renderCalendar();
+    showToast(r.name+" marked as Confirmed","success");
+  };
+  document.getElementById("confirmModal").classList.add("open");
+}
+
+function sendToLiaison(id){
+  var r=requests.find(function(x){return x.id===id});if(!r)return;
+  var aflPlayerNames=r.players.map(function(pid){var p=players.find(function(pl){return pl.id===pid});return p?p.name:null;}).filter(Boolean);
+  var aflwPlayerNames=r.players.map(function(pid){var p=aflwPlayers.find(function(pl){return pl.id===pid});return p?p.name:null;}).filter(Boolean);
+  var hasBoth=aflPlayerNames.length>0&&aflwPlayerNames.length>0;
+  var hasAFLW=aflwPlayerNames.length>0;
+  var liaison=hasBoth?"Trent & Rachel":hasAFLW?"Rachel":"Trent";
+  var noteAddition=" | Sent to "+liaison+" for final confirmation";
+  if(hasBoth)noteAddition+=" | AFL: "+aflPlayerNames.join(", ")+" | AFLW: "+aflwPlayerNames.join(", ");
+  r.status="Confirmed";
+  syncRequestToMonday(id,{status:"Confirmed",notes:(r.notes||"")+noteAddition});
+  renderRequests();renderCalendar();
+  showToast("Sent to football dept — status updated to Confirmed","success");
+}
+
+function pendingApproveWithComment(id,comment){
+  var r=requests.find(function(x){return x.id===id});if(!r)return;
+  r.approved=true;r.status="Internally Approved";if(comment)r.approverComment=comment;
+  syncRequestToMonday(id,{approved:true,status:"Internally Approved",notes:(r.notes?(r.notes+(comment?" | Approver: "+comment:"")):(comment?"Approver: "+comment:""))});
+  if(r.submitterMondayId){
+    mondayApi('mutation($uid:ID!,$txt:String!,$tid:ID!){create_notification(user_id:$uid,target_id:$tid,text:$txt,target_type:Project){text}}',
+      {uid:String(r.submitterMondayId),tid:String(BOARD_ID),txt:"Your request "+r.name+" has been approved!"+(comment?" - "+comment:"")});
+  }
+  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" approved","success");updateApprovalBanner();
+  closeModal("pendingModal");
+}
+
+function pendingDenyWithComment(id,comment){
+  var r=requests.find(function(x){return x.id===id});if(!r)return;
+  r.denied=true;r.status="Not Approved";if(comment)r.approverComment=comment;
+  syncRequestToMonday(id,{status:"Not Approved",approved:false,notes:(r.notes?(r.notes+(comment?" | Denied: "+comment:"")):(comment?"Denied: "+comment:""))});
+  if(r.submitterMondayId){
+    mondayApi('mutation($uid:ID!,$txt:String!,$tid:ID!){create_notification(user_id:$uid,target_id:$tid,text:$txt,target_type:Project){text}}',
+      {uid:String(r.submitterMondayId),tid:String(BOARD_ID),txt:"Your request "+r.name+" was not approved."+(comment?" Reason: "+comment:"")});
+  }
+  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" denied","error");updateApprovalBanner();
+  closeModal("pendingModal");
+}
+
+// ── Delete / Edit ──────────────────────────────────────────────────────────
+function deleteRequest(id){
+  var r=requests.find(function(x){return x.id===id});if(!r)return;
+  document.getElementById("confirmTitle").textContent="Delete Request";
+  document.getElementById("confirmSubtitle").textContent=r.name;
+  document.getElementById("confirmMessage").textContent="This will permanently delete this request from the board.";
+  document.getElementById("confirmOkBtn").textContent="Delete";
+  document.getElementById("confirmOkBtn").style.background="var(--red)";
+  document.getElementById("confirmOkBtn").onclick=function(){
+    deleteRequestOnMonday(id);
+    requests=requests.filter(function(x){return x.id!==id});
+    closeModal("confirmModal");renderRequests();renderCalendar();renderPlayers();
+    showToast("Request deleted","success");
+  };
+  document.getElementById("confirmModal").classList.add("open");
+}
+
+function openEditModal(id){
+  editingId=id;
+  var r=requests.find(function(x){return x.id===id});if(!r)return;
+  document.getElementById("ef-name").value=r.name||"";
+  document.getElementById("ef-type").value=r.type||"Retail";
+  document.getElementById("ef-status").value=r.status||"TBC";
+  document.getElementById("ef-date").value=r.date||"";
+  document.getElementById("ef-location").value=r.location||"";
+  document.getElementById("ef-time").value=r.time_required||"";
+  document.getElementById("ef-start-time").value=r.start_time||"";
+  document.getElementById("ef-notes").value=r.notes||"";
+  var allP=players.concat(aflwPlayers);
+  var cbs=document.getElementById("editPlayersCheckboxes");
+  if(cbs){cbs.innerHTML="";allP.forEach(function(p){var label=document.createElement("label");label.style.cssText="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer";var cb=document.createElement("input");cb.type="checkbox";cb.value=p.id;cb.dataset.pid=p.id;if(r.players.includes(p.id))cb.checked=true;label.appendChild(cb);label.appendChild(document.createTextNode(p.name));cbs.appendChild(label);});}
+  document.getElementById("editModal").classList.add("open");
+}
+
+function saveEdit(){
+  var r=requests.find(function(x){return x.id===editingId});if(!r)return;
+  r.name=document.getElementById("ef-name").value.trim();
+  r.type=document.getElementById("ef-type").value;
+  r.status=document.getElementById("ef-status").value;
+  r.date=document.getElementById("ef-date").value||null;
+  r.location=document.getElementById("ef-location").value.trim();
+  r.time_required=document.getElementById("ef-time").value.trim();
+  r.start_time=document.getElementById("ef-start-time").value;
+  r.notes=document.getElementById("ef-notes").value.trim();
+  r.players=[].slice.call(document.querySelectorAll("#editPlayersCheckboxes input:checked")).map(function(i){return i.dataset.pid});
+  syncRequestToMonday(editingId,{status:r.status,approved:r.approved,notes:r.notes});
+  closeModal("editModal");renderRequests();renderCalendar();renderPlayers();showToast("Saved","success");
+}
+
+// ── Player modal ───────────────────────────────────────────────────────────
+function openPlayerRequests(pid){
+  var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});
+  var today=new Date();today.setHours(0,0,0,0);
+  var pR=visReqs().filter(function(r){return r.players.includes(pid)&&(!r.date||new Date(r.date+"T12:00:00")>=today)});
+  document.getElementById("prModalTitle").textContent=p.name;
+  var body=document.getElementById("prModalBody");body.innerHTML="";
+  if(!pR.length){body.innerHTML='<div style="text-align:center;padding:20px;color:#9ca3af">No upcoming requests</div>';document.getElementById("prModal").classList.add("open");return;}
+  pR.forEach(function(r){
+    var div=document.createElement("div");div.style.cssText="padding:10px 0;border-bottom:0.5px solid #f3f4f6;font-size:13px";
+    div.innerHTML='<div style="font-weight:600">'+r.name+'</div><div style="color:#6b7280;margin-top:2px">'+(r.date?fmtDate(r.date):"TBC")+(r.location?" · "+r.location:"")+'</div><div style="margin-top:4px"><span class="status-chip '+sc(r.status)+'">'+r.status+'</span></div>';
+    body.appendChild(div);
+  });
+  document.getElementById("prModal").classList.add("open");
+}
+
+function openBalanceModal(pid){
+  balEditingId=pid;
+  var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});
+  if(!p)return;
+  document.getElementById("balModalName").textContent=p.name;
+  document.getElementById("balModalInput").value=p.bal||0;
+  document.getElementById("balModal").classList.add("open");
+}
+
+function saveBalance(){
+  var p=players.find(function(pl){return pl.id===balEditingId})||aflwPlayers.find(function(pl){return pl.id===balEditingId});
+  if(!p)return;
+  var val=parseInt(document.getElementById("balModalInput").value,10)||0;
+  val=Math.min(100,Math.max(0,val));
+  var oldBal=p.bal;p.bal=val;
+  var today=new Date().toISOString().slice(0,10);
+  document.getElementById("stampDate").value=today;
+  document.getElementById("balancesStampDisplay").textContent=fmtDate(today);
+  var mondayId=PLAYER_MONDAY_IDS[balEditingId];
+  if(mondayId){mondayApi('mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv){id}}',{bid:BOARD_ID,iid:String(mondayId),cv:JSON.stringify({[COL.balance]:val})});}
+  closeModal("balModal");renderPlayers();
+  if(document.getElementById("tab-balances").classList.contains("active"))renderBalancesTab();
+  showToast("Balance updated","success");
+}
+
+function resetBal(pid){
+  var inp=document.getElementById("bal-input-"+pid);if(!inp)return;
+  var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});
+  if(p&&inp){inp.value=p.bal;updateBalFromInput(inp);}
+}
+
+function updateBalFromInput(inp){
+  var pid=inp.dataset.pid;
+  var val=parseInt(inp.value,10)||0;val=Math.min(100,Math.max(0,val));inp.value=val;
+  var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});
+  if(p)p.bal=val;
+}
+
+function saveAllBalances(){
+  var today=new Date().toISOString().slice(0,10);
+  document.getElementById("stampDate").value=today;
+  document.getElementById("balancesStampDisplay").textContent=fmtDate(today);
+  mondayApi('mutation($iid:ID!,$bid:ID!,$cv:JSON!){change_multiple_column_values(item_id:$iid,board_id:$bid,column_values:$cv){id}}',
+    {iid:SETTINGS_ITEM_ID,bid:BOARD_ID,cv:JSON.stringify({[COL.balance_stamp]:{date:today}})});
+  var allP=players.concat(aflwPlayers);var count=0;
+  allP.forEach(function(p){
+    var inp=document.getElementById("bal-input-"+p.id);
+    if(inp){
+      var val=parseInt(inp.value,10)||0;val=Math.min(100,Math.max(0,val));
+      if(val!==p.bal){
+        p.bal=val;count++;
+        var mondayId=PLAYER_MONDAY_IDS[p.id];
+        if(mondayId){mondayApi('mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv){id}}',{bid:BOARD_ID,iid:String(mondayId),cv:JSON.stringify({[COL.balance]:val})});}
+      }
+    }
+  });
+  renderPlayers();showToast(count>0?count+" balance"+(count>1?"s":"")+" saved to board":"No changes to save",count>0?"success":"error");
+  var status=document.getElementById("balancesSaveStatus");if(status)status.textContent="";
+}
+
+function saveStamp(){
+  var d=document.getElementById("stampDate").value;if(!d){showToast("Pick a date","error");return}
+  mondayApi('mutation($iid:ID!,$bid:ID!,$cv:JSON!){change_multiple_column_values(item_id:$iid,board_id:$bid,column_values:$cv){id}}',
+    {iid:SETTINGS_ITEM_ID,bid:BOARD_ID,cv:JSON.stringify({[COL.balance_stamp]:{date:d}})});
+  var stampDisplay=document.getElementById("balancesStampDisplay");if(stampDisplay)stampDisplay.textContent=fmtDate(d);
+  showToast("Balance last updated: "+fmtDate(d),"success");
+}
+
+// ── New request form ───────────────────────────────────────────────────────
+function openRequestModal(){
+  ["f-name","f-location","f-notes","f-time","f-submitter","f-start-time"].forEach(function(id){var el=document.getElementById(id);if(el)el.value=""});
+  document.getElementById("f-date").value="";
+  document.getElementById("requestModal").classList.add("open");
+}
+
+function saveRequest(){
+  var name=document.getElementById("f-name").value.trim();if(!name){showToast("Enter a name","error");return}
+  var type=document.getElementById("f-type").value;var status=document.getElementById("f-status").value;
+  var pids=[].slice.call(document.querySelectorAll("#playersCheckboxes input:checked")).map(function(i){return i.dataset.pid});
+  var fSubmitter=document.getElementById("f-submitter")?document.getElementById("f-submitter").value.trim():"";
+  var newReq={id:"r"+Date.now(),name:name,date:document.getElementById("f-date").value||null,
+    location:document.getElementById("f-location").value.trim(),
+    start_time:document.getElementById("f-start-time")?document.getElementById("f-start-time").value:"",
+    time_required:document.getElementById("f-time").value.trim(),
+    submitter:fSubmitter,type:type,status:status,notes:document.getElementById("f-notes").value.trim(),
+    players:pids,approved:false,briefed:false};
+  var sdk=getMondayClient();
+  requests.unshift(newReq);
+  closeModal("requestModal");renderRequests();renderCalendar();renderPlayers();
+  showToast("Saved!","success");
+  if(sdk){sdk.api("{me{id name}}").then(function(r){if(r&&r.data&&r.data.me){newReq.submitterMondayId=r.data.me.id;newReq.submitter=newReq.submitter||r.data.me.name;}createRequestOnMonday(newReq);}).catch(function(){createRequestOnMonday(newReq);});}
+  else{createRequestOnMonday(newReq);}
+}
+
+// ── Add player ─────────────────────────────────────────────────────────────
+function openAddPlayerModal(){document.getElementById("addPlayerModal").classList.add("open")}
+function saveNewPlayer(){
+  var name=document.getElementById("ap-name").value.trim();if(!name){showToast("Enter a name","error");return}
+  var squad=document.getElementById("ap-squad").value;
+  var p={id:"p"+Date.now(),name:name,num:document.getElementById("ap-num").value.trim()||"",
+    pos:document.getElementById("ap-pos").value.trim()||"",asa:"Full ASA",bal:100,restricted:false,sponsor:"None",img:""};
+  var targetGroup=squad==="aflw"?"group_mm35q3j5":"group_mm354464";
+  mondayApi('mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}',
+    {bid:BOARD_ID,gid:targetGroup,name:name,cv:JSON.stringify({[COL.player_number]:p.num,[COL.position]:p.pos,[COL.balance]:100})}).then(function(r){
+      if(r&&r.data&&r.data.create_item){PLAYER_MONDAY_IDS[p.id]=parseInt(r.data.create_item.id,10);}
+    });
+  if(squad==="aflw"){p.squad="aflw";aflwPlayers.push(p);}else{players.push(p);}
+  closeModal("addPlayerModal");renderPlayers();showToast("Player added","success");
+}
+
+// ── Edit player ────────────────────────────────────────────────────────────
+function openEditPlayerModal(pid){
+  var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});if(!p)return;
+  document.getElementById("ep-pid").value=pid;
+  document.getElementById("ep-name").value=p.name;
+  document.getElementById("ep-num").value=p.num;
+  document.getElementById("ep-pos").value=p.pos;
+  document.getElementById("ep-asa").value=p.asa;
+  document.getElementById("ep-img").value=p.img||"";
+  document.getElementById("ep-restricted").checked=p.restricted;
+  document.getElementById("editPlayerModal").classList.add("open");
+}
+
+function saveEditPlayer(){
+  var pid=document.getElementById("ep-pid").value;
+  var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});if(!p)return;
+  p.name=document.getElementById("ep-name").value.trim();
+  p.num=document.getElementById("ep-num").value.trim();
+  p.pos=document.getElementById("ep-pos").value.trim();
+  p.asa=document.getElementById("ep-asa").value;
+  p.img=document.getElementById("ep-img").value.trim();
+  p.restricted=document.getElementById("ep-restricted").checked;
+  var mondayId=PLAYER_MONDAY_IDS[pid];
+  if(mondayId){mondayApi('mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv){id}}',
+    {bid:BOARD_ID,iid:String(mondayId),cv:JSON.stringify({[COL.player_number]:p.num,[COL.position]:p.pos,[COL.photo]:p.img})});}
+  closeModal("editPlayerModal");renderPlayers();showToast("Player updated","success");
+}
+
+// ── Make a Request tab ─────────────────────────────────────────────────────
+var mreqSelectedType="Retail";
+function selectMreqType(btn){
+  mreqSelectedType=btn.dataset.val;
+  document.querySelectorAll(".mreq-type-btn").forEach(function(b){b.classList.remove("active")});
+  btn.classList.add("active");
+  var note=document.getElementById("mreqTypeNote");
+  if(note)note.textContent=mreqSelectedType==="Retail"?"Retail requests go to your Retail Approver for review.":mreqSelectedType==="PCL"?"PCL requests go to your Commercial Approver for review.":"Commercial requests go to your Commercial Approver for review.";
+  mreqCheckConflicts();
+}
+
+function initMreqPlayers(){
+  var grid=document.getElementById("mreqPlayersGrid");if(!grid)return;
+  grid.innerHTML="";
+  var allP=players.concat(aflwPlayers);
+  allP.forEach(function(p){
+    var card=document.createElement("div");card.className="mreq-player-card";card.dataset.pid=p.id;
+    var img=p.img?'<img src="'+p.img+'" class="mreq-player-img" onerror="this.style.opacity=.2">'
+      :'<div class="mreq-player-img" style="background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#0369a1">'+p.name[0]+'</div>';
+    card.innerHTML=img+'<div class="mreq-player-name">'+p.name+'</div><div class="mreq-player-info">#'+p.num+'</div>';
+    card.onclick=function(){this.classList.toggle("selected");mreqCheckConflicts();};
+    grid.appendChild(card);
+  });
+}
+
+function mreqCheckConflicts(){
+  var date=document.getElementById("mreq-date").value;var ae=document.getElementById("mreqDateAvail");
+  var mbDate=date?mediaBlackouts.find(function(m){return m.date===date}):null;
+  if(date&&schedule[date]){
+    var s=schedule[date];var sa=aflwSchedule[date];
+    var cls={available:"mreq-date-available",partial:"mreq-date-partial",unavailable:"mreq-date-unavailable",cba:"mreq-date-cba",weekend:"mreq-date-weekend"};
+    var ic={available:"✅",partial:"🕐",unavailable:"❌",cba:"⚠️",weekend:"🏠"};
+    ae.className="mreq-date-avail "+(cls[s.a]||"");
+    ae.innerHTML=ic[s.a]+" AFL: "+s.n+(sa&&sa.a!=="weekend"?"<br>"+ic[sa.a]+" AFLW: "+sa.n:"")+(mbDate?"<br>📷 Media Blackout: "+mbDate.label:"");
+  } else if(mbDate){
+    ae.className="mreq-date-avail mreq-date-unavailable";ae.innerHTML="📷 Media Blackout: "+mbDate.label;
+  } else {ae.textContent="";}
+}
+
+function submitMakeRequest(){
+  var name=document.getElementById("mreq-name").value.trim();if(!name){showToast("Enter a request name","error");return}
+  var date=document.getElementById("mreq-date").value;
+  var loc=document.getElementById("mreq-location").value.trim();
+  var timeReq=document.getElementById("mreq-time").value.trim();
+  var startTime=document.getElementById("mreq-start-time")?document.getElementById("mreq-start-time").value:"";
+  var sub=document.getElementById("mreq-submitter").value.trim();
+  var notes=document.getElementById("mreq-notes").value.trim();
+  var status=document.getElementById("mreq-status").value;
+  var sel=[].slice.call(document.querySelectorAll(".mreq-player-card.selected")).map(function(c){return c.dataset.pid});
+  var type=mreqSelectedType;
+  var nr={id:"r"+Date.now(),name:name,date:date,players:sel,location:loc,start_time:startTime,
+    time_required:timeReq,type:type,status:status,briefed:false,approved:false,submitter:sub,notes:notes};
+  requests.unshift(nr);renderRequests();renderCalendar();renderPlayers();
+  var sdk=getMondayClient();
+  if(sdk){sdk.api("{me{id name}}").then(function(r){if(r&&r.data&&r.data.me){nr.submitterMondayId=r.data.me.id;nr.submitter=nr.submitter||r.data.me.name;}createRequestOnMonday(nr);}).catch(function(){createRequestOnMonday(nr);});}
+  else{createRequestOnMonday(nr);}
+  mreqReset();showToast("Request submitted!","success");switchTab("requests",null);
+}
+
+function mreqReset(){
+  ["mreq-name","mreq-date","mreq-location","mreq-notes","mreq-submitter","mreq-time","mreq-start-time"].forEach(function(id){var el=document.getElementById(id);if(el)el.value=""});
+  document.querySelectorAll(".mreq-player-card.selected").forEach(function(c){c.classList.remove("selected")});
+  mreqSelectedType="Retail";
+  document.querySelectorAll(".mreq-type-btn").forEach(function(b){b.classList.remove("active");if(b.dataset.val==="Retail")b.classList.add("active");});
+}
+
+// ── Calendar ───────────────────────────────────────────────────────────────
+function calNav(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
+function switchCalSquad(squad,btn){
+  calSquad=squad;
+  document.querySelectorAll("#calBtn-afl,#calBtn-aflw,#calBtn-both").forEach(function(b){b.classList.remove("active")});
+  btn.classList.add("active");renderCalendar();
+}
+
+function setFilterDrop(type,val){if(type==="dept")filterDept=val;else if(type==="status")filterStatus=val;else filterTime=val;renderRequests();}
+
+// ── Toggle edit modes ──────────────────────────────────────────────────────
+function toggleProcessEdit(){
+  var btn=document.getElementById("processEditBtn");var editing=btn.dataset.editing==="true";
+  if(editing){document.querySelectorAll(".process-editable,.process-editable-title,.process-editable-subtitle").forEach(function(el){el.contentEditable="false";el.style.outline="";el.style.borderRadius="";el.style.padding="";});document.getElementById("processIntroText").contentEditable="false";document.getElementById("processIntroText").style.outline="";btn.dataset.editing="false";btn.innerHTML="✏️ Edit Content";btn.style.background="var(--teal)";showToast("Process content saved","success");}
+  else{document.querySelectorAll(".process-editable,.process-editable-title,.process-editable-subtitle").forEach(function(el){el.contentEditable="true";el.style.outline="2px solid var(--teal)";el.style.borderRadius="4px";el.style.padding="2px 4px";});document.getElementById("processIntroText").contentEditable="true";document.getElementById("processIntroText").style.outline="2px solid var(--teal)";btn.dataset.editing="true";btn.innerHTML="💾 Save Changes";btn.style.background="var(--confirmed)";showToast("Click any text to edit it","success");}
+}
+
+function toggleHiwEdit(){
+  var btn=document.getElementById("hiwEditBtn");var editing=btn.dataset.editing==="true";
+  if(editing){document.querySelectorAll(".hiw-editable").forEach(function(el){el.contentEditable="false";el.style.outline="";el.style.borderRadius="";el.style.padding="";});btn.dataset.editing="false";btn.innerHTML="✏️ Edit Content";btn.style.background="var(--teal)";showToast("How It Works content saved","success");}
+  else{document.querySelectorAll(".hiw-card-title,.hiw-card-text").forEach(function(el){el.classList.add("hiw-editable");el.contentEditable="true";el.style.outline="2px solid var(--teal)";el.style.borderRadius="4px";el.style.padding="4px";});btn.dataset.editing="true";btn.innerHTML="💾 Save Changes";btn.style.background="var(--confirmed)";showToast("Click any text to edit it","success");}
+}
+
+// ── Blackouts ──────────────────────────────────────────────────────────────
+function openBlackoutModal(){document.getElementById("bo-label").value="";document.getElementById("bo-date").value="";document.getElementById("blackoutModal").classList.add("open");}
+function saveBlackout(){
+  var label=document.getElementById("bo-label").value.trim();var startDate=document.getElementById("bo-date").value;
+  var endDateEl=document.getElementById("bo-end-date");var endDate=endDateEl&&endDateEl.value?endDateEl.value:startDate;
+  if(!label||!startDate){showToast("Please enter a label and start date","error");return}
+  if(endDate<startDate){showToast("End date must be after start date","error");return}
+  var dates=[];var cur=new Date(startDate+"T12:00:00");var end=new Date(endDate+"T12:00:00");
+  while(cur<=end){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
+  var groupId="mbo"+Date.now();
+  dates.forEach(function(date,i){
+    var mb={id:"mb"+(Date.now()+i),date:date,label:label,groupId:groupId,mondayId:null};
+    mediaBlackouts.push(mb);
+    mondayApi('mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}',
+      {bid:BOARD_ID,gid:MEDIA_GROUP,name:label+(dates.length>1?" ("+date+")":""),cv:JSON.stringify({"date_mm35z010":{date:date}})}).then(function(r){if(r&&r.data&&r.data.create_item)mb.mondayId=parseInt(r.data.create_item.id,10);});
+  });
+  closeModal("blackoutModal");if(endDateEl)endDateEl.value="";renderCalendar();
+  showToast(dates.length>1?"Blackout added: "+label+" ("+dates.length+" days)":"Blackout added: "+label,"success");
+}
+function deleteBlackout(id){
+  var mb=mediaBlackouts.find(function(m){return m.id===id});if(!mb)return;
+  var toRemove=mb.groupId?mediaBlackouts.filter(function(m){return m.groupId===mb.groupId}):[mb];
+  if(!confirm("Remove "+mb.label+" ("+toRemove.length+" day"+(toRemove.length>1?"s":"")+")?")){return}
+  toRemove.forEach(function(item){mediaBlackouts=mediaBlackouts.filter(function(m){return m.id!==item.id});if(item.mondayId){mondayApi('mutation($id:ID!){delete_item(item_id:$id){id}}',{id:String(item.mondayId)});}});
+  renderCalendar();showToast("Blackout removed","success");
+}
+
+// ── SDK init ───────────────────────────────────────────────────────────────
+(function(){
+  var sdk=getMondayClient();
+  if(!sdk){setTimeout(function(){if(players.length===0)loadFromBoard();},1500);return;}
+  sdk.listen("context",function(res){
+    var ctx=res.data||res;SDK_READY=true;
+    if(ctx&&ctx.user&&ctx.user.id)resolveIdentity(ctx.user.id);
+    loadFromBoard();
+  });
+  sdk.get("context").then(function(res){var ctx=res.data||res;if(ctx&&ctx.user&&ctx.user.id)resolveIdentity(ctx.user.id);}).catch(function(){});
+  setTimeout(function(){sdk.api("{me{id name}}").then(function(res){if(res&&res.data&&res.data.me)resolveIdentity(res.data.me.id);}).catch(function(){});},600);
+  setTimeout(function(){if(players.length===0)loadFromBoard();},1500);
+})();
+
+document.getElementById("playersGrid").innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">⚡ Loading players from board...</div>';
+renderRequests();renderCalendar();
+</script>
+</body>
+</html>
