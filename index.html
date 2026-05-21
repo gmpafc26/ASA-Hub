@@ -16,7 +16,7 @@
   .header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .access-badge{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;color:rgba(255,255,255,.8);font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap}
   .access-badge:hover{background:rgba(255,255,255,.18)}.access-badge.logged-in{background:rgba(0,180,216,.2);border-color:var(--teal-light);color:var(--teal-light)}
-  .tab-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center}
+  .tab-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;position:sticky;top:54px;z-index:99}
   .tab-btn{padding:14px 20px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:7px;white-space:nowrap}
   .tab-btn:hover{color:var(--text)}.tab-btn.active{color:var(--teal);border-bottom-color:var(--teal)}
   .tab-btn-cta{margin-left:auto;background:var(--teal);color:#fff !important;font-weight:600;border-radius:7px;margin-top:8px;margin-bottom:8px;padding:8px 16px !important;border-bottom:none !important}
@@ -234,7 +234,7 @@
   .mreq-success-detail{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.7;max-width:420px;margin-left:auto;margin-right:auto}
   .mreq-success-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
   .approval-banner-inner{max-width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 24px;flex-wrap:wrap}
-  #approvalBanner{background:linear-gradient(135deg,#fff7ed,#fef3c7);border-bottom:2px solid var(--tentative);position:sticky;top:98px;z-index:98}
+  #approvalBanner{background:linear-gradient(135deg,#fff7ed,#fef3c7);border-bottom:2px solid var(--tentative)}
   .approval-banner-left{display:flex;align-items:center;gap:12px}
   .approval-banner-icon{width:36px;height:36px;background:var(--tentative);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
   .approval-banner-title{font-weight:700;font-size:14px;color:#92400e}
@@ -1216,8 +1216,10 @@ function switchCalSquad(squad,btn){
 function switchBalSquad(squad,btn){
   document.querySelectorAll("#balBtn-afl,#balBtn-aflw").forEach(function(b){b.classList.remove("active")});
   btn.classList.add("active");
-  document.getElementById("balancesAFLBody").style.display=squad==="afl"?"grid":"none";
-  document.getElementById("balancesAFLWBody").style.display=squad==="aflw"?"grid":"none";
+  var aflBody=document.getElementById("balancesAFLBody");
+  var aflwBody=document.getElementById("balancesAFLWBody");
+  if(aflBody)aflBody.style.display=squad==="afl"?"grid":"none";
+  if(aflwBody)aflwBody.style.display=squad==="aflw"?"grid":"none";
 }
 
 // ── Players ────────────────────────────────────────────────────────────────
@@ -1612,6 +1614,16 @@ function submitMakeRequest(){
 
 // ── Balances ───────────────────────────────────────────────────────────────
 function renderBalancesTab(){
+  // Ensure AFL shown, AFLW hidden on load
+  var aflEl=document.getElementById("balancesAFLBody");
+  var aflwEl=document.getElementById("balancesAFLWBody");
+  if(aflEl)aflEl.style.display="grid";
+  if(aflwEl)aflwEl.style.display="none";
+  // Reset toggle buttons
+  var balBtnAfl=document.getElementById("balBtn-afl");
+  var balBtnAflw=document.getElementById("balBtn-aflw");
+  if(balBtnAfl)balBtnAfl.classList.add("active");
+  if(balBtnAflw)balBtnAflw.classList.remove("active");
   renderBalancesTable("balancesAFLBody",players);
   renderBalancesTable("balancesAFLWBody",aflwPlayers);
   var stamp=document.getElementById("stampDate");
@@ -1621,31 +1633,33 @@ function renderBalancesTab(){
 function renderBalancesTable(containerId,squad){
   var container=document.getElementById(containerId);
   if(!container)return;
+  var currentDisplay=container.style.display;
   container.innerHTML="";
-  container.style.cssText="display:grid;grid-template-columns:repeat(4,1fr);gap:12px";
+  container.style.cssText="display:"+(currentDisplay==="none"?"none":"grid")+";grid-template-columns:repeat(4,1fr);gap:12px";
   squad.forEach(function(p){
     var pct=Math.min(100,Math.max(0,p.bal||0));
     var card=document.createElement("div");
-    card.style.cssText="background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px";
+    var barCol=pct>60?"#1D9E75":pct>30?"#EF9F27":"#E24B4A";
+    card.style.cssText="background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;border-bottom:3px solid "+barCol;
     card.id="balrow-"+p.id;
     var img=document.createElement("img");
     img.style.cssText="width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:top center;flex-shrink:0;border:2px solid #f3f4f6";
     img.src=p.img;img.onerror=function(){this.style.opacity=.2};
     var right=document.createElement("div");right.style.cssText="flex:1;min-width:0";
     var nameRow=document.createElement("div");nameRow.style.cssText="display:flex;align-items:baseline;gap:6px;margin-bottom:4px;flex-wrap:wrap";
-    var nameSpan=document.createElement("span");nameSpan.style.cssText="font-size:13px;font-weight:600;color:#111827;white-space:nowrap";nameSpan.textContent=p.name;
-    var numSpan=document.createElement("span");numSpan.style.cssText="font-size:11px;color:#9ca3af;white-space:nowrap";numSpan.textContent="#"+p.num+" \xb7 "+p.pos;
+    var nameSpan=document.createElement("span");nameSpan.style.cssText="font-size:12px;font-weight:600;color:#111827;white-space:nowrap";nameSpan.textContent=p.name;
+    var numSpan=document.createElement("span");numSpan.style.cssText="font-size:10px;color:#9ca3af;white-space:nowrap";numSpan.textContent="#"+p.num+" \xb7 "+p.pos;
     nameRow.appendChild(nameSpan);nameRow.appendChild(numSpan);
-    var inputRow=document.createElement("div");inputRow.style.cssText="display:flex;align-items:center;gap:5px";
+    var inputRow=document.createElement("div");inputRow.style.cssText="display:flex;align-items:center;gap:4px";
     var inp=document.createElement("input");inp.type="number";inp.min=0;inp.max=100;inp.value=pct;
     inp.id="bal-input-"+p.id;
-    inp.style.cssText="width:52px;font-size:14px;font-weight:700;padding:4px 6px;border-radius:6px;border:0.5px solid #d1d5db;text-align:center;color:#111827";
+    inp.style.cssText="width:54px;font-size:15px;font-weight:700;padding:4px 6px;border-radius:6px;border:0.5px solid #d1d5db;text-align:center;color:#111827";
     inp.dataset.pid=p.id;
     inp.addEventListener("change",function(){
       var pid=this.dataset.pid;var val=Math.min(100,Math.max(0,parseInt(this.value,10)||0));this.value=val;
       var pl=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});if(pl)pl.bal=val;
     });
-    var pctLabel=document.createElement("span");pctLabel.style.cssText="font-size:12px;color:#6b7280;font-weight:500";pctLabel.textContent="% remaining";
+    var pctLabel=document.createElement("span");pctLabel.style.cssText="font-size:12px;color:#6b7280;font-weight:500";pctLabel.textContent="%";pctLabel.style.cssText="font-size:13px;color:#6b7280;font-weight:500";
     var resetBtn=document.createElement("button");resetBtn.style.cssText="background:none;border:none;cursor:pointer;color:#d1d5db;font-size:14px;padding:2px 4px;margin-left:auto";
     resetBtn.innerHTML="&#8635;";resetBtn.title="Reset";resetBtn.dataset.pid=p.id;
     resetBtn.addEventListener("click",function(){var pid=this.dataset.pid;var inp2=document.getElementById("bal-input-"+pid);var pl=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});if(inp2&&pl)inp2.value=pl.bal;});
