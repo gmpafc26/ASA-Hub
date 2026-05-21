@@ -250,7 +250,7 @@
   .players-stamp-date{border:none;font-family:"DM Sans",sans-serif;font-size:13px;font-weight:600;color:var(--text);background:transparent;outline:none;cursor:pointer}
   .players-stamp-save{background:var(--teal);border:none;color:#fff;font-family:"DM Sans",sans-serif;font-size:11px;font-weight:600;border-radius:5px;padding:4px 10px;cursor:pointer;transition:opacity .15s}
   .players-stamp-save:hover{opacity:.85}
-  .balances-wrap{max-width:860px;margin:0 auto}
+  .balances-wrap{width:100%}
   .balances-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px;flex-wrap:wrap}
   .balances-title{font-size:22px;font-weight:800;margin-bottom:4px}
   .balances-sub{font-size:13px;color:var(--muted)}
@@ -1782,11 +1782,12 @@ function renderBalancesTable(containerId,squad){
   var container=document.getElementById(containerId);
   if(!container)return;
   container.innerHTML="";
+  container.style.cssText="display:grid;grid-template-columns:repeat(4,1fr);gap:12px";
   squad.forEach(function(p){
     var pct=Math.min(100,Math.max(0,p.bal||0));
     var barColor=pct>60?"#1D9E75":pct>30?"#EF9F27":"#E24B4A";
     var card=document.createElement("div");
-    card.style.cssText="background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:8px";
+    card.style.cssText="background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;padding:14px;";
     card.id="balrow-"+p.id;
     var img=document.createElement("img");
     img.style.cssText="width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:top center;border:2px solid #f3f4f6;flex-shrink:0";
@@ -1816,12 +1817,13 @@ function renderBalancesTable(containerId,squad){
     inputRow.style.cssText="display:flex;align-items:center;gap:6px";
     inputRow.appendChild(inp);inputRow.appendChild(pctLabel);inputRow.appendChild(resetBtn);
     var topRow=document.createElement("div");
-    topRow.style.cssText="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px";
+    topRow.style.cssText="display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:4px";
     topRow.appendChild(nameEl);topRow.appendChild(inputRow);
-    var textCol=document.createElement("div");textCol.style.cssText="flex:1;min-width:0";
+    var textCol=document.createElement("div");textCol.style.cssText="width:100%";
     textCol.appendChild(topRow);textCol.appendChild(barWrap);
     var inner=document.createElement("div");
-    inner.style.cssText="display:flex;align-items:center;gap:12px";
+    inner.style.cssText="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px";
+    img.style.cssText="width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:top center;border:2px solid #f3f4f6;flex-shrink:0";
     inner.appendChild(img);inner.appendChild(textCol);
     card.appendChild(inner);
     container.appendChild(card);
