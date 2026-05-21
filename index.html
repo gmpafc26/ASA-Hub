@@ -22,7 +22,7 @@
   .tab-btn-cta{margin-left:auto;background:var(--teal);color:#fff !important;font-weight:600;border-radius:7px;margin-top:8px;margin-bottom:8px;padding:8px 16px !important;border-bottom:none !important}
   .tab-btn-cta:hover{background:var(--teal-light) !important}.tab-btn-cta.active{background:var(--teal-light);border-bottom:none !important}
   .tab-btn-balances{color:#059669;font-weight:600}.tab-btn-balances.active{border-bottom-color:#059669;color:#059669}
-  .tab-pane{display:none;padding:24px}.tab-pane.active{display:block}
+  .tab-content{max-width:1400px;margin:0 auto;padding:0 24px}.tab-pane{display:none;padding:24px 0}.tab-pane.active{display:block}
   .players-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
   @media(max-width:1200px){.players-grid{grid-template-columns:repeat(4,1fr)}}
   @media(max-width:600px){.players-grid{grid-template-columns:repeat(2,1fr)}}
@@ -370,21 +370,17 @@
     <button class="approval-banner-btn" onclick="openPendingModal()">Review &amp; Approve &#8594;</button>
   </div>
 </div>
+<div class="tab-content">
 <div class="tab-pane active" id="tab-players">
   <div class="players-tab-header">
     <div class="tab-page-header">
       <div><h2 class="tab-page-title">Players</h2><p class="tab-page-sub">AFL and AFLW player profiles, ASA/CBA balances and upcoming requests</p></div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <button class="squad-tab-btn active" id="sqBtn-afl" onclick="switchSquad('afl',this)">AFL</button>
         <button class="squad-tab-btn" id="sqBtn-aflw" onclick="switchSquad('aflw',this)">AFLW</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <div class="players-balance-stamp">
-        <span class="players-stamp-label">Balance last updated</span>
-        <input type="date" class="players-stamp-date" id="stampDate">
-        <button class="players-stamp-save" onclick="saveStamp()">Save</button>
+
+        <button class="btn-primary" id="addPlayerBtn" onclick="openAddPlayerModal()" style="display:none">&#43; Add Player</button>
       </div>
-      <button class="btn-primary" id="addPlayerBtn" onclick="openAddPlayerModal()" style="display:none">&#43; Add Player</button>
     </div>
   </div>
   <div id="playersGrid" class="players-grid"></div>
@@ -574,7 +570,6 @@
     <div id="balancesAFLBody" style="display:block"></div>
     <div id="balancesAFLWBody" style="display:none"></div>
     <div class="balances-footer"><button class="btn-primary" onclick="saveAllBalances()">&#128190; Save All to Board</button><span class="balances-footer-note" id="balancesSaveStatus"></span></div>
-    </div>
   </div>
 </div>
 <div class="tab-pane" id="tab-how-it-works">
@@ -678,6 +673,7 @@
     </div>
 
   </div>
+</div>
 </div>
 
 <div class="modal-overlay" id="requestFormModal">
@@ -785,6 +781,7 @@
     
     </div>
   </div>
+</div>
 </div>
 
 <div class="modal-overlay" id="playerRequestsModal"><div class="modal narrow"><div class="modal-header"><div><div class="modal-title" id="prModalTitle"></div><div style="font-size:12px;color:var(--muted);margin-top:3px" id="prModalSub"></div></div><button class="modal-close" onclick="closeModal('playerRequestsModal')">&#215;</button></div><div class="modal-body" id="prModalBody"></div><div class="modal-footer"><button class="btn-primary" id="prNewBtn">+ New Request</button></div></div></div>
