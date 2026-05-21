@@ -336,6 +336,10 @@
   .badge{background:var(--teal);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px}
   .toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(60px);opacity:0;transition:all .25s;z-index:2000}
   .toast.show{transform:translateY(0);opacity:1}.toast.success{background:var(--confirmed)}.toast.error{background:var(--red)}
+
+  .tab-page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+  .tab-page-title{font-size:17px;font-weight:700;color:var(--text);margin:0 0 3px}
+  .tab-page-sub{font-size:12px;color:var(--text2);margin:0}
 </style>
 </head>
 <body>
@@ -368,9 +372,11 @@
 </div>
 <div class="tab-pane active" id="tab-players">
   <div class="players-tab-header">
-    <div style="display:flex;align-items:center;gap:8px">
-      <button class="squad-tab-btn active" id="sqBtn-afl" onclick="switchSquad('afl',this)">AFL</button>
-      <button class="squad-tab-btn" id="sqBtn-aflw" onclick="switchSquad('aflw',this)">AFLW</button>
+    <div class="tab-page-header">
+      <div><h2 class="tab-page-title">Players</h2><p class="tab-page-sub">AFL and AFLW player profiles, ASA/CBA balances and upcoming requests</p></div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button class="squad-tab-btn active" id="sqBtn-afl" onclick="switchSquad('afl',this)">AFL</button>
+        <button class="squad-tab-btn" id="sqBtn-aflw" onclick="switchSquad('aflw',this)">AFLW</button>
     </div>
     <div style="display:flex;align-items:center;gap:12px">
       <div class="players-balance-stamp">
@@ -435,11 +441,8 @@
   <div class="requests-table-wrap"><div id="requestsCards" style="display:flex;flex-direction:column;gap:10px;padding:16px"></div></div>
 </div>
 <div class="tab-pane" id="tab-process">
-  <div class="process-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
-    <div>
-      <h2>Request Process</h2>
-      <p>Three streams for managing Retail, Commercial and PCL player appearance requests</p>
-    </div>
+  <div class="tab-page-header">
+    <div><h2 class="tab-page-title">Request Process</h2><p class="tab-page-sub">How Retail, Commercial and PCL appearance requests are submitted and approved</p></div>
     <button id="processEditBtn" class="btn-primary" style="display:none" onclick="toggleProcessEdit()">&#9998; Edit Content</button>
   </div>
 
@@ -552,8 +555,8 @@
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
       <div>
-        <h2 class="balances-title">&#9997;&#65039; Update ASA / CBA Balances</h2>
-        <p class="balances-sub">Edit player balances. Changes save to the board when you click Save All.</p>
+        <h2 class="tab-page-title">ASA / CBA Balances</h2>
+        <p class="tab-page-sub">Update player balance percentages — changes sync to the board when you click Save All</p>
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <div class="balances-stamp-display">Last updated: <strong id="balancesStampDisplay">&#8212;</strong></div>
@@ -580,8 +583,8 @@
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
       <div>
-        <h2 style="font-size:18px;font-weight:700;margin:0 0 4px">How It Works</h2>
-        <p style="font-size:13px;color:var(--text2);margin:0">ASA / CBA Player Requests Hub — Port Adelaide Football Club</p>
+        <h2 class="tab-page-title">How It Works</h2>
+        <p class="tab-page-sub">Guide to using the ASA / CBA Player Requests Hub</p>
       </div>
       <button id="hiwEditBtn" class="btn-primary" style="display:none" onclick="toggleHiwEdit()">&#9998; Edit Content</button>
     </div>
