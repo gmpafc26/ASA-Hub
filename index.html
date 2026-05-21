@@ -10,13 +10,13 @@
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{--navy:#0d1b2a;--teal:#008aab;--teal-light:#00b4d8;--white:#fff;--off-white:#f4f6f8;--border:#e2e8f0;--text:#1a2636;--muted:#64748b;--confirmed:#16a34a;--tentative:#d97706;--planned:#3b82f6;--tbc:#94a3b8;--red:#dc2626;--radius:12px;--shadow:0 2px 12px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.14)}
   body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
-  .hub-header{background:var(--navy);padding:8px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:8px}
+  .hub-header{background:var(--navy);padding:8px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
   .hub-logo{display:flex;align-items:center;gap:10px;color:#fff;font-weight:700;font-size:15px;letter-spacing:-.3px}
   .hub-logo-icon{width:28px;height:28px;background:var(--teal);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
   .header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .access-badge{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;color:rgba(255,255,255,.8);font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap}
   .access-badge:hover{background:rgba(255,255,255,.18)}.access-badge.logged-in{background:rgba(0,180,216,.2);border-color:var(--teal-light);color:var(--teal-light)}
-  .tab-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;position:sticky;top:54px;z-index:99}
+  .tab-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;position:sticky;top:0;z-index:99}
   .tab-btn{padding:14px 20px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:7px;white-space:nowrap}
   .tab-btn:hover{color:var(--text)}.tab-btn.active{color:var(--teal);border-bottom-color:var(--teal)}
   .tab-btn-cta{margin-left:auto;background:var(--teal);color:#fff !important;font-weight:600;border-radius:7px;margin-top:8px;margin-bottom:8px;padding:8px 16px !important;border-bottom:none !important}
@@ -343,7 +343,7 @@
 </style>
 </head>
 <body>
-<header class="hub-header">
+<div style="position:sticky;top:0;z-index:100"><header class="hub-header">
   <div class="hub-logo"><div class="hub-logo-icon">&#9889;</div>ASA Player Requests Hub</div>
   <div class="header-right">
     <div class="access-badge" id="accessBadge" onclick="openPinModal()">&#128274; <span id="accessLabel">Sign in</span></div>
@@ -358,6 +358,7 @@
   <button class="tab-btn" data-tab="how-it-works" onclick="switchTab('how-it-works',this)">&#128214; How It Works</button>
   <button class="tab-btn tab-btn-cta" onclick="openRequestFormModal()">&#43; New Request</button>
 </nav>
+</div>
 <div id="approvalBanner" style="display:none">
   <div class="approval-banner-inner">
     <div class="approval-banner-left">
