@@ -1564,8 +1564,8 @@ function initMreqPlayers(){
   for(var i=0;i<allP.length;i++){
     var p=allP[i];
     var imgInitials=p.name.split(" ").map(function(w){return w[0]||""}).slice(0,2).join("");
-    var imgHtml=p.img?'<img class="mreq-player-img" src="'+p.img+'" alt="'+p.name+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'+'<div class="mreq-player-img" style="display:none;align-items:center;justify-content:center;font-weight:600;color:#0369a1;background:#e0f2fe">'+imgInitials+'</div>'
-      :'<div class="mreq-player-img" style="display:flex;align-items:center;justify-content:center;font-weight:600;color:#0369a1;background:#e0f2fe">'+imgInitials+'</div>';
+    var imgHtml=p.img?'<img class="mreq-player-photo" src="'+p.img+'" alt="'+p.name+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'+'<div class="mreq-player-photo" style="display:none;align-items:center;justify-content:center;font-weight:600;color:#0369a1;background:#e0f2fe">'+imgInitials+'</div>'
+      :'<div class="mreq-player-photo" style="display:flex;align-items:center;justify-content:center;font-weight:600;color:#0369a1;background:#e0f2fe">'+imgInitials+'</div>';
     html+='<div class="mreq-player-card" id="mreqpc-'+p.id+'" onclick="mreqToggle(event,\''+p.id+'\')">'
       +'<input type="checkbox" data-pid="'+p.id+'" onclick="event.stopPropagation();mreqToggle(event,\''+p.id+'\')">'
       +imgHtml
