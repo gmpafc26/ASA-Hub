@@ -432,7 +432,7 @@
       <div class="filter-group"><label class="filter-group-label" for="filterTimeSel">Time</label><div class="filter-select-wrap"><select class="filter-select" id="filterTimeSel" onchange="setFilterDrop('time',this.value)"><option value="active">Active</option><option value="past">Past</option><option value="all">All Time</option></select><span class="filter-select-arrow">&#8964;</span></div></div>
     </div>
   </div>
-  <div class="requests-table-wrap"><table class="requests-table"><thead><tr><th>Name</th><th>Type</th><th>Date</th><th>Players</th><th>Location</th><th>Time</th><th>Status</th><th></th></tr></thead><tbody id="requestsTbody"></tbody></table></div>
+  <div class="requests-table-wrap"><div id="requestsCards" style="display:flex;flex-direction:column;gap:10px;padding:16px"></div></div>
 </div>
 <div class="tab-pane" id="tab-process">
   <div class="process-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
@@ -1403,34 +1403,64 @@ function renderRequests(){
   else if(filterTime==="past")vis=vis.filter(function(r){if(!r.approved&&canApprove(r.type))return true;if(!r.date)return false;return new Date(r.date+"T12:00:00")<today});
   var tb=document.getElementById("requestsTbody");
   if(!vis.length){tb.innerHTML='<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--muted)">No requests found</td></tr>';return}
-  var html="";
+  // Sort by date - upcoming first (soonest date first), undated at end
+  var today2=new Date();today2.setHours(0,0,0,0);
+  vis.sort(function(a,b){
+    if(!a.date&&!b.date)return 0;
+    if(!a.date)return 1;
+    if(!b.date)return -1;
+    return new Date(a.date+"T12:00:00")-new Date(b.date+"T12:00:00");
+  });
+  var cards="";
   for(var i=0;i<vis.length;i++){
     var r=vis[i];
-    var names=r.players.map(function(pid){var ap=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return ap?ap.name:""}).filter(Boolean);
+    var names=r.players.map(function(pid){var ap=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return ap?ap.name:"";}).filter(Boolean);
     var canEd=accessLevel!=="viewer"&&(accessLevel==="admin"||canApprove(r.type));
-    var eBtn=canEd?'<button class="btn-icon" onclick="openEditModal(\''+r.id+'\')">&#9998;</button>':"";
-    var dBtn=(accessLevel==="admin"||canApprove(r.type))?'<button class="btn-icon danger" onclick="deleteRequest(\''+r.id+'\')">&#128465;</button>':"";
-    var aBtn=!r.approved&&canApprove(r.type)?'<button class="btn-icon" title="Approve" onclick="approveRequest(\''+r.id+'\')" style="color:var(--confirmed)">&#9989;</button>':"";
+    var eBtn=canEd?'<button onclick="openEditModal(\''+r.id+'\')" style="background:none;border:0.5px solid #d1d5db;border-radius:6px;padding:5px 8px;cursor:pointer;color:#6b7280;font-size:12px" title="Edit">&#9998;</button>':"";
+    var dBtn=(accessLevel==="admin"||canApprove(r.type))?'<button onclick="deleteRequest(\''+r.id+'\')" style="background:none;border:0.5px solid #fca5a5;border-radius:6px;padding:5px 8px;cursor:pointer;color:#ef4444;font-size:12px" title="Delete">&#128465;</button>':"";
+    var aBtn=!r.approved&&canApprove(r.type)?'<button onclick="approveRequest(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Approve</button>':"";
     var aflCount=r.players.filter(function(pid){return players.find(function(p){return p.id===pid})}).length;
     var aflwCount=r.players.filter(function(pid){return aflwPlayers.find(function(p){return p.id===pid})}).length;
-    var liaison=aflCount>0&&aflwCount>0?"Both Liaisons":aflwCount>0?"AFLW Liaison":"AFL Liaison";
-    var sendBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button class="btn-icon" onclick="sendToLiaison(\''+r.id+'\')" style="color:#6d28d9;width:auto;padding:0 8px;font-size:11px;font-weight:600;white-space:nowrap">&#128231; Send to Dept</button>':"";
-    var confirmBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button class="btn-icon" onclick="markFullyConfirmed(\''+r.id+'\')" title="Mark as fully confirmed (bypass liaison)" style="color:var(--confirmed);width:auto;padding:0 8px;font-size:11px;font-weight:600;white-space:nowrap">&#9989; Confirm</button>':"";
-    var pNote=!r.approved&&canApprove(r.type)?'<span class="pending-badge">&#8987; Pending your approval</span>':"";
-    var bNote=r.briefed?'<span style="font-size:10px;color:var(--confirmed);display:block;margin-top:2px">&#9989; Briefed to Trent</span>':"";
+    var sendBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="sendToLiaison(\''+r.id+'\')" style="background:#f5f3ff;border:0.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer;color:#6d28d9;font-size:12px;font-weight:600">&#128231; Send to Dept</button>':"";
+    var confirmBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="markFullyConfirmed(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Confirm</button>':"";
     var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
-    var pillsHtml=names.length?names.map(function(n){return'<span class="player-pill">'+n+"</span>"}).join(""):'<span style="color:var(--muted);font-size:12px">--</span>';
-    html+='<tr class="'+(r.approved?"":"pending-row")+'">'
-      +"<td><strong>"+r.name+"</strong>"+pNote+bNote+"</td>"
-      +'<td><span class="type-chip '+tc+'">'+r.type+"</span></td>"
-      +"<td>"+(r.date?fmtDate(r.date):'<span style="color:var(--muted)">TBC</span>')+"</td>"
-      +'<td><div class="player-list-inline">'+pillsHtml+"</div></td>"
-      +"<td>"+(r.location||"--")+"</td>"
-      +"<td style='color:var(--muted);font-size:12px'>"+(r.start_time?fmtTime(r.start_time)+" · ":"")+(r.time_required||"--")+"</td>"
-      +'<td><span class="status-chip '+sc(r.status)+'">'+r.status+"</span></td>"
-      +'<td><div class="action-btns">'+sendBtn+confirmBtn+aBtn+eBtn+dBtn+"</div></td></tr>";
+    var isPast=r.date&&new Date(r.date+"T12:00:00")<today2;
+    var cardStyle="background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;padding:16px 18px;opacity:"+(isPast?"0.6":"1");
+    var metaParts=[];
+    if(r.date)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#128197; '+fmtDate(r.date)+'</span>');
+    if(r.location)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#128205; '+r.location+'</span>');
+    if(r.start_time||r.time_required)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#9200; '+(r.start_time?fmtTime(r.start_time)+(r.time_required?" · "+r.time_required:""):r.time_required)+'</span>');
+    var pillsHtml=names.length?names.map(function(n){return'<div style="width:28px;height:28px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0369a1;flex-shrink:0" title="'+n+'">'+n.split(" ").map(function(w){return w[0]}).join("").slice(0,2)+'</div>'}).join(""):'<span style="font-size:12px;color:#9ca3af">No players</span>';
+    var pendingNote=!r.approved&&canApprove(r.type)?'<span style="font-size:11px;color:#d97706;font-weight:600">&#8987; Pending your approval</span>':"";
+    var briefedNote=r.briefed?'<span style="font-size:11px;color:#059669">&#9989; Briefed to Trent</span>':"";
+    var hasBtns=(aBtn||sendBtn||confirmBtn||eBtn||dBtn);
+    cards+='<div style="'+cardStyle+'">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px">'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">'
+            +'<span style="font-size:14px;font-weight:600;color:#111827">'+r.name+'</span>'
+            +'<span class="type-chip '+tc+'">'+r.type+'</span>'
+            +(pendingNote?'<span style="font-size:11px;color:#d97706;font-weight:600">&#8987; Pending your approval</span>':"")
+            +(briefedNote?'<span style="font-size:11px;color:#059669">&#9989; Briefed to Trent</span>':"")
+          +'</div>'
+          +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+            +metaParts.join("")
+          +'</div>'
+        +'</div>'
+        +'<span class="status-chip '+sc(r.status)+'" style="flex-shrink:0">'+r.status+'</span>'
+      +'</div>'
+      +(names.length||hasBtns?
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:10px;border-top:0.5px solid #f3f4f6">'
+          +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+            +pillsHtml
+            +(names.length?'<span style="font-size:12px;color:#6b7280;margin-left:4px">'+names.join(", ")+'</span>':"")
+          +'</div>'
+          +(hasBtns?'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+sendBtn+confirmBtn+aBtn+eBtn+dBtn+'</div>':"")
+        +'</div>':"")
+      +'</div>';
   }
-  tb.innerHTML=html;
+  var cardsEl=document.getElementById("requestsCards");
+  if(cardsEl)cardsEl.innerHTML=cards||'<div style="text-align:center;padding:40px;color:#9ca3af">No requests found</div>';
 }
 function approveRequest(id){var r=requests.find(function(x){return x.id===id});if(r){r.approved=true;renderRequests();renderCalendar();renderPlayers();syncRequestToMonday(id,{approved:true});showToast("Request approved","success")}}
 function setFilterDrop(group,val){if(group==="dept")filterDept=val;else if(group==="status")filterStatus=val;else if(group==="time")filterTime=val;renderRequests()}
