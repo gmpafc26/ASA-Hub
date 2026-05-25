@@ -1693,6 +1693,8 @@ function initMreqPlayers(){
       +'<div class="mreq-player-conflict" id="mreqpconf-'+p.id+'"></div></div>';
   }
   g.innerHTML=html;
+  // Re-run conflict check in case date already selected
+  if(document.getElementById("mreq-date")&&document.getElementById("mreq-date").value)mreqCheckConflicts();
 }
 function mreqToggle(e,pid){
   var card=document.getElementById("mreqpc-"+pid);var cb=card.querySelector("input[type=checkbox]");
@@ -1703,12 +1705,46 @@ function selectMreqType(btn){
   mreqCheckConflicts();
 }
 function mreqCheckConflicts(){
-  var date=document.getElementById("mreq-date").value;var ae=document.getElementById("mreqDateAvail");
+  var date=document.getElementById("mreq-date").value;
+  var ae=document.getElementById("mreqDateAvail");
   if(!ae)return;
+  // Update date availability banner
   var mb=date?mediaBlackouts.find(function(m){return m.date===date}):null;
-  if(mb){ae.className="mreq-date-avail mreq-date-unavailable";ae.innerHTML="&#128247; Media Blackout: "+mb.label;return;}
-  if(date&&schedule[date]){var s=schedule[date];var cls={available:"mreq-date-available",partial:"mreq-date-partial",unavailable:"mreq-date-unavailable",cba:"mreq-date-cba",weekend:"mreq-date-weekend"};var ic={available:"&#9989;",partial:"&#128336;",unavailable:"&#10060;",cba:"&#9888;&#65039;",weekend:"&#127958;&#65039;"};ae.className="mreq-date-avail "+(cls[s.a]||"");ae.innerHTML=ic[s.a]+" "+s.n}else{ae.textContent="";}
+  if(mb){ae.className="mreq-date-avail mreq-date-unavailable";ae.innerHTML="&#128247; Media Blackout: "+mb.label;}
+  else if(date&&schedule[date]){
+    var s=schedule[date];
+    var cls={available:"mreq-date-available",partial:"mreq-date-partial",unavailable:"mreq-date-unavailable",cba:"mreq-date-cba",weekend:"mreq-date-weekend"};
+    var ic={available:"&#9989;",partial:"&#128336;",unavailable:"&#10060;",cba:"&#9888;&#65039;",weekend:"&#127958;&#65039;"};
+    ae.className="mreq-date-avail "+(cls[s.a]||"");ae.innerHTML=ic[s.a]+" "+s.n;
+  } else {ae.textContent="";}
+  // Update per-player conflict indicators
+  var allP=players.concat(aflwPlayers);
+  for(var i=0;i<allP.length;i++){
+    var p=allP[i];
+    var confDiv=document.getElementById("mreqpconf-"+p.id);
+    var card=document.getElementById("mreqpc-"+p.id);
+    if(!confDiv||!card)continue;
+    // Check if player has an existing booking on this date
+    var hasBooking=date?requests.some(function(r){
+      return r.date===date&&r.players.indexOf(p.id)>-1&&r.status!=="Not Approved";
+    }):false;
+    // Check AFLW schedule conflict
+    var sq=aflwPlayers.indexOf(p)>-1?"aflw":"afl";
+    var sched=sq==="aflw"?(aflwSchedule&&aflwSchedule[date]):schedule[date];
+    var schedConflict=date&&sched&&(sched.a==="unavailable"||sched.a==="cba");
+    if(hasBooking){
+      confDiv.innerHTML='<span style="font-size:9px;color:#dc2626;font-weight:600">&#9888; Existing booking</span>';
+      card.classList.add("conflicted");
+    } else if(schedConflict){
+      confDiv.innerHTML='<span style="font-size:9px;color:#d97706;font-weight:600">&#128336; '+sched.n+'</span>';
+      card.classList.add("conflicted");
+    } else {
+      confDiv.innerHTML="";
+      card.classList.remove("conflicted");
+    }
+  }
 }
+
 function mreqIgnoreConflict(){mreqConflictOverride=true;var c=document.getElementById("mreq-conflict");if(c)c.style.display="none"}
 function submitMakeRequest(){
   var name=document.getElementById("mreq-name").value.trim();if(!name){showToast("Enter a request name","error");return}
