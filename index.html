@@ -1204,7 +1204,7 @@ function loadFromBoard(){
         var reqApproved=cv[COL.approved]==="Approved"||reqStatus==="Internally Approved"||reqStatus==="Confirmed"||reqStatus==="Sent to Football Dept";
         var reqDenied=reqStatus==="Not Approved";
         newRequests.push({id:rid,mondayId:parseInt(mondayId,10),name:item.name,
-          type:cv[COL.req_type]||"Retail",date:cv[COL.date]||null,
+          type:(function(){var t=cv[COL.req_type_dropdown]||cv[COL.req_type]||"";if(/commercial/i.test(t))return"Commercial";if(/pcl/i.test(t))return"PCL";if(/retail/i.test(t))return"Retail";return t||"Retail";}()),date:cv[COL.date]||null,
           location:cv[COL.location]||"",time_required:cv[COL.time_required]||"",
           start_time:cv[COL.start_time]||"",
           status:reqStatus,approved:reqApproved,denied:reqDenied,
