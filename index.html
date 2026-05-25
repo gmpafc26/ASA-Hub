@@ -348,7 +348,7 @@
 <div style="position:sticky;top:0;z-index:100"><header class="hub-header">
   <div class="hub-logo"><div class="hub-logo-icon">&#9889;</div>ASA Player Requests Hub</div>
   <div class="header-right">
-    <div class="access-badge" id="accessBadge" onclick="openPinModal()">&#128274; <span id="accessLabel">Sign in</span></div>
+    <div class="access-badge" id="accessBadge" onclick="openPinModal()" style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.3);display:inline-block;flex-shrink:0"></span><span id="accessLabel">Sign in</span></div>
   </div>
 </header>
 <nav class="tab-bar">
@@ -959,7 +959,7 @@
 <option value="22:30">10:30 PM</option>
 <option value="22:45">10:45 PM</option></select></div><div class="form-group"><label class="form-label">Time Required</label><input type="text" class="form-control" id="ef-time" placeholder="e.g. 2 hours, Half day, 90 mins"></div></div>
     <div class="form-group" style="margin-bottom:14px"><label class="form-label">Players</label><div class="players-checkboxes" id="editPlayersCheckboxes"></div></div>
-    <div class="form-row"><div class="form-group"><label class="form-label">Status</label><select class="form-control" id="ef-status" onchange="toggleModalBriefed('ef-briefed-wrap',this.value)"><option>TBC</option><option>Planned</option><option>Internally Approved</option><option>Confirmed</option><option>Not Approved</option></select></div></div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Status</label><select class="form-control" id="ef-status" onchange="toggleModalBriefed('ef-briefed-wrap',this.value)"><option>TBC</option><option>Planned</option><option>Internally Approved</option><option>Sent to Football Dept</option><option>Confirmed</option><option>Not Approved</option></select></div></div>
     <div id="ef-briefed-wrap" style="display:none;margin-bottom:14px"><div class="briefed-row"><input type="checkbox" id="ef-briefed"><label for="ef-briefed">Briefed to Trent &amp; Approved</label></div></div>
     <div class="form-row full"><div class="form-group full"><label class="form-label">Notes</label><textarea class="form-control" id="ef-notes"></textarea></div></div>
   </div>
@@ -1484,7 +1484,7 @@ function renderRequests(){
     var aflCount=r.players.filter(function(pid){return players.find(function(p){return p.id===pid})}).length;
     var aflwCount=r.players.filter(function(pid){return aflwPlayers.find(function(p){return p.id===pid})}).length;
     var sendBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="sendToLiaison(\''+r.id+'\')" style="background:#f5f3ff;border:0.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer;color:#6d28d9;font-size:12px;font-weight:600">&#128231; Football Dept</button>':"";
-    var confirmBtn=r.approved&&r.status==="Sent to Football Dept"&&canApprove(r.type)?'<button onclick="markFullyConfirmed(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Mark Confirmed</button>':"";
+    var confirmBtn=(r.approved&&(r.status==="Sent to Football Dept"||r.status==="Internally Approved")&&canApprove(r.type))?'<button onclick="markFullyConfirmed(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Mark Confirmed</button>':"";
     var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
     var isPast=r.date&&new Date(r.date+"T12:00:00")<today;
     var pendingNote=!r.approved&&canApprove(r.type)?'<span style="font-size:11px;color:#d97706;font-weight:600">&#8987; Pending your approval</span>':"";
@@ -1597,28 +1597,20 @@ function confirmSendToLiaison(){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
   var btn=document.getElementById("emailSendBtn");
   var toEmail=btn.dataset.to;
-  var toName=btn.dataset.toname;
   var subject=btn.dataset.subject;
-  // Build plain text body for mailto
   var bodyEl=document.getElementById("emailPreviewBody");
-  // Strip HTML tags for mailto body
   var bodyText=bodyEl.innerHTML
     .replace(/<br\s*\/?>/gi,"\n")
     .replace(/<strong>/gi,"").replace(/<\/strong>/gi,"")
     .replace(/<[^>]+>/g,"")
     .replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&nbsp;/g," ");
-  // Build mailto link and open it
   var mailto="mailto:"+encodeURIComponent(toEmail)
     +"?subject="+encodeURIComponent(subject)
     +"&body="+encodeURIComponent(bodyText);
   window.open(mailto,"_self");
-  // Update status to Confirmed and sync to board
-  r.status="Sent to Football Dept";
-  syncRequestToMonday(id,{status:"Sent to Football Dept",notes:(r.notes||"")+" | Emailed "+toName});
   closeModal("emailPreviewModal");
   _pendingLiaisonId=null;
-  renderRequests();renderCalendar();
-  showToast("Outlook opened — status updated to Sent to Football Dept","success");
+  showToast("Outlook opened — update status to \"Sent to Football Dept\" once sent","success");
 }
 
 function markFullyConfirmed(id){
@@ -1880,8 +1872,10 @@ function applyAccessLevel(level){
   accessLevel=level;
   var accessLabel=document.getElementById("accessLabel");
   var accessBadge=document.getElementById("accessBadge");
-  var roleText=level==="admin"?"🔓 Admin":level==="retail-approver"?"🔓 Retail":level==="commercial-approver"?"🔓 Commercial":level==="pcl-approver"?"🔓 PCL":"🔒 Sign in";
-  if(accessLabel)accessLabel.textContent=roleText;
+  var dot=level==="admin"?'<span style="width:9px;height:9px;border-radius:50%;background:#ef4444;display:inline-block;flex-shrink:0"></span>':level!=="viewer"?'<span style="width:9px;height:9px;border-radius:50%;background:#22c55e;display:inline-block;flex-shrink:0"></span>':'<span style="width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.3);display:inline-block;flex-shrink:0"></span>';
+  var labelText=level==="admin"?"Admin":level==="retail-approver"?"Retail":level==="commercial-approver"?"Commercial":level==="pcl-approver"?"PCL":"Sign in";
+  var roleText=dot+" "+labelText;
+  if(accessLabel)accessLabel.innerHTML=roleText;
   if(accessBadge)accessBadge.className="access-badge"+(level!=="viewer"?" logged-in":"");
   if(level==="admin"||level==="balance-updater"||level==="pcl-approver"){var bt=document.getElementById("balancesTabBtn");if(bt)bt.style.display="flex";}
   if(level==="admin"){var apb=document.getElementById("addPlayerBtn");if(apb)apb.style.display="flex";var heb=document.getElementById("hiwEditBtn");if(heb)heb.style.display="flex";var peb=document.getElementById("processEditBtn");if(peb)peb.style.display="flex";}
