@@ -516,7 +516,7 @@
         </div>
         <div style="padding:16px 20px;flex:1">
           <div class="step-title process-editable">Approver notifies the football department</div>
-          <div class="step-desc process-editable" style="margin-top:4px">For internally approved requests, the approver contacts the relevant football department liaison for final player confirmation. AFL requests go to Trent, AFLW to Rachel, mixed requests go to both — with players listed separately.</div>
+          <div class="step-desc process-editable" style="margin-top:4px">For internally approved requests, the approver contacts the relevant football department liaison for final player confirmation. AFL requests go to Trent, AFLW to Rachael, mixed requests go to both — with players listed separately.</div>
           <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:#92400e" class="process-editable">
             Do this directly from the Requests tab — click <strong>&#128231; Football Dept</strong> on any Internally Approved request. Alternatively confirm offline and click <strong>&#9989; Confirm</strong> to manually mark as Confirmed.
           </div>
@@ -1567,11 +1567,11 @@ function sendToLiaison(id){
   var aflN=r.players.filter(function(pid){return players.find(function(p){return p.id===pid})}).map(function(pid){var p=players.find(function(p){return p.id===pid});return p?p.name:""}).filter(Boolean);
   var aflwN=r.players.filter(function(pid){return aflwPlayers.find(function(p){return p.id===pid})}).map(function(pid){var p=aflwPlayers.find(function(p){return p.id===pid});return p?p.name:""}).filter(Boolean);
   var isAFL=aflN.length>0,isAFLW=aflwN.length>0;
-  var toName=isAFL&&isAFLW?"Trent & Rachel":isAFLW?"Rachel":"Trent";
+  var toName=isAFL&&isAFLW?"Trent & Rachael":isAFLW?"Rachael":"Trent";
   var toEmail=isAFL&&isAFLW?"thentschel@pafc.com.au, rsporn@pafc.com.au":isAFLW?"rsporn@pafc.com.au":"thentschel@pafc.com.au";
   var allNames=aflN.concat(aflwN).join(", ")||"TBC";
   var dateStr=r.date?fmtDate(r.date):"TBC";
-  var greeting=isAFL&&isAFLW?"Hi Trent and Rachel,":isAFLW?"Hi Rachel,":"Hi Trent,";
+  var greeting=isAFL&&isAFLW?"Hi Trent and Rachael,":isAFLW?"Hi Rachael,":"Hi Trent,";
   var subject="Player Appearance Request — "+r.name+(r.date?" ("+dateStr+")":"");
   var body=greeting
     +"<br><br>Please see below the details of an approved ASA/CBA player appearance request that requires your coordination."
