@@ -98,6 +98,7 @@
   .requests-table tr.pending-row td{opacity:.55}
   .pending-badge{font-size:10px;color:var(--tentative);font-weight:600;display:block;margin-top:2px}
   .status-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+  .status-sent-football{background:#ede9fe;color:#5b21b6}
   .status-confirmed{background:#f0fdf4;color:var(--confirmed)}.status-tentative{background:#fffbeb;color:var(--tentative)}
   .status-planned{background:#eff6ff;color:var(--planned)}.status-tbc{background:#f8fafc;color:var(--tbc);border:1px solid var(--border)}
   .status-internally-approved{background:#fef3c7;color:#92400e}.status-not-approved{background:#fef2f2;color:var(--red)}
@@ -1483,7 +1484,7 @@ function renderRequests(){
     var aflCount=r.players.filter(function(pid){return players.find(function(p){return p.id===pid})}).length;
     var aflwCount=r.players.filter(function(pid){return aflwPlayers.find(function(p){return p.id===pid})}).length;
     var sendBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="sendToLiaison(\''+r.id+'\')" style="background:#f5f3ff;border:0.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer;color:#6d28d9;font-size:12px;font-weight:600">&#128231; Football Dept</button>':"";
-    var confirmBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="markFullyConfirmed(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Confirm</button>':"";
+    var confirmBtn=r.approved&&r.status==="Sent to Football Dept"&&canApprove(r.type)?'<button onclick="markFullyConfirmed(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Mark Confirmed</button>':"";
     var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
     var isPast=r.date&&new Date(r.date+"T12:00:00")<today;
     var pendingNote=!r.approved&&canApprove(r.type)?'<span style="font-size:11px;color:#d97706;font-weight:600">&#8987; Pending your approval</span>':"";
@@ -1494,7 +1495,7 @@ function renderRequests(){
     if(r.start_time||r.time_required)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#9200; '+(r.start_time?fmtTime(r.start_time)+(r.time_required?" · "+r.time_required:""):r.time_required)+'</span>');
     var pillsHtml=names.length?names.map(function(n){return'<div style="width:28px;height:28px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0369a1;flex-shrink:0" title="'+n+'">'+n.split(" ").map(function(w){return w[0]}).join("").slice(0,2)+'</div>'}).join(""):'<span style="font-size:12px;color:#9ca3af">No players</span>';
     var hasBtns=(aBtn||sendBtn||confirmBtn||eBtn||dBtn);
-    cards+='<div style="background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;padding:16px 18px;opacity:'+(isPast?"0.6":"1")+'">'
+    cards+='<div style="background:'+(r.status==="Confirmed"?"#f0fdf4":r.status==="Sent to Football Dept"?"#f5f3ff":r.status==="Not Approved"?"#fff5f5":"#fff")+';border:0.5px solid '+(r.status==="Confirmed"?"#86efac":r.status==="Sent to Football Dept"?"#c4b5fd":r.status==="Not Approved"?"#fca5a5":"#e5e7eb")+';border-left:3px solid '+(r.status==="Confirmed"?"#16a34a":r.status==="Sent to Football Dept"?"#7c3aed":r.status==="Not Approved"?"#ef4444":r.status==="Internally Approved"?"#d97706":"transparent")+';border-radius:10px;padding:16px 18px;opacity:'+(isPast?"0.6":"1")+'">'
       +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px">'
         +'<div style="flex:1;min-width:0">'
           +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">'
@@ -1560,15 +1561,66 @@ function pendingDenyWithComment(id,comment){
   syncRequestToMonday(id,{status:"Not Approved",approved:false});
   renderRequests();renderCalendar();renderPlayers();showToast(r.name+" denied","error");updateApprovalBanner();closeModal("pendingModal");
 }
+var _pendingLiaisonId=null;
 function sendToLiaison(id){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
   var aflN=r.players.filter(function(pid){return players.find(function(p){return p.id===pid})}).map(function(pid){var p=players.find(function(p){return p.id===pid});return p?p.name:""}).filter(Boolean);
   var aflwN=r.players.filter(function(pid){return aflwPlayers.find(function(p){return p.id===pid})}).map(function(pid){var p=aflwPlayers.find(function(p){return p.id===pid});return p?p.name:""}).filter(Boolean);
-  var liaison=aflN.length>0&&aflwN.length>0?"Trent & Rachel":aflwN.length>0?"Rachel":"Trent";
-  r.status="Confirmed";
-  syncRequestToMonday(id,{status:"Confirmed",notes:(r.notes||"")+" | Sent to "+liaison});
-  renderRequests();renderCalendar();showToast("Sent to football dept — status updated to Confirmed","success");
+  var isAFL=aflN.length>0,isAFLW=aflwN.length>0;
+  var toName=isAFL&&isAFLW?"Trent & Rachel":isAFLW?"Rachel":"Trent";
+  var toEmail=isAFL&&isAFLW?"thentschel@pafc.com.au, rsporn@pafc.com.au":isAFLW?"rsporn@pafc.com.au":"thentschel@pafc.com.au";
+  var allNames=aflN.concat(aflwN).join(", ")||"TBC";
+  var dateStr=r.date?fmtDate(r.date):"TBC";
+  var greeting=isAFL&&isAFLW?"Hi Trent and Rachel,":isAFLW?"Hi Rachel,":"Hi Trent,";
+  var subject="Player Appearance Request — "+r.name+(r.date?" ("+dateStr+")":"");
+  var body=greeting
+    +"<br><br>Please see below the details of an approved ASA/CBA player appearance request that requires your coordination."
+    +"<br><br><strong>Request:</strong> "+r.name
+    +"<br><strong>Type:</strong> "+r.type
+    +"<br><strong>Date:</strong> "+dateStr
+    +(r.location?"<br><strong>Location:</strong> "+r.location:"")
+    +(r.time_required?"<br><strong>Duration:</strong> "+r.time_required:"")
+    +"<br><strong>Players:</strong> "+allNames
+    +(r.notes?"<br><strong>Notes:</strong> "+r.notes:"")
+    +"<br><br>This request has been internally approved. Please confirm availability with the player(s) and provide any relevant scheduling details."
+    +"<br><br>Thanks,<br>Port Store / Commercial Team";
+  _pendingLiaisonId=id;
+  document.getElementById("emailPreviewTo").innerHTML="<strong>To:</strong> "+toName+" ("+toEmail+")<br><strong>From:</strong> Your account (gmorris@pafc.com.au)<br><strong>Subject:</strong> "+subject;
+  document.getElementById("emailPreviewBody").innerHTML=body;
+  document.getElementById("emailSendBtn").dataset.subject=subject;
+  document.getElementById("emailSendBtn").dataset.to=toEmail;
+  document.getElementById("emailSendBtn").dataset.toname=toName;
+  document.getElementById("emailPreviewModal").classList.add("open");
 }
+function confirmSendToLiaison(){
+  var id=_pendingLiaisonId;if(!id)return;
+  var r=requests.find(function(x){return x.id===id});if(!r)return;
+  var btn=document.getElementById("emailSendBtn");
+  var toEmail=btn.dataset.to;
+  var toName=btn.dataset.toname;
+  var subject=btn.dataset.subject;
+  // Build plain text body for mailto
+  var bodyEl=document.getElementById("emailPreviewBody");
+  // Strip HTML tags for mailto body
+  var bodyText=bodyEl.innerHTML
+    .replace(/<br\s*\/?>/gi,"\n")
+    .replace(/<strong>/gi,"").replace(/<\/strong>/gi,"")
+    .replace(/<[^>]+>/g,"")
+    .replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&nbsp;/g," ");
+  // Build mailto link and open it
+  var mailto="mailto:"+encodeURIComponent(toEmail)
+    +"?subject="+encodeURIComponent(subject)
+    +"&body="+encodeURIComponent(bodyText);
+  window.open(mailto,"_self");
+  // Update status to Confirmed and sync to board
+  r.status="Sent to Football Dept";
+  syncRequestToMonday(id,{status:"Sent to Football Dept",notes:(r.notes||"")+" | Emailed "+toName});
+  closeModal("emailPreviewModal");
+  _pendingLiaisonId=null;
+  renderRequests();renderCalendar();
+  showToast("Outlook opened — status updated to Sent to Football Dept","success");
+}
+
 function markFullyConfirmed(id){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
   document.getElementById("confirmTitle").textContent="Mark as Confirmed";
@@ -1933,6 +1985,25 @@ renderRequests();renderCalendar();
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('blackoutModal')">Cancel</button>
       <button class="btn-primary" onclick="saveBlackout()">&#128247; Add Blackout</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="emailPreviewModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">&#128231; Send to Football Dept</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px" id="emailPreviewTo"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('emailPreviewModal')">&#215;</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:var(--off-white);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;line-height:1.7" id="emailPreviewBody"></div>
+      <div style="font-size:11px;color:var(--muted)">Review the message above before sending. The request status will be updated to <strong>Confirmed</strong> when sent.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('emailPreviewModal')">Cancel</button>
+      <button class="btn-primary" id="emailSendBtn" onclick="confirmSendToLiaison()">&#128231; Open in Outlook</button>
     </div>
   </div>
 </div>
