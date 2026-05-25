@@ -1709,63 +1709,74 @@ function mreqCheckConflicts(){
   var date=document.getElementById("mreq-date").value;
   var ae=document.getElementById("mreqDateAvail");
   if(!ae)return;
-  // ── Date availability banner: show both AFL and AFLW lines ──
-  var mb=date?mediaBlackouts.find(function(m){return m.date===date}):null;
-  if(mb){
-    ae.className="mreq-date-avail mreq-date-unavailable";
-    ae.innerHTML="&#128247; Media Blackout: "+mb.label;
-  } else if(date){
-    var lines=[];
-    var afl=schedule[date];
-    var aflw=aflwSchedule&&aflwSchedule[date];
-    var cls={available:"color:#059669",partial:"color:#d97706",unavailable:"color:#6b7280",cba:"color:#d97706",weekend:"color:#9ca3af"};
-    var ic={available:"&#9989;",partial:"&#128336;",unavailable:"&#8212;",cba:"&#9888;&#65039;",weekend:"&#8212;"};
-    if(afl)lines.push('<span style="'+( cls[afl.a]||"")+'"><strong>AFL:</strong> '+ic[afl.a]+' '+afl.n+'</span>');
-    if(aflw)lines.push('<span style="'+(cls[aflw.a]||"")+'"><strong>AFLW:</strong> '+ic[aflw.a]+' '+aflw.n+'</span>');
-    if(lines.length){ae.className="mreq-date-avail";ae.style.cssText="font-size:12px;display:flex;flex-direction:column;gap:3px;padding:6px 10px";ae.innerHTML=lines.join("");}
-    else{ae.textContent="";ae.style.cssText="";}
-  } else {ae.textContent="";ae.style.cssText="";}
+  ae.style.cssText="";
+  ae.className="mreq-date-avail";
 
-  // ── Per-player indicators ──
+  if(!date){ae.textContent="";clearPlayerConflicts();return;}
+
+  // ── Build availability lines under the date field ──────────────────────
+  var mb=mediaBlackouts.find(function(m){return m.date===date});
+  var lines=[];
+
+  if(mb){
+    lines.push('<span style="color:#dc2626;font-weight:600">&#128247; Media Blackout: '+mb.label+'</span>');
+  }
+
+  // AFL line
+  var afl=schedule[date];
+  if(afl&&afl.a!=="weekend"){
+    var aflCol=afl.a==="available"?"#059669":afl.a==="partial"?"#d97706":"#6b7280";
+    var aflIcon=afl.a==="available"?"&#9989;":afl.a==="partial"?"&#128336;":"&#8212;";
+    lines.push('<span style="color:'+aflCol+'"><strong>AFL:</strong> '+aflIcon+' '+afl.n+'</span>');
+  }
+
+  // AFLW line
+  var aflw=aflwSchedule&&aflwSchedule[date];
+  if(aflw&&aflw.a!=="weekend"){
+    var aflwCol=aflw.a==="available"?"#059669":aflw.a==="partial"?"#d97706":"#6b7280";
+    var aflwIcon=aflw.a==="available"?"&#9989;":aflw.a==="partial"?"&#128336;":"&#8212;";
+    lines.push('<span style="color:'+aflwCol+'"><strong>AFLW:</strong> '+aflwIcon+' '+aflw.n+'</span>');
+  }
+
+  if(lines.length){
+    ae.style.cssText="display:flex;flex-direction:column;gap:3px;padding:6px 0;font-size:12px";
+    ae.innerHTML=lines.join("");
+  } else {
+    ae.textContent="";
+  }
+
+  // ── Per-player: only show existing booking conflicts for the week ───────
+  var wb=wkBounds(date);var wkStart=wb[0];var wkEnd=wb[1];
   var allP=players.concat(aflwPlayers);
-  // Get week bounds for same-week booking check
-  var wkStart=null,wkEnd=null;
-  if(date){var wb=wkBounds(date);wkStart=wb[0];wkEnd=wb[1];}
   for(var i=0;i<allP.length;i++){
     var p=allP[i];
     var confDiv=document.getElementById("mreqpconf-"+p.id);
     var card=document.getElementById("mreqpc-"+p.id);
     if(!confDiv||!card)continue;
-    confDiv.innerHTML="";
     card.classList.remove("conflicted");
-    if(!date)continue;
-    var isAFLW=aflwPlayers.indexOf(p)>-1;
-    var sched=isAFLW?(aflwSchedule&&aflwSchedule[date]):schedule[date];
-    // Check existing bookings this week (not Not Approved)
+    confDiv.innerHTML="";
+    // Only flag existing bookings this week
     var weekBookings=requests.filter(function(r){
       return r.players.indexOf(p.id)>-1&&r.status!=="Not Approved"&&r.date&&r.date>=wkStart&&r.date<=wkEnd;
     });
-    var lines2=[];
     if(weekBookings.length){
-      weekBookings.forEach(function(r){
+      var msgs=weekBookings.map(function(r){
         var sameDayStr=r.date===date?" (same day)":"";
-        lines2.push('<span style="color:#d97706;font-size:9px;font-weight:600">&#9888; '+r.name+sameDayStr+'</span>');
+        return r.name+sameDayStr;
       });
+      confDiv.innerHTML='<span style="color:#d97706;font-size:9px;font-weight:600">&#9888; '+msgs.join(", ")+'</span>';
       card.classList.add("conflicted");
     }
-    // Show schedule note (only if not just a player day off / weekend - don't highlight)
-    if(sched&&sched.a!=="weekend"){
-      var schedColour=sched.a==="available"?"#059669":sched.a==="partial"?"#d97706":"#6b7280";
-      var schedIcon=sched.a==="available"?"&#9989;":sched.a==="partial"?"&#128336;":"&#8212;";
-      lines2.push('<span style="color:'+schedColour+';font-size:9px">'+schedIcon+' '+sched.n+'</span>');
-      // Only add conflicted class for cba/unavailable that isn't just a day off
-      if(sched.a==="cba"||(sched.a==="unavailable"&&sched.n.toLowerCase().indexOf("day off")<0)){
-        card.classList.add("conflicted");
-      }
-    }
-    if(lines2.length){
-      confDiv.innerHTML=lines2.join('<br>');
-    }
+  }
+}
+function clearPlayerConflicts(){
+  var allP=players.concat(aflwPlayers);
+  for(var i=0;i<allP.length;i++){
+    var p=allP[i];
+    var confDiv=document.getElementById("mreqpconf-"+p.id);
+    var card=document.getElementById("mreqpc-"+p.id);
+    if(confDiv)confDiv.innerHTML="";
+    if(card)card.classList.remove("conflicted");
   }
 }
 
