@@ -1073,13 +1073,48 @@ const schedule={
 };
 
 var aflwSchedule={
-  "2026-05-18":{a:"unavailable",n:"AFLW Round 1"},
-  "2026-05-24":{a:"unavailable",n:"AFLW Round 2"},
-  "2026-05-31":{a:"unavailable",n:"AFLW Round 3"},
-  "2026-06-07":{a:"unavailable",n:"AFLW Round 4"},
-  "2026-06-14":{a:"unavailable",n:"AFLW Round 5"},
-  "2026-06-21":{a:"unavailable",n:"AFLW Round 6"},
-  "2026-06-28":{a:"unavailable",n:"AFLW Round 7"}
+  "2026-05-18":{a:"partial",n:"Available before 12pm"},
+  "2026-05-19":{a:"unavailable",n:"Not Available"},
+  "2026-05-20":{a:"unavailable",n:"Player Day Off"},
+  "2026-05-21":{a:"partial",n:"Available before 12pm"},
+  "2026-05-22":{a:"unavailable",n:"Player Day Off"},
+  "2026-05-23":{a:"weekend",n:"Weekend"},
+  "2026-05-24":{a:"weekend",n:"Weekend"},
+  "2026-05-25":{a:"available",n:"Available all day"},
+  "2026-05-26":{a:"unavailable",n:"Not Available"},
+  "2026-05-27":{a:"unavailable",n:"Player Day Off"},
+  "2026-05-28":{a:"unavailable",n:"Player Community Camp"},
+  "2026-05-29":{a:"unavailable",n:"Player Community Camp"},
+  "2026-05-30":{a:"weekend",n:"Weekend"},
+  "2026-05-31":{a:"weekend",n:"Weekend"},
+  "2026-06-01":{a:"partial",n:"Available before 2pm"},
+  "2026-06-02":{a:"partial",n:"Available from 1pm"},
+  "2026-06-03":{a:"unavailable",n:"Player Day Off"},
+  "2026-06-04":{a:"unavailable",n:"Not Available"},
+  "2026-06-05":{a:"unavailable",n:"Player Day Off"},
+  "2026-06-06":{a:"weekend",n:"Weekend"},
+  "2026-06-07":{a:"weekend",n:"Weekend"},
+  "2026-06-08":{a:"partial",n:"Available from 2pm"},
+  "2026-06-09":{a:"unavailable",n:"Not Available"},
+  "2026-06-10":{a:"unavailable",n:"Player Day Off"},
+  "2026-06-11":{a:"unavailable",n:"Not Available"},
+  "2026-06-12":{a:"unavailable",n:"Player Day Off"},
+  "2026-06-13":{a:"weekend",n:"Weekend"},
+  "2026-06-14":{a:"weekend",n:"Weekend"},
+  "2026-06-15":{a:"partial",n:"Available before 2pm"},
+  "2026-06-16":{a:"unavailable",n:"Not Available"},
+  "2026-06-17":{a:"unavailable",n:"Player Day Off"},
+  "2026-06-18":{a:"unavailable",n:"Not Available"},
+  "2026-06-19":{a:"unavailable",n:"Player Day Off"},
+  "2026-06-20":{a:"weekend",n:"Weekend"},
+  "2026-06-21":{a:"weekend",n:"Weekend"},
+  "2026-06-22":{a:"partial",n:"Available before 2pm"},
+  "2026-06-23":{a:"unavailable",n:"Not Available"},
+  "2026-06-24":{a:"unavailable",n:"Player Day Off"},
+  "2026-06-25":{a:"unavailable",n:"Not Available"},
+  "2026-06-26":{a:"unavailable",n:"Player Day Off"},
+  "2026-06-27":{a:"weekend",n:"Weekend"},
+  "2026-06-28":{a:"weekend",n:"Weekend"}
 };
 
 var currentSquad="afl";
@@ -1343,7 +1378,6 @@ function buildCell(y,m,d,om,tiso){
   var mb=mediaBlackouts.find(function(x){return x.date===iso});
   var showAFL=calSquad==="afl"||calSquad==="both";
   var showAFLW=calSquad==="aflw"||calSquad==="both";
-  var sched=showAFL?s:(showAFLW?sa:null);
   var dr=visReqs().filter(function(r){
     if(r.date!==iso)return false;
     if(calSquad==="afl")return r.players.some(function(pid){return players.find(function(p){return p.id===pid})});
@@ -1351,38 +1385,76 @@ function buildCell(y,m,d,om,tiso){
     return true;
   });
   var el=document.createElement("div");
+  var hasContent=mb||(showAFL&&s)||(showAFLW&&sa)||dr.length;
   var cls="cal-day"+(om?" other-month":"")+(iso===tiso?" today":"");
-  if(!om&&(sched||dr.length||mb))cls+=" clickable";
+  if(!om&&hasContent)cls+=" clickable";
   el.className=cls;
   var bm={available:"bar-available",partial:"bar-partial",unavailable:"bar-unavailable",cba:"bar-cba",weekend:"bar-weekend"};
   var inner='<div class="day-num">'+d+"</div>";
-  if(mb)inner+='<div class="day-avail-bar" style="background:#fca5a5"></div>';
-  else if(sched&&bm[sched.a])inner+='<div class="day-avail-bar '+bm[sched.a]+'"></div>';
-  if(mb)inner+='<div class="day-avail-text" style="color:#dc2626">'+mb.label+"</div>";
-  else if(sched&&sched.a!=="weekend")inner+='<div class="day-avail-text">'+sched.n+"</div>";
-  if(dr.length){inner+='<div class="day-bookings">';for(var i=0;i<dr.length;i++){var r=dr[i];var cc=r.type==="Commercial"?"chip-commercial":r.type==="PCL"?"chip-pcl":r.status==="TBC"?"chip-tbc":"chip-retail";inner+='<div class="day-booking-chip '+cc+'">'+r.name+"</div>"}inner+="</div>"}
+  if(mb){
+    inner+='<div class="day-avail-bar" style="background:#fca5a5"></div>';
+    inner+='<div class="day-avail-text" style="color:#dc2626;font-size:9px">'+mb.label+"</div>";
+  } else {
+    if(showAFL&&s&&bm[s.a]){
+      var aflLabel=calSquad==="both"?'<span style="font-size:8px;font-weight:700;opacity:.7">AFL </span>'+s.n:s.n;
+      inner+='<div class="day-avail-bar '+bm[s.a]+'"></div>';
+      if(s.a!=="weekend")inner+='<div class="day-avail-text">'+aflLabel+"</div>";
+    }
+    if(showAFLW&&sa&&bm[sa.a]){
+      var aflwLabel=calSquad==="both"?'<span style="font-size:8px;font-weight:700;opacity:.7">AFLW </span>'+sa.n:sa.n;
+      var barStyle=calSquad==="both"?"margin-top:2px":"";
+      inner+='<div class="day-avail-bar '+bm[sa.a]+'" style="'+barStyle+'"></div>';
+      if(sa.a!=="weekend")inner+='<div class="day-avail-text" style="font-style:italic">'+aflwLabel+"</div>";
+    }
+  }
+  if(dr.length){
+    inner+='<div class="day-bookings">';
+    for(var i=0;i<dr.length;i++){
+      var r=dr[i];
+      var cc=r.type==="Commercial"?"chip-commercial":r.type==="PCL"?"chip-pcl":r.status==="TBC"?"chip-tbc":"chip-retail";
+      inner+='<div class="day-booking-chip '+cc+'">'+r.name+"</div>";
+    }
+    inner+="</div>";
+  }
   el.innerHTML=inner;
-  if(!om&&(sched||dr.length||mb)){(function(iso2,y2,m2,d2){el.addEventListener("click",function(){openDayDetail(iso2,y2,m2,d2)})})(iso,y,m,d)}
+  if(!om&&hasContent){
+    (function(iso2,y2,m2,d2){el.addEventListener("click",function(){openDayDetail(iso2,y2,m2,d2)})})(iso,y,m,d);
+  }
   return el;
 }
+
 function openDayDetail(iso,y,m,d){
-  var s=schedule[iso];var dr=visReqs().filter(function(r){return r.date===iso});
+  var s=schedule[iso];var sa=aflwSchedule?aflwSchedule[iso]:null;
+  var dr=visReqs().filter(function(r){return r.date===iso});
   var mb=mediaBlackouts.find(function(x){return x.date===iso});
   document.getElementById("dayDetailTitle").textContent=new Date(y,m,d).toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
   var cm={available:"avail-available",partial:"avail-partial",unavailable:"avail-unavailable",cba:"avail-cba",weekend:"avail-weekend"};
   var iem={available:"&#9989;",partial:"&#128336;",unavailable:"&#10060;",cba:"&#9888;&#65039;",weekend:"&#127958;&#65039;"};
   var h="";
   if(mb)h+='<div class="day-detail-avail" style="background:#fee2e2;color:#dc2626">&#128247; Media Blackout: '+mb.label+(accessLevel==="admin"?'<button onclick="deleteBlackout(\''+mb.id+'\')" style="margin-left:8px;font-size:11px;color:#dc2626;background:none;border:none;cursor:pointer">Remove</button>':"")+"</div>";
-  if(s)h+='<div class="day-detail-avail '+cm[s.a]+'">'+iem[s.a]+" "+s.n+"</div>";
-  h+='<div class="day-detail-bookings-title" style="margin-top:'+(s||mb?"14px":"0")+'">'+(dr.length?"Requests on this day":"No requests on this day")+"</div>";
-  if(dr.length){h+='<div class="pr-list" style="margin-top:8px">';for(var i=0;i<dr.length;i++){var r=dr[i];var names=r.players.map(function(pid){var ap=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return ap?ap.name:""}).filter(Boolean).join(", ");var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";h+='<div class="pr-item"><div class="pr-item-header"><div class="pr-item-name">'+r.name+'</div><span class="status-chip '+sc(r.status)+'">'+r.status+"</span></div>"+'<div class="pr-item-meta"><span class="type-chip '+tc+'">'+r.type+"</span>"+(names?'<span class="pr-item-detail">&#128100; '+names+"</span>":"")+(r.location?'<span class="pr-item-detail">&#128205; '+r.location+"</span>":"")+"</div></div>"}h+="</div>"}
-  else h+='<p style="color:var(--muted);font-size:13px;margin-top:8px">Click below to create a request.</p>';
+  if((calSquad==="afl"||calSquad==="both")&&s)
+    h+='<div class="day-detail-avail '+cm[s.a]+'">'+iem[s.a]+(calSquad==="both"?' <strong>AFL:</strong> ':" ")+s.n+"</div>";
+  if((calSquad==="aflw"||calSquad==="both")&&sa)
+    h+='<div class="day-detail-avail '+cm[sa.a]+'" style="margin-top:4px">'+iem[sa.a]+(calSquad==="both"?' <strong>AFLW:</strong> ':" ")+sa.n+"</div>";
+  h+='<div class="day-detail-bookings-title" style="margin-top:'+((s||sa||mb)?"14px":"0")+'">'+( dr.length?"Requests on this day":"No requests on this day")+"</div>";
+  if(dr.length){
+    h+='<div class="pr-list" style="margin-top:8px">';
+    for(var i=0;i<dr.length;i++){
+      var r=dr[i];
+      var names=r.players.map(function(pid){var ap=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return ap?ap.name:""}).filter(Boolean).join(", ");
+      var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
+      h+='<div class="pr-item"><div class="pr-item-header"><div class="pr-item-name">'+r.name+'</div><span class="status-chip '+sc(r.status)+'">'+r.status+"</span></div>"
+        +'<div class="pr-item-meta"><span class="type-chip '+tc+'">'+r.type+"</span>"+(names?'<span class="pr-item-detail">&#128100; '+names+"</span>":"")+(r.location?'<span class="pr-item-detail">&#128205; '+r.location+"</span>":"")+"</div></div>";
+    }
+    h+="</div>";
+  } else {
+    h+='<p style="color:var(--muted);font-size:13px;margin-top:8px">Click below to create a request.</p>';
+  }
   document.getElementById("dayDetailBody").innerHTML=h;
   document.getElementById("dayNewReqBtn").onclick=function(){closeModal("dayDetailModal");openRequestFormModal()};
   document.getElementById("dayDetailModal").classList.add("open");
 }
 
-// ── Requests ───────────────────────────────────────────────────────────────
 function setFilterDrop(type,val){if(type==="dept")filterDept=val;else if(type==="status")filterStatus=val;else filterTime=val;renderRequests()}
 
 function renderRequests(){
