@@ -1001,7 +1001,12 @@
 </div>
 <div class="modal-overlay" id="pendingModal">
   <div class="modal" style="max-width:680px"><div class="modal-header"><div><div class="modal-title">&#9203; Pending Approvals</div><div style="font-size:12px;color:var(--muted);margin-top:3px" id="pendingModalSub"></div></div><button class="modal-close" onclick="closeModal('pendingModal')">&#215;</button></div>
-  <div class="modal-body" id="pendingModalBody"></div></div>
+  <div class="modal-body" id="pendingModalBody"></div>
+  <div class="modal-footer" style="gap:10px">
+    <button class="btn-secondary" onclick="closeModal('pendingModal')">Cancel</button>
+    <button id="pendingDenyBtn" style="padding:10px 20px;background:#fff;color:var(--red);border:2px solid var(--red);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:6px" onmouseover="this.style.background='var(--red)';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='var(--red)'">&#10060; Deny</button>
+    <button id="pendingApproveBtn" style="padding:10px 20px;background:var(--confirmed);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:6px">&#9989; Approve</button>
+  </div></div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -1195,10 +1200,14 @@ function loadFromBoard(){
         var rid="r"+mondayId;
         REQUEST_MONDAY_IDS[rid]=parseInt(mondayId,10);
         var playerNames=(cv[COL.players_text]||"").split(",").map(function(n){return n.trim()}).filter(Boolean);
+        var reqStatus=cv[COL.status]||"TBC";
+        var reqApproved=cv[COL.approved]==="Approved"||reqStatus==="Internally Approved"||reqStatus==="Confirmed"||reqStatus==="Sent to Football Dept";
+        var reqDenied=reqStatus==="Not Approved";
         newRequests.push({id:rid,mondayId:parseInt(mondayId,10),name:item.name,
           type:cv[COL.req_type]||"Retail",date:cv[COL.date]||null,
           location:cv[COL.location]||"",time_required:cv[COL.time_required]||"",
-          status:cv[COL.status]||"TBC",approved:cv[COL.approved]==="Approved",
+          start_time:cv[COL.start_time]||"",
+          status:reqStatus,approved:reqApproved,denied:reqDenied,
           briefed:cv[COL.briefed]==="Yes",notes:cv[COL.notes]||"",
           _playerNames:playerNames});
       } else if(item.name==="__settings__"){
@@ -1227,7 +1236,7 @@ function sc(s){return s==="Confirmed"?"status-confirmed":s==="Planned"?"status-p
 function closeModal(id){var el=document.getElementById(id);if(el)el.classList.remove("open")}
 function showToast(msg,type){var t=document.getElementById("toast");if(!t)return;t.textContent=msg;t.className="toast show"+(type?" "+type:"");setTimeout(function(){t.className="toast"},2800)}
 function canApprove(type){if(accessLevel==="admin")return true;return(APPROVAL[type]||[]).includes(accessLevel)}
-function visReqs(){return requests.filter(function(r){return !r.denied&&(r.approved||canApprove(r.type)||accessLevel==="admin")})}
+function visReqs(){return requests.filter(function(r){if(r.denied||r.status==="Not Approved")return accessLevel==="admin"||canApprove(r.type);return r.approved||canApprove(r.type)||accessLevel==="admin";})}
 function wkBounds(dateStr){var d=new Date(dateStr+"T12:00:00"),dow=d.getDay(),diff=dow===0?-6:1-dow;var mon=new Date(d);mon.setDate(d.getDate()+diff);var sun=new Date(mon);sun.setDate(mon.getDate()+6);return[mon.toISOString().slice(0,10),sun.toISOString().slice(0,10)]}
 
 // ── Tab switching ──────────────────────────────────────────────────────────
@@ -1961,7 +1970,7 @@ function updateApprovalBanner(){
   if(accessLevel!=="retail-approver"&&accessLevel!=="commercial-approver"&&accessLevel!=="pcl-approver"&&accessLevel!=="admin"){banner.style.display="none";return;}
   var ACTIONED=["Internally Approved","Confirmed","Not Approved"];
   var pending=requests.filter(function(r){return !r.approved&&!r.denied&&ACTIONED.indexOf(r.status)<0&&canApprove(r.type)});
-  if(pending.length>0){banner.style.display="flex";var msg=document.getElementById("bannerMsg");if(msg)msg.textContent=pending.length+" request"+(pending.length>1?"s":"")+" pending your approval";}
+  if(pending.length>0){banner.style.display="flex";var msg=document.getElementById("approvalBannerTitle");if(msg)msg.textContent=pending.length+" request"+(pending.length>1?"s":"")+" pending your approval";var sub=document.getElementById("approvalBannerSub");if(sub)sub.textContent="Click Review & Approve to action them";}
   else{banner.style.display="none";}
 }
 function updatePinDots(){
