@@ -519,7 +519,7 @@
           <div class="step-title process-editable">Approver notifies the football department</div>
           <div class="step-desc process-editable" style="margin-top:4px">For internally approved requests, the approver contacts the relevant football department liaison for final player confirmation. AFL requests go to Trent, AFLW to Rachael, mixed requests go to both — with players listed separately.</div>
           <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:#92400e" class="process-editable">
-            Do this directly from the Requests tab — click <strong>&#128231; Football Dept</strong> on any Internally Approved request. Alternatively confirm offline and click <strong>&#9989; Confirm</strong> to manually mark as Confirmed.
+            Do this directly from the Requests tab — click <strong>&#128231; Send to Football Dept</strong> on any Internally Approved request. This opens a pre-filled email to Trent or Rachael and stamps the sent date on the request. If you've already sent the email outside the hub, click the <strong>&#9679; Not Sent</strong> pill to mark it as sent manually.
           </div>
         </div>
       </div>
@@ -530,8 +530,8 @@
           <div class="step-num" style="background:var(--confirmed);color:#fff">6</div>
         </div>
         <div style="padding:16px 20px;flex:1">
-          <div class="step-title process-editable" style="color:var(--confirmed)">Confirmed — fully locked in</div>
-          <div class="step-desc process-editable" style="margin-top:4px">Once the football department has confirmed, the approver updates the status to <strong>Confirmed</strong>. The submitter receives a final email notification and the request is locked in on the calendar.</div>
+          <div class="step-title process-editable" style="color:var(--confirmed)">Locked in — fully confirmed</div>
+          <div class="step-desc process-editable" style="margin-top:4px">Once the football department has signed off, the approver clicks <strong>Lock In Request</strong> on the request card. Status updates to <strong>Confirmed</strong> and the request is fully locked in on the calendar.</div>
         </div>
       </div>
 
@@ -545,7 +545,7 @@
       <li><strong>Planned</strong> — You are certain this request needs to go ahead. Submitted and ready for the approver to review.</li>
       <li><strong>Internally Approved</strong> — Approved by the relevant approver (Retail, Commercial or PCL). The approver will now notify the football department for final sign-off.</li>
       <li><strong>Not Approved</strong> — The request was declined by the approver. Check any comments left for the reason.</li>
-      <li><strong>Confirmed</strong> — Fully locked in. The football department has confirmed and the request is finalised.</li>
+      <li><strong>Confirmed</strong> — Fully locked in. The football department has signed off and the approver has closed out the request.</li>
     </ul>
     <div class="cal-info-note">Always check the calendar before submitting to avoid conflicts. You will receive email notifications at each stage of the approval process.</div>
   </div>
@@ -625,7 +625,7 @@
         <div style="width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128101;</div>
         <div>
           <div class="hiw-card-title hiw-editable">Players tab</div>
-          <div class="hiw-card-text hiw-editable">Browse all AFL and AFLW players with their photo, jersey number, position, ASA type and remaining balance. Toggle between squads using the AFL / AFLW buttons. Click <strong>Requests</strong> on a player card to see their upcoming bookings. Admins and approvers can edit player details directly.</div>
+          <div class="hiw-card-text hiw-editable">Browse all AFL and AFLW players with their photo, guernsey number, position, ASA type and remaining balance. Toggle between squads using the AFL / AFLW buttons. Click <strong>Requests</strong> on a player card to see their upcoming bookings. Admins and approvers can edit player details directly.</div>
         </div>
       </div>
 
@@ -652,7 +652,7 @@
         <div style="width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#9989;</div>
         <div>
           <div class="hiw-card-title hiw-editable">Requests & approvals</div>
-          <div class="hiw-card-text hiw-editable">The <strong>Requests</strong> tab shows all upcoming requests sorted by date. Approvers see an amber banner when requests are pending their review. They can approve or deny with an optional comment. Approved requests move to <strong>Internally Approved</strong> — the approver then notifies the football department, after which status updates to <strong>Confirmed</strong>.</div>
+          <div class="hiw-card-text hiw-editable">The <strong>Requests</strong> tab shows all upcoming requests sorted by date. Approvers see an amber banner when requests are pending review. Approve or deny with an optional comment — approved requests move to <strong>Internally Approved</strong>. The approver then uses <strong>Send to Football Dept</strong> to notify the football department, which stamps the sent date and updates the status to <strong>Sent to Football Dept</strong>. Once the football department signs off, the approver clicks <strong>Lock In Request</strong> to fully close out the request as <strong>Confirmed</strong>.</div>
         </div>
       </div>
 
@@ -1141,7 +1141,8 @@ const COL={
   players_text:"text_mm35qb0p",req_type:"color_mm35cenq",briefed:"color_mm359ffs",approved:"color_mm35zm9j",
   req_type_dropdown:"dropdown_mm38f2g1",time_required:"text_mm388at2",
   submitted_by:"multiple_person_mm3g7m2g",
-  balance_stamp:"date_mm3hme1r"
+  balance_stamp:"date_mm3hme1r",
+  football_sent_date:"date_mm3football"
 };
 
 var PLAYER_MONDAY_IDS={};
@@ -1208,6 +1209,7 @@ function loadFromBoard(){
           type:(function(){var t=cv[COL.req_type_dropdown]||cv[COL.req_type]||"";if(/commercial/i.test(t))return"Commercial";if(/pcl/i.test(t))return"PCL";if(/retail/i.test(t))return"Retail";return t||"Retail";}()),date:cv[COL.date]||null,
           location:cv[COL.location]||"",time_required:cv[COL.time_required]||"",
           start_time:cv[COL.start_time]||"",
+          football_sent_date:cv[COL.football_sent_date]||null,
           status:reqStatus,approved:reqApproved,denied:reqDenied,
           briefed:cv[COL.briefed]==="Yes",notes:cv[COL.notes]||"",
           _playerNames:playerNames});
@@ -1494,8 +1496,19 @@ function renderRequests(){
     var aBtn=!r.approved&&canApprove(r.type)?'<button onclick="approveRequest(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Approve</button>':"";
     var aflCount=r.players.filter(function(pid){return players.find(function(p){return p.id===pid})}).length;
     var aflwCount=r.players.filter(function(pid){return aflwPlayers.find(function(p){return p.id===pid})}).length;
-    var sendBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="sendToLiaison(\''+r.id+'\')" style="background:#f5f3ff;border:0.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer;color:#6d28d9;font-size:12px;font-weight:600">&#128231; Football Dept</button>':"";
-    var confirmBtn=(r.approved&&(r.status==="Sent to Football Dept"||r.status==="Internally Approved")&&canApprove(r.type))?'<button onclick="markFullyConfirmed(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Mark Confirmed</button>':"";
+    var footballSentDate=r.football_sent_date?(" · "+fmtDate(r.football_sent_date)):"";
+    var showFootballRow=r.approved&&canApprove(r.type)&&(r.status==="Internally Approved"||r.status==="Sent to Football Dept"||r.status==="Confirmed");
+    var sentPill="";
+    if(showFootballRow){
+      var _sp='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">';
+      if(r.status==="Internally Approved")_sp+='<button onclick="sendToLiaison(\"'+r.id+'\")" style="background:#f5f3ff;border:0.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer;color:#6d28d9;font-size:12px;font-weight:600">&#128231; Send to Football Dept</button>';
+      if(r.status==="Internally Approved")_sp+='<span onclick="markSentToFootball(\"'+r.id+'\")" title="Click to mark as sent" style="cursor:pointer;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;white-space:nowrap">&#9679; Not Sent</span>';
+      else _sp+='<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#f0fdf4;color:#15803d;border:1px solid #86efac;white-space:nowrap">&#9679; Sent'+footballSentDate+'</span>';
+      _sp+='</div>';
+      sentPill=_sp;
+    }
+    var sendBtn="";
+    var confirmBtn=(r.approved&&r.status==="Sent to Football Dept"&&canApprove(r.type))?'<button onclick="markFullyConfirmed(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Lock In Request</button>':"";
     var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
     var isPast=r.date&&new Date(r.date+"T12:00:00")<today;
     var pendingNote=!r.approved&&canApprove(r.type)?'<span style="font-size:11px;color:#d97706;font-weight:600">&#8987; Pending your approval</span>':"";
@@ -1505,7 +1518,7 @@ function renderRequests(){
     if(r.location)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#128205; '+r.location+'</span>');
     if(r.start_time||r.time_required)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#9200; '+(r.start_time?fmtTime(r.start_time)+(r.time_required?" · "+r.time_required:""):r.time_required)+'</span>');
     var pillsHtml=names.length?names.map(function(n){return'<div style="width:28px;height:28px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0369a1;flex-shrink:0" title="'+n+'">'+n.split(" ").map(function(w){return w[0]}).join("").slice(0,2)+'</div>'}).join(""):'<span style="font-size:12px;color:#9ca3af">No players</span>';
-    var hasBtns=(aBtn||sendBtn||confirmBtn||eBtn||dBtn);
+    var hasBtns=(aBtn||sentPill||confirmBtn||eBtn||dBtn);
     cards+='<div style="background:'+(r.status==="Confirmed"?"#f0fdf4":r.status==="Sent to Football Dept"?"#f5f3ff":r.status==="Not Approved"?"#fff5f5":"#fff")+';border:0.5px solid '+(r.status==="Confirmed"?"#86efac":r.status==="Sent to Football Dept"?"#c4b5fd":r.status==="Not Approved"?"#fca5a5":"#e5e7eb")+';border-left:3px solid '+(r.status==="Confirmed"?"#16a34a":r.status==="Sent to Football Dept"?"#7c3aed":r.status==="Not Approved"?"#ef4444":r.status==="Internally Approved"?"#d97706":"transparent")+';border-radius:10px;padding:16px 18px;opacity:'+(isPast?"0.6":"1")+'">'
       +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px">'
         +'<div style="flex:1;min-width:0">'
@@ -1523,7 +1536,7 @@ function renderRequests(){
           +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+pillsHtml
           +(names.length?'<span style="font-size:12px;color:#6b7280;margin-left:4px">'+names.join(", ")+'</span>':"")
           +'</div>'
-          +(hasBtns?'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+sendBtn+confirmBtn+aBtn+eBtn+dBtn+'</div>':"")
+          +(hasBtns?'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">'+sentPill+confirmBtn+aBtn+eBtn+dBtn+'</div>':"")
         +'</div>':"")
       +'</div>';
   }
@@ -1646,17 +1659,30 @@ function confirmSendToLiaison(){
     +"?subject="+encodeURIComponent(subject)
     +"&body="+encodeURIComponent(bodyText);
   window.open(mailto,"_self");
+  // Stamp sent date and update status
+  var today=new Date().toISOString().slice(0,10);
+  r.status="Sent to Football Dept";r.football_sent_date=today;
+  syncRequestToMonday(id,{status:"Sent to Football Dept",approved:true});
   closeModal("emailPreviewModal");
   _pendingLiaisonId=null;
-  showToast("Outlook opened — update status to \"Sent to Football Dept\" once sent","success");
+  renderRequests();renderCalendar();
+  showToast("Sent to football dept — status updated","success");
 }
 
+function markSentToFootball(id){
+  var r=requests.find(function(x){return x.id===id});if(!r)return;
+  var today=new Date().toISOString().slice(0,10);
+  r.status="Sent to Football Dept";r.football_sent_date=today;
+  syncRequestToMonday(id,{status:"Sent to Football Dept",approved:true});
+  renderRequests();renderCalendar();
+  showToast("Marked as sent to football dept","success");
+}
 function markFullyConfirmed(id){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
-  document.getElementById("confirmTitle").textContent="Mark as Confirmed";
+  document.getElementById("confirmTitle").textContent="Player Appearance Locked In";
   document.getElementById("confirmSubtitle").textContent=r.name;
-  document.getElementById("confirmMessage").textContent="Mark this request as fully Confirmed?";
-  document.getElementById("confirmOkBtn").textContent="Confirm";
+  document.getElementById("confirmMessage").textContent="Has the football department signed off on this request? Once marked, the request is fully locked in and no further action is needed.";
+  document.getElementById("confirmOkBtn").textContent="Yes, Lock It In";
   document.getElementById("confirmOkBtn").style.background="var(--confirmed)";
   document.getElementById("confirmOkBtn").onclick=function(){
     r.status="Confirmed";syncRequestToMonday(id,{status:"Confirmed"});
