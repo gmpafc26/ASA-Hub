@@ -1000,10 +1000,11 @@
   </div>
 </div>
 <div class="modal-overlay" id="pendingModal">
-  <div class="modal" style="max-width:680px"><div class="modal-header"><div><div class="modal-title">&#9203; Pending Approvals</div><div style="font-size:12px;color:var(--muted);margin-top:3px" id="pendingModalSub"></div></div><button class="modal-close" onclick="closeModal('pendingModal')">&#215;</button></div>
+  <div class="modal" style="max-width:680px"><div class="modal-header"><div><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div class="modal-title">&#9203; Pending Approvals</div><span id="pendingCounter" style="font-size:12px;font-weight:600;background:#f1f5f9;color:#64748b;padding:3px 10px;border-radius:20px"></span></div><div style="font-size:12px;color:var(--muted);margin-top:3px" id="pendingModalSub"></div></div><button class="modal-close" onclick="closeModal('pendingModal')">&#215;</button></div>
   <div class="modal-body" id="pendingModalBody"></div>
   <div class="modal-footer" style="gap:10px">
     <button class="btn-secondary" onclick="closeModal('pendingModal')">Cancel</button>
+    <button id="pendingSkipBtn" onclick="pendingNext()" style="padding:10px 16px;background:#fff;color:#64748b;border:1px solid #e2e8f0;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:none">Skip &#8594;</button>
     <button id="pendingDenyBtn" style="padding:10px 20px;background:#fff;color:var(--red);border:2px solid var(--red);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:6px" onmouseover="this.style.background='var(--red)';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='var(--red)'">&#10060; Deny</button>
     <button id="pendingApproveBtn" style="padding:10px 20px;background:var(--confirmed);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:6px">&#9989; Approve</button>
   </div></div>
@@ -1533,16 +1534,35 @@ function approveRequest(id){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
   openPendingModalForId(id);
 }
+var _pendingQueue=[];var _pendingIdx=0;
+function getPendingQueue(){
+  var ACTIONED=["Internally Approved","Confirmed","Not Approved"];
+  return requests.filter(function(r){return !r.approved&&!r.denied&&ACTIONED.indexOf(r.status)<0&&canApprove(r.type)});
+}
 function openPendingModalForId(id){
-  var r=requests.find(function(x){return x.id===id});if(!r)return;
-  showPendingReviewCard(r);
+  var queue=getPendingQueue();
+  var idx=queue.findIndex(function(r){return r.id===id});
+  _pendingQueue=queue;_pendingIdx=idx>=0?idx:0;
+  if(!_pendingQueue.length)return;
+  showPendingReviewCard(_pendingQueue[_pendingIdx]);
 }
 function openPendingModal(){
-  var ACTIONED=["Internally Approved","Confirmed","Not Approved"];
-  var pending=requests.filter(function(r){return !r.approved&&!r.denied&&ACTIONED.indexOf(r.status)<0&&canApprove(r.type)});
-  if(!pending.length)return;showPendingReviewCard(pending[0]);
+  _pendingQueue=getPendingQueue();_pendingIdx=0;
+  if(!_pendingQueue.length)return;
+  showPendingReviewCard(_pendingQueue[0]);
+}
+function pendingNext(){
+  _pendingQueue=getPendingQueue();
+  if(!_pendingQueue.length){closeModal("pendingModal");return;}
+  _pendingIdx=Math.min(_pendingIdx+1,_pendingQueue.length-1);
+  showPendingReviewCard(_pendingQueue[_pendingIdx]);
 }
 function showPendingReviewCard(r){
+  var total=_pendingQueue.length;var current=_pendingIdx+1;
+  var counter=document.getElementById("pendingCounter");
+  if(counter)counter.textContent=total>1?current+" of "+total:"";
+  var skipBtn=document.getElementById("pendingSkipBtn");
+  if(skipBtn)skipBtn.style.display=total>1&&current<total?"inline-flex":"none";
   document.getElementById("pendingModalSub").textContent=r.name;
   var body=document.getElementById("pendingModalBody");body.innerHTML="";
   var wrap=document.createElement("div");wrap.style.cssText="display:flex;flex-direction:column;gap:12px";
@@ -1563,13 +1583,21 @@ function pendingApproveWithComment(id,comment){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
   r.approved=true;r.status="Internally Approved";if(comment)r.approverComment=comment;
   syncRequestToMonday(id,{approved:true,status:"Internally Approved"});
-  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" approved","success");updateApprovalBanner();closeModal("pendingModal");
+  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" approved","success");
+  _pendingQueue=getPendingQueue();
+  if(_pendingQueue.length){_pendingIdx=Math.min(_pendingIdx,_pendingQueue.length-1);showPendingReviewCard(_pendingQueue[_pendingIdx]);}
+  else{closeModal("pendingModal");showToast("All requests actioned","success");}
+  updateApprovalBanner();
 }
 function pendingDenyWithComment(id,comment){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
   r.denied=true;r.status="Not Approved";if(comment)r.approverComment=comment;
   syncRequestToMonday(id,{status:"Not Approved",approved:false});
-  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" denied","error");updateApprovalBanner();closeModal("pendingModal");
+  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" denied","error");
+  _pendingQueue=getPendingQueue();
+  if(_pendingQueue.length){_pendingIdx=Math.min(_pendingIdx,_pendingQueue.length-1);showPendingReviewCard(_pendingQueue[_pendingIdx]);}
+  else{closeModal("pendingModal");showToast("All requests actioned","success");}
+  updateApprovalBanner();
 }
 var _pendingLiaisonId=null;
 function sendToLiaison(id){
