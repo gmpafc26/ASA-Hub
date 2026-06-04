@@ -1486,7 +1486,8 @@ function renderRequests(){
     var aflCount=r.players.filter(function(pid){return players.find(function(p){return p.id===pid})}).length;
     var aflwCount=r.players.filter(function(pid){return aflwPlayers.find(function(p){return p.id===pid})}).length;
     var sendBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="sendToLiaison(\''+r.id+'\')" style="background:#f5f3ff;border:0.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer;color:#6d28d9;font-size:12px;font-weight:600">&#128231; Football Dept</button>':"";
-    var confirmBtn=r.approved&&(r.status==="Sent to Football Dept")&&canApprove(r.type)?'<button onclick="openFootballStatusModal(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Update Status</button>':"";
+    var FDSTATUSES=["Internally Approved","Sent to Football Dept","Football Dept Confirmed"];
+    var confirmBtn=r.approved&&canApprove(r.type)?'<select onchange="updateFootballStatus(\''+r.id+'\',this.value)" style="font-size:11px;padding:4px 6px;border-radius:6px;border:0.5px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-family:inherit"><option value="" disabled'+(FDSTATUSES.indexOf(r.status)<0?' selected':'')+'>&#127944; Football Dept...</option><option value="Internally Approved"'+(r.status==="Internally Approved"?' selected':'')+'>Not Sent</option><option value="Sent to Football Dept"'+(r.status==="Sent to Football Dept"?' selected':'')+'>Sent to Football Dept</option><option value="Football Dept Confirmed"'+(r.status==="Football Dept Confirmed"?' selected':'')+'>Football Dept Confirmed</option></select>':"";
     var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
     var isPast=r.date&&new Date(r.date+"T12:00:00")<today;
     var pendingNote=!r.approved&&canApprove(r.type)?'<span style="font-size:11px;color:#d97706;font-weight:600">&#8987; Pending your approval</span>':"";
@@ -1629,24 +1630,15 @@ function markFullyConfirmed(id){
   };
   document.getElementById("confirmModal").classList.add("open");
 }
-function openFootballStatusModal(id){
+function updateFootballStatus(id,newStatus){
+  if(!newStatus)return;
   var r=requests.find(function(x){return x.id===id});if(!r)return;
-  var modal=document.getElementById("footballStatusModal");
-  var sel=document.getElementById("footballStatusSel");
-  var title=document.getElementById("footballStatusTitle");
-  if(!modal||!sel)return;
-  title.textContent=r.name;
-  sel.value=r.status;
-  document.getElementById("footballStatusSaveBtn").onclick=function(){
-    var newStatus=sel.value;
-    r.status=newStatus;
-    syncRequestToMonday(id,{status:newStatus});
-    closeModal("footballStatusModal");
-    renderRequests();renderCalendar();
-    showToast("Status updated to \""+newStatus+"\"","success");
-  };
-  modal.classList.add("open");
+  r.status=newStatus;
+  syncRequestToMonday(id,{status:newStatus});
+  renderRequests();renderCalendar();
+  showToast("Status updated to \""+newStatus+"\"","success");
 }
+function openFootballStatusModal(id){updateFootballStatus(id,"");}
 
 function deleteRequest(id){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
