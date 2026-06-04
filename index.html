@@ -99,6 +99,7 @@
   .pending-badge{font-size:10px;color:var(--tentative);font-weight:600;display:block;margin-top:2px}
   .status-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
   .status-sent-football{background:#ede9fe;color:#5b21b6}
+  .status-football-confirmed{background:#d1fae5;color:#065f46}
   .status-confirmed{background:#f0fdf4;color:var(--confirmed)}.status-tentative{background:#fffbeb;color:var(--tentative)}
   .status-planned{background:#eff6ff;color:var(--planned)}.status-tbc{background:#f8fafc;color:var(--tbc);border:1px solid var(--border)}
   .status-internally-approved{background:#fef3c7;color:#92400e}.status-not-approved{background:#fef2f2;color:var(--red)}
@@ -960,7 +961,7 @@
 <option value="22:30">10:30 PM</option>
 <option value="22:45">10:45 PM</option></select></div><div class="form-group"><label class="form-label">Time Required</label><input type="text" class="form-control" id="ef-time" placeholder="e.g. 2 hours, Half day, 90 mins"></div></div>
     <div class="form-group" style="margin-bottom:14px"><label class="form-label">Players</label><div class="players-checkboxes" id="editPlayersCheckboxes"></div></div>
-    <div class="form-row"><div class="form-group"><label class="form-label">Status</label><select class="form-control" id="ef-status" onchange="toggleModalBriefed('ef-briefed-wrap',this.value)"><option>TBC</option><option>Planned</option><option>Internally Approved</option><option>Sent to Football Dept</option><option>Confirmed</option><option>Not Approved</option></select></div></div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Status</label><select class="form-control" id="ef-status" onchange="toggleModalBriefed('ef-briefed-wrap',this.value)"><option>TBC</option><option>Planned</option><option>Internally Approved</option><option>Sent to Football Dept</option><option>Football Dept Confirmed</option><option>Confirmed</option><option>Not Approved</option></select></div></div>
     <div id="ef-briefed-wrap" style="display:none;margin-bottom:14px"><div class="briefed-row"><input type="checkbox" id="ef-briefed"><label for="ef-briefed">Briefed to Trent &amp; Approved</label></div></div>
     <div class="form-row full"><div class="form-group full"><label class="form-label">Notes</label><textarea class="form-control" id="ef-notes"></textarea></div></div>
   </div>
@@ -1485,7 +1486,7 @@ function renderRequests(){
     var aflCount=r.players.filter(function(pid){return players.find(function(p){return p.id===pid})}).length;
     var aflwCount=r.players.filter(function(pid){return aflwPlayers.find(function(p){return p.id===pid})}).length;
     var sendBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="sendToLiaison(\''+r.id+'\')" style="background:#f5f3ff;border:0.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer;color:#6d28d9;font-size:12px;font-weight:600">&#128231; Football Dept</button>':"";
-    var confirmBtn=(r.approved&&(r.status==="Sent to Football Dept"||r.status==="Internally Approved")&&canApprove(r.type))?'<button onclick="markFullyConfirmed(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Mark Confirmed</button>':"";
+    var confirmBtn=r.approved&&(r.status==="Sent to Football Dept")&&canApprove(r.type)?'<button onclick="openFootballStatusModal(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Update Status</button>':"";
     var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
     var isPast=r.date&&new Date(r.date+"T12:00:00")<today;
     var pendingNote=!r.approved&&canApprove(r.type)?'<span style="font-size:11px;color:#d97706;font-weight:600">&#8987; Pending your approval</span>':"";
@@ -1496,7 +1497,7 @@ function renderRequests(){
     if(r.start_time||r.time_required)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#9200; '+(r.start_time?fmtTime(r.start_time)+(r.time_required?" · "+r.time_required:""):r.time_required)+'</span>');
     var pillsHtml=names.length?names.map(function(n){return'<div style="width:28px;height:28px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0369a1;flex-shrink:0" title="'+n+'">'+n.split(" ").map(function(w){return w[0]}).join("").slice(0,2)+'</div>'}).join(""):'<span style="font-size:12px;color:#9ca3af">No players</span>';
     var hasBtns=(aBtn||sendBtn||confirmBtn||eBtn||dBtn);
-    cards+='<div style="background:'+(r.status==="Confirmed"?"#f0fdf4":r.status==="Sent to Football Dept"?"#f5f3ff":r.status==="Not Approved"?"#fff5f5":"#fff")+';border:0.5px solid '+(r.status==="Confirmed"?"#86efac":r.status==="Sent to Football Dept"?"#c4b5fd":r.status==="Not Approved"?"#fca5a5":"#e5e7eb")+';border-left:3px solid '+(r.status==="Confirmed"?"#16a34a":r.status==="Sent to Football Dept"?"#7c3aed":r.status==="Not Approved"?"#ef4444":r.status==="Internally Approved"?"#d97706":"transparent")+';border-radius:10px;padding:16px 18px;opacity:'+(isPast?"0.6":"1")+'">'
+    cards+='<div style="background:'+(r.status==="Confirmed"||r.status==="Football Dept Confirmed"?"#f0fdf4":r.status==="Sent to Football Dept"?"#f5f3ff":r.status==="Not Approved"?"#fff5f5":"#fff")+';border:0.5px solid '+(r.status==="Confirmed"||r.status==="Football Dept Confirmed"?"#86efac":r.status==="Sent to Football Dept"?"#c4b5fd":r.status==="Not Approved"?"#fca5a5":"#e5e7eb")+';border-left:3px solid '+(r.status==="Confirmed"||r.status==="Football Dept Confirmed"?"#16a34a":r.status==="Sent to Football Dept"?"#7c3aed":r.status==="Not Approved"?"#ef4444":r.status==="Internally Approved"?"#d97706":"transparent")+';border-radius:10px;padding:16px 18px;opacity:'+(isPast?"0.6":"1")+'">'
       +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px">'
         +'<div style="flex:1;min-width:0">'
           +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">'
@@ -1628,6 +1629,25 @@ function markFullyConfirmed(id){
   };
   document.getElementById("confirmModal").classList.add("open");
 }
+function openFootballStatusModal(id){
+  var r=requests.find(function(x){return x.id===id});if(!r)return;
+  var modal=document.getElementById("footballStatusModal");
+  var sel=document.getElementById("footballStatusSel");
+  var title=document.getElementById("footballStatusTitle");
+  if(!modal||!sel)return;
+  title.textContent=r.name;
+  sel.value=r.status;
+  document.getElementById("footballStatusSaveBtn").onclick=function(){
+    var newStatus=sel.value;
+    r.status=newStatus;
+    syncRequestToMonday(id,{status:newStatus});
+    closeModal("footballStatusModal");
+    renderRequests();renderCalendar();
+    showToast("Status updated to \""+newStatus+"\"","success");
+  };
+  modal.classList.add("open");
+}
+
 function deleteRequest(id){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
   document.getElementById("confirmTitle").textContent="Delete Request";
@@ -1843,11 +1863,13 @@ function renderBalancesTable(containerId,squad){
     var inputRow=document.createElement("div");inputRow.style.cssText="display:flex;align-items:center;gap:4px";
     var inp=document.createElement("input");inp.type="number";inp.min=0;inp.max=100;inp.value=pct;
     inp.id="bal-input-"+p.id;
+    inp.dataset.orig=pct;
     inp.style.cssText="width:54px;font-size:15px;font-weight:700;padding:4px 6px;border-radius:6px;border:0.5px solid #d1d5db;text-align:center;color:#111827";
     inp.dataset.pid=p.id;
-    inp.addEventListener("change",function(){
-      var pid=this.dataset.pid;var val=Math.min(100,Math.max(0,parseInt(this.value,10)||0));this.value=val;
-      var pl=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});if(pl)pl.bal=val;
+    inp.addEventListener("input",function(){
+      var val=Math.min(100,Math.max(0,parseInt(this.value,10)||0));
+      this.style.borderColor=val!==parseInt(this.dataset.orig,10)?"#d97706":"";
+      this.style.background=val!==parseInt(this.dataset.orig,10)?"#fffbeb":"";
     });
     var pctLabel=document.createElement("span");pctLabel.style.cssText="font-size:12px;color:#6b7280;font-weight:500";pctLabel.textContent="%";pctLabel.style.cssText="font-size:13px;color:#6b7280;font-weight:500";
     var resetBtn=document.createElement("button");resetBtn.style.cssText="background:none;border:none;cursor:pointer;color:#d1d5db;font-size:14px;padding:2px 4px;margin-left:auto";
@@ -1868,7 +1890,8 @@ function saveAllBalances(){
   allP.forEach(function(p){
     var inp=document.getElementById("bal-input-"+p.id);
     if(inp){var val=Math.min(100,Math.max(0,parseInt(inp.value,10)||0));
-      if(val!==p.bal){p.bal=val;count++;var mid=PLAYER_MONDAY_IDS[p.id];
+      var orig=parseInt(inp.dataset.orig,10)||0;
+      if(val!==orig){p.bal=val;inp.dataset.orig=val;inp.style.borderColor="";inp.style.background="";count++;var mid=PLAYER_MONDAY_IDS[p.id];
         if(mid)mondayApi('mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv){id}}',{bid:BOARD_ID,iid:String(mid),cv:JSON.stringify({[COL.balance]:val})});}}
   });
   renderPlayers();showToast(count>0?count+" balance"+(count>1?"s":"")+" saved to board":"No changes to save",count>0?"success":"error");
@@ -2069,6 +2092,32 @@ renderRequests();renderCalendar();
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('emailPreviewModal')">Cancel</button>
       <button class="btn-primary" id="emailSendBtn" onclick="confirmSendToLiaison()">&#128231; Open in Outlook</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="footballStatusModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">&#127944; Football Dept Status</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px" id="footballStatusTitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('footballStatusModal')">&#215;</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+      <div class="mreq-field">
+        <label class="mreq-label">Football Department Status</label>
+        <select id="footballStatusSel" class="mreq-input">
+          <option value="Internally Approved">Not Sent to Football Dept</option>
+          <option value="Sent to Football Dept">Sent to Football Dept</option>
+          <option value="Football Dept Confirmed">Football Dept Confirmed</option>
+        </select>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin:0">This updates the status on the board. Use the ✉️ Football Dept button to send the email first.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('footballStatusModal')">Cancel</button>
+      <button class="btn-primary" id="footballStatusSaveBtn">&#128190; Save Status</button>
     </div>
   </div>
 </div>
