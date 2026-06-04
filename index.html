@@ -519,7 +519,7 @@
           <div class="step-title process-editable">Approver notifies the football department</div>
           <div class="step-desc process-editable" style="margin-top:4px">For internally approved requests, the approver contacts the relevant football department liaison for final player confirmation. AFL requests go to Trent, AFLW to Rachael, mixed requests go to both — with players listed separately.</div>
           <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:#92400e" class="process-editable">
-            Do this directly from the Requests tab — on any Internally Approved request you'll see a two-step progress strip. Click <strong>Send to Football Dept</strong> to open a pre-filled email to Trent or Rachael; this stamps the sent date and step 1 turns green. If you've already sent the email outside the hub, click step 1 directly to mark it as sent. Once the football department has signed off, click <strong>Lock In Request</strong> and then step 2 turns green — the request is fully closed out.
+            Do this directly from the Requests tab — click <strong>&#128231; Football Dept</strong> on any Internally Approved request. Alternatively confirm offline and click <strong>&#9989; Confirm</strong> to manually mark as Confirmed.
           </div>
         </div>
       </div>
@@ -530,8 +530,8 @@
           <div class="step-num" style="background:var(--confirmed);color:#fff">6</div>
         </div>
         <div style="padding:16px 20px;flex:1">
-          <div class="step-title process-editable" style="color:var(--confirmed)">Locked in — fully confirmed</div>
-          <div class="step-desc process-editable" style="margin-top:4px">Once the football department has signed off, click <strong>Lock In Request</strong> on the request card. Step 2 of the progress strip turns green with the locked-in date. Status updates to <strong>Confirmed</strong> and the card turns green — fully locked in.</div>
+          <div class="step-title process-editable" style="color:var(--confirmed)">Confirmed — fully locked in</div>
+          <div class="step-desc process-editable" style="margin-top:4px">Once the football department has confirmed, the approver updates the status to <strong>Confirmed</strong>. The submitter receives a final email notification and the request is locked in on the calendar.</div>
         </div>
       </div>
 
@@ -545,7 +545,7 @@
       <li><strong>Planned</strong> — You are certain this request needs to go ahead. Submitted and ready for the approver to review.</li>
       <li><strong>Internally Approved</strong> — Approved by the relevant approver (Retail, Commercial or PCL). The approver will now notify the football department for final sign-off.</li>
       <li><strong>Not Approved</strong> — The request was declined by the approver. Check any comments left for the reason.</li>
-      <li><strong>Confirmed</strong> — Fully locked in. The football department has signed off and the approver has closed out the request.</li>
+      <li><strong>Confirmed</strong> — Fully locked in. The football department has confirmed and the request is finalised.</li>
     </ul>
     <div class="cal-info-note">Always check the calendar before submitting to avoid conflicts. You will receive email notifications at each stage of the approval process.</div>
   </div>
@@ -625,7 +625,7 @@
         <div style="width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128101;</div>
         <div>
           <div class="hiw-card-title hiw-editable">Players tab</div>
-          <div class="hiw-card-text hiw-editable">Browse all AFL and AFLW players with their photo, guernsey number, position, ASA type and remaining balance. Toggle between squads using the AFL / AFLW buttons. Click <strong>Requests</strong> on a player card to see their upcoming bookings. Admins and approvers can edit player details directly.</div>
+          <div class="hiw-card-text hiw-editable">Browse all AFL and AFLW players with their photo, jersey number, position, ASA type and remaining balance. Toggle between squads using the AFL / AFLW buttons. Click <strong>Requests</strong> on a player card to see their upcoming bookings. Admins and approvers can edit player details directly.</div>
         </div>
       </div>
 
@@ -652,7 +652,7 @@
         <div style="width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#9989;</div>
         <div>
           <div class="hiw-card-title hiw-editable">Requests & approvals</div>
-          <div class="hiw-card-text hiw-editable">The <strong>Requests</strong> tab shows all upcoming requests sorted by date. Approvers see an amber banner when requests are pending review. Approve or deny with an optional comment — approved requests move to <strong>Internally Approved</strong>. Each approved request shows a two-step progress strip. Step 1 — click <strong>Send to Football Dept</strong> to email Trent or Rachael (this stamps the sent date and turns step 1 green), or click the step directly if you've already sent it manually. Step 2 — once the football department signs off, click <strong>Lock In Request</strong> to close out the request. Both steps turn green and the card turns green — status updates to <strong>Confirmed</strong>.</div>
+          <div class="hiw-card-text hiw-editable">The <strong>Requests</strong> tab shows all upcoming requests sorted by date. Approvers see an amber banner when requests are pending their review. They can approve or deny with an optional comment. Approved requests move to <strong>Internally Approved</strong> — the approver then notifies the football department, after which status updates to <strong>Confirmed</strong>.</div>
         </div>
       </div>
 
@@ -1000,14 +1000,8 @@
   </div>
 </div>
 <div class="modal-overlay" id="pendingModal">
-  <div class="modal" style="max-width:680px"><div class="modal-header"><div><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div class="modal-title">&#9203; Pending Approvals</div><span id="pendingCounter" style="font-size:12px;font-weight:600;background:#f1f5f9;color:#64748b;padding:3px 10px;border-radius:20px"></span></div><div style="font-size:12px;color:var(--muted);margin-top:3px" id="pendingModalSub"></div></div><button class="modal-close" onclick="closeModal('pendingModal')">&#215;</button></div>
-  <div class="modal-body" id="pendingModalBody"></div>
-  <div class="modal-footer" style="gap:10px">
-    <button class="btn-secondary" onclick="closeModal('pendingModal')">Cancel</button>
-    <button id="pendingSkipBtn" onclick="pendingNext()" style="padding:10px 16px;background:#fff;color:#64748b;border:1px solid #e2e8f0;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:none">Skip &#8594;</button>
-    <button id="pendingDenyBtn" style="padding:10px 20px;background:#fff;color:var(--red);border:2px solid var(--red);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:6px" onmouseover="this.style.background='var(--red)';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='var(--red)'">&#10060; Deny</button>
-    <button id="pendingApproveBtn" style="padding:10px 20px;background:var(--confirmed);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:6px">&#9989; Approve</button>
-  </div></div>
+  <div class="modal" style="max-width:680px"><div class="modal-header"><div><div class="modal-title">&#9203; Pending Approvals</div><div style="font-size:12px;color:var(--muted);margin-top:3px" id="pendingModalSub"></div></div><button class="modal-close" onclick="closeModal('pendingModal')">&#215;</button></div>
+  <div class="modal-body" id="pendingModalBody"></div></div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -1141,8 +1135,7 @@ const COL={
   players_text:"text_mm35qb0p",req_type:"color_mm35cenq",briefed:"color_mm359ffs",approved:"color_mm35zm9j",
   req_type_dropdown:"dropdown_mm38f2g1",time_required:"text_mm388at2",
   submitted_by:"multiple_person_mm3g7m2g",
-  balance_stamp:"date_mm3hme1r",
-  football_sent_date:"date_mm3football"
+  balance_stamp:"date_mm3hme1r"
 };
 
 var PLAYER_MONDAY_IDS={};
@@ -1152,7 +1145,7 @@ var monday=null;
 var MONDAY_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY1NDUxNzk2NCwiYWFpIjoxMSwidWlkIjo4MjY0Njg5NiwiaWFkIjoiMjAyNi0wNS0wNlQwNzoxOTowNi4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzA5Mjc2LCJyZ24iOiJ1c2UxIn0.S91_48zIq-aPoxjEBHuBuRLTSwPizmnHZsPQYGysQwU";
 var SDK_READY=false;
 
-var userRoles={82646896:"admin",41198358:"commercial-approver",62081586:"commercial-approver",29892421:"retail-approver",96759461:"pcl-approver"};
+var userRoles={82646896:"admin",41198358:"commercial-approver",62081586:"commercial-approver",29892421:"retail-approver",44397410:"retail-approver",96759461:"pcl-approver"};
 var pinConfig={admin:"3942","retail-approver":"1870","commercial-approver":"1972","balance-updater":"1559","pcl-approver":"1559"};
 
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -1202,16 +1195,10 @@ function loadFromBoard(){
         var rid="r"+mondayId;
         REQUEST_MONDAY_IDS[rid]=parseInt(mondayId,10);
         var playerNames=(cv[COL.players_text]||"").split(",").map(function(n){return n.trim()}).filter(Boolean);
-        var reqStatus=cv[COL.status]||"TBC";
-        var reqApproved=cv[COL.approved]==="Approved"||reqStatus==="Internally Approved"||reqStatus==="Confirmed"||reqStatus==="Sent to Football Dept";
-        var reqDenied=reqStatus==="Not Approved";
         newRequests.push({id:rid,mondayId:parseInt(mondayId,10),name:item.name,
-          type:(function(){var t=cv[COL.req_type_dropdown]||cv[COL.req_type]||"";if(/commercial/i.test(t))return"Commercial";if(/pcl/i.test(t))return"PCL";if(/retail/i.test(t))return"Retail";return t||"Retail";}()),date:cv[COL.date]||null,
+          type:cv[COL.req_type]||"Retail",date:cv[COL.date]||null,
           location:cv[COL.location]||"",time_required:cv[COL.time_required]||"",
-          start_time:cv[COL.start_time]||"",
-          football_sent_date:cv[COL.football_sent_date]||null,
-          football_locked_date:cv[COL.football_locked_date]||null,
-          status:reqStatus,approved:reqApproved,denied:reqDenied,
+          status:cv[COL.status]||"TBC",approved:cv[COL.approved]==="Approved",
           briefed:cv[COL.briefed]==="Yes",notes:cv[COL.notes]||"",
           _playerNames:playerNames});
       } else if(item.name==="__settings__"){
@@ -1240,7 +1227,7 @@ function sc(s){return s==="Confirmed"?"status-confirmed":s==="Planned"?"status-p
 function closeModal(id){var el=document.getElementById(id);if(el)el.classList.remove("open")}
 function showToast(msg,type){var t=document.getElementById("toast");if(!t)return;t.textContent=msg;t.className="toast show"+(type?" "+type:"");setTimeout(function(){t.className="toast"},2800)}
 function canApprove(type){if(accessLevel==="admin")return true;return(APPROVAL[type]||[]).includes(accessLevel)}
-function visReqs(){return requests.filter(function(r){if(r.denied||r.status==="Not Approved")return accessLevel==="admin"||canApprove(r.type);return r.approved||canApprove(r.type)||accessLevel==="admin";})}
+function visReqs(){return requests.filter(function(r){return !r.denied&&(r.approved||canApprove(r.type)||accessLevel==="admin")})}
 function wkBounds(dateStr){var d=new Date(dateStr+"T12:00:00"),dow=d.getDay(),diff=dow===0?-6:1-dow;var mon=new Date(d);mon.setDate(d.getDate()+diff);var sun=new Date(mon);sun.setDate(mon.getDate()+6);return[mon.toISOString().slice(0,10),sun.toISOString().slice(0,10)]}
 
 // ── Tab switching ──────────────────────────────────────────────────────────
@@ -1491,34 +1478,14 @@ function renderRequests(){
   for(var i=0;i<vis.length;i++){
     var r=vis[i];
     var names=r.players.map(function(pid){var ap=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return ap?ap.name:""}).filter(Boolean);
-    var canEd=accessLevel!=="viewer"&&(accessLevel==="admin"||canApprove(r.type));
+    var canEd=accessLevel!=="viewer";
     var eBtn=canEd?'<button onclick="openEditModal(\''+r.id+'\')" style="background:none;border:0.5px solid #d1d5db;border-radius:6px;padding:5px 8px;cursor:pointer;color:#6b7280;font-size:12px" title="Edit">&#9998;</button>':"";
     var dBtn=(accessLevel==="admin"||canApprove(r.type))?'<button onclick="deleteRequest(\''+r.id+'\')" style="background:none;border:0.5px solid #fca5a5;border-radius:6px;padding:5px 8px;cursor:pointer;color:#ef4444;font-size:12px" title="Delete">&#128465;</button>':"";
     var aBtn=!r.approved&&canApprove(r.type)?'<button onclick="approveRequest(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Approve</button>':"";
     var aflCount=r.players.filter(function(pid){return players.find(function(p){return p.id===pid})}).length;
     var aflwCount=r.players.filter(function(pid){return aflwPlayers.find(function(p){return p.id===pid})}).length;
-    var footballSentDate=r.football_sent_date?(" · "+fmtDate(r.football_sent_date)):"";
-    var showFootballRow=r.approved&&canApprove(r.type)&&(r.status==="Internally Approved"||r.status==="Sent to Football Dept"||r.status==="Confirmed");
-    var sentPill="";
-    var confirmBtn="";
-    if(showFootballRow){
-      var _sw='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:280px">';
-      if(r.status==="Internally Approved")_sw+='<button onclick="sendToLiaison(\"'+r.id+'\")" style="background:#f5f3ff;border:0.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer;color:#6d28d9;font-size:12px;font-weight:600;align-self:flex-end">&#128231; Send to Football Dept</button>';
-      if(r.status==="Sent to Football Dept")_sw+='<button onclick="markFullyConfirmed(\"'+r.id+'\")" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600;align-self:flex-end">&#9989; Lock In Request</button>';
-      _sw+='<div style="background:transparent;border:none;display:inline-flex;align-items:center;font-family:inherit;white-space:nowrap;padding:0;gap:0;min-width:260px;justify-content:flex-end">';
-      var _s1style="font-size:11px;font-weight:600;padding:4px 10px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;border-radius:20px 0 0 20px"+(r.status==="Internally Approved"?";background:#fef3c7;border:0.5px solid #fcd34d;color:#92400e;cursor:pointer":r.status==="Sent to Football Dept"||r.status==="Confirmed"?";background:#f0fdf4;border:0.5px solid #86efac;color:#15803d":";background:#f8fafc;border:0.5px solid #e2e8f0;color:#94a3b8");
-      var _s1label=r.status==="Sent to Football Dept"||r.status==="Confirmed"?"&#10003; 1. Sent"+footballSentDate:"1. Sent to football dept";
-      var _s1onclick=r.status==="Internally Approved"?" onclick=\"markSentToFootball(\'"+r.id+"\')\" title=\"Click to mark as sent\"":" ";
-      _sw+='<span'+_s1onclick+' style="'+_s1style+'">'+_s1label+'</span>';
-      _sw+='<span style="font-size:10px;color:#94a3b8;background:#f8fafc;border-top:0.5px solid #e2e8f0;border-bottom:0.5px solid #e2e8f0;display:inline-flex;align-items:center;padding:0 3px">&#8250;</span>';
-      var _s2style="font-size:11px;font-weight:600;padding:4px 10px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;border-radius:0 20px 20px 0"+(r.status==="Confirmed"?";background:#f0fdf4;border:0.5px solid #86efac;color:#15803d":r.status==="Sent to Football Dept"?";background:#f5f3ff;border:0.5px solid #c4b5fd;color:#6d28d9":";background:#f8fafc;border:0.5px solid #e2e8f0;color:#94a3b8");
-      var _s2label=r.status==="Confirmed"?"&#10003; 2. Locked in"+(r.football_locked_date?" · "+fmtDate(r.football_locked_date):""):r.status==="Sent to Football Dept"?"2. Lock in":"2. Locked in";
-      _sw+='<span style="'+_s2style+'">'+_s2label+'</span>';
-      _sw+='</div></div>';
-      sentPill=_sw;
-    }
-    var sendBtn="";
-    var confirmBtn="";
+    var sendBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="sendToLiaison(\''+r.id+'\')" style="background:#f5f3ff;border:0.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer;color:#6d28d9;font-size:12px;font-weight:600">&#128231; Football Dept</button>':"";
+    var confirmBtn=(r.approved&&(r.status==="Sent to Football Dept"||r.status==="Internally Approved")&&canApprove(r.type))?'<button onclick="markFullyConfirmed(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Mark Confirmed</button>':"";
     var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
     var isPast=r.date&&new Date(r.date+"T12:00:00")<today;
     var pendingNote=!r.approved&&canApprove(r.type)?'<span style="font-size:11px;color:#d97706;font-weight:600">&#8987; Pending your approval</span>':"";
@@ -1528,7 +1495,7 @@ function renderRequests(){
     if(r.location)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#128205; '+r.location+'</span>');
     if(r.start_time||r.time_required)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#9200; '+(r.start_time?fmtTime(r.start_time)+(r.time_required?" · "+r.time_required:""):r.time_required)+'</span>');
     var pillsHtml=names.length?names.map(function(n){return'<div style="width:28px;height:28px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0369a1;flex-shrink:0" title="'+n+'">'+n.split(" ").map(function(w){return w[0]}).join("").slice(0,2)+'</div>'}).join(""):'<span style="font-size:12px;color:#9ca3af">No players</span>';
-    var hasBtns=(aBtn||sentPill||eBtn||dBtn);
+    var hasBtns=(aBtn||sendBtn||confirmBtn||eBtn||dBtn);
     cards+='<div style="background:'+(r.status==="Confirmed"?"#f0fdf4":r.status==="Sent to Football Dept"?"#f5f3ff":r.status==="Not Approved"?"#fff5f5":"#fff")+';border:0.5px solid '+(r.status==="Confirmed"?"#86efac":r.status==="Sent to Football Dept"?"#c4b5fd":r.status==="Not Approved"?"#fca5a5":"#e5e7eb")+';border-left:3px solid '+(r.status==="Confirmed"?"#16a34a":r.status==="Sent to Football Dept"?"#7c3aed":r.status==="Not Approved"?"#ef4444":r.status==="Internally Approved"?"#d97706":"transparent")+';border-radius:10px;padding:16px 18px;opacity:'+(isPast?"0.6":"1")+'">'
       +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px">'
         +'<div style="flex:1;min-width:0">'
@@ -1546,7 +1513,7 @@ function renderRequests(){
           +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+pillsHtml
           +(names.length?'<span style="font-size:12px;color:#6b7280;margin-left:4px">'+names.join(", ")+'</span>':"")
           +'</div>'
-          +(hasBtns?'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">'+sentPill+aBtn+eBtn+dBtn+'</div>':"")
+          +(hasBtns?'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+sendBtn+confirmBtn+aBtn+eBtn+dBtn+'</div>':"")
         +'</div>':"")
       +'</div>';
   }
@@ -1557,35 +1524,16 @@ function approveRequest(id){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
   openPendingModalForId(id);
 }
-var _pendingQueue=[];var _pendingIdx=0;
-function getPendingQueue(){
-  var ACTIONED=["Internally Approved","Confirmed","Not Approved"];
-  return requests.filter(function(r){return !r.approved&&!r.denied&&ACTIONED.indexOf(r.status)<0&&canApprove(r.type)});
-}
 function openPendingModalForId(id){
-  var queue=getPendingQueue();
-  var idx=queue.findIndex(function(r){return r.id===id});
-  _pendingQueue=queue;_pendingIdx=idx>=0?idx:0;
-  if(!_pendingQueue.length)return;
-  showPendingReviewCard(_pendingQueue[_pendingIdx]);
+  var r=requests.find(function(x){return x.id===id});if(!r)return;
+  showPendingReviewCard(r);
 }
 function openPendingModal(){
-  _pendingQueue=getPendingQueue();_pendingIdx=0;
-  if(!_pendingQueue.length)return;
-  showPendingReviewCard(_pendingQueue[0]);
-}
-function pendingNext(){
-  _pendingQueue=getPendingQueue();
-  if(!_pendingQueue.length){closeModal("pendingModal");return;}
-  _pendingIdx=Math.min(_pendingIdx+1,_pendingQueue.length-1);
-  showPendingReviewCard(_pendingQueue[_pendingIdx]);
+  var ACTIONED=["Internally Approved","Confirmed","Not Approved"];
+  var pending=requests.filter(function(r){return !r.approved&&!r.denied&&ACTIONED.indexOf(r.status)<0&&canApprove(r.type)});
+  if(!pending.length)return;showPendingReviewCard(pending[0]);
 }
 function showPendingReviewCard(r){
-  var total=_pendingQueue.length;var current=_pendingIdx+1;
-  var counter=document.getElementById("pendingCounter");
-  if(counter)counter.textContent=total>1?current+" of "+total:"";
-  var skipBtn=document.getElementById("pendingSkipBtn");
-  if(skipBtn)skipBtn.style.display=total>1&&current<total?"inline-flex":"none";
   document.getElementById("pendingModalSub").textContent=r.name;
   var body=document.getElementById("pendingModalBody");body.innerHTML="";
   var wrap=document.createElement("div");wrap.style.cssText="display:flex;flex-direction:column;gap:12px";
@@ -1606,21 +1554,13 @@ function pendingApproveWithComment(id,comment){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
   r.approved=true;r.status="Internally Approved";if(comment)r.approverComment=comment;
   syncRequestToMonday(id,{approved:true,status:"Internally Approved"});
-  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" approved","success");
-  _pendingQueue=getPendingQueue();
-  if(_pendingQueue.length){_pendingIdx=Math.min(_pendingIdx,_pendingQueue.length-1);showPendingReviewCard(_pendingQueue[_pendingIdx]);}
-  else{closeModal("pendingModal");showToast("All requests actioned","success");}
-  updateApprovalBanner();
+  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" approved","success");updateApprovalBanner();closeModal("pendingModal");
 }
 function pendingDenyWithComment(id,comment){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
   r.denied=true;r.status="Not Approved";if(comment)r.approverComment=comment;
   syncRequestToMonday(id,{status:"Not Approved",approved:false});
-  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" denied","error");
-  _pendingQueue=getPendingQueue();
-  if(_pendingQueue.length){_pendingIdx=Math.min(_pendingIdx,_pendingQueue.length-1);showPendingReviewCard(_pendingQueue[_pendingIdx]);}
-  else{closeModal("pendingModal");showToast("All requests actioned","success");}
-  updateApprovalBanner();
+  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" denied","error");updateApprovalBanner();closeModal("pendingModal");
 }
 var _pendingLiaisonId=null;
 function sendToLiaison(id){
@@ -1669,33 +1609,20 @@ function confirmSendToLiaison(){
     +"?subject="+encodeURIComponent(subject)
     +"&body="+encodeURIComponent(bodyText);
   window.open(mailto,"_self");
-  // Stamp sent date and update status
-  var today=new Date().toISOString().slice(0,10);
-  r.status="Sent to Football Dept";r.football_sent_date=today;
-  syncRequestToMonday(id,{status:"Sent to Football Dept",approved:true});
   closeModal("emailPreviewModal");
   _pendingLiaisonId=null;
-  renderRequests();renderCalendar();
-  showToast("Sent to football dept — status updated","success");
+  showToast("Outlook opened — update status to \"Sent to Football Dept\" once sent","success");
 }
 
-function markSentToFootball(id){
-  var r=requests.find(function(x){return x.id===id});if(!r)return;
-  var today=new Date().toISOString().slice(0,10);
-  r.status="Sent to Football Dept";r.football_sent_date=today;
-  syncRequestToMonday(id,{status:"Sent to Football Dept",approved:true});
-  renderRequests();renderCalendar();
-  showToast("Marked as sent to football dept","success");
-}
 function markFullyConfirmed(id){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
-  document.getElementById("confirmTitle").textContent="Player Appearance Locked In";
+  document.getElementById("confirmTitle").textContent="Mark as Confirmed";
   document.getElementById("confirmSubtitle").textContent=r.name;
-  document.getElementById("confirmMessage").textContent="Has the football department signed off on this request? Once marked, the request is fully locked in and no further action is needed.";
-  document.getElementById("confirmOkBtn").textContent="Yes, Lock It In";
+  document.getElementById("confirmMessage").textContent="Mark this request as fully Confirmed?";
+  document.getElementById("confirmOkBtn").textContent="Confirm";
   document.getElementById("confirmOkBtn").style.background="var(--confirmed)";
   document.getElementById("confirmOkBtn").onclick=function(){
-    r.status="Confirmed";r.football_locked_date=new Date().toISOString().slice(0,10);syncRequestToMonday(id,{status:"Confirmed"});
+    r.status="Confirmed";syncRequestToMonday(id,{status:"Confirmed"});
     closeModal("confirmModal");document.getElementById("confirmOkBtn").style.background="var(--red)";
     renderRequests();renderCalendar();showToast(r.name+" confirmed","success");
   };
@@ -2034,7 +1961,7 @@ function updateApprovalBanner(){
   if(accessLevel!=="retail-approver"&&accessLevel!=="commercial-approver"&&accessLevel!=="pcl-approver"&&accessLevel!=="admin"){banner.style.display="none";return;}
   var ACTIONED=["Internally Approved","Confirmed","Not Approved"];
   var pending=requests.filter(function(r){return !r.approved&&!r.denied&&ACTIONED.indexOf(r.status)<0&&canApprove(r.type)});
-  if(pending.length>0){banner.style.display="flex";var msg=document.getElementById("approvalBannerTitle");if(msg)msg.textContent=pending.length+" request"+(pending.length>1?"s":"")+" pending your approval";var sub=document.getElementById("approvalBannerSub");if(sub)sub.textContent="Click Review & Approve to action them";}
+  if(pending.length>0){banner.style.display="flex";var msg=document.getElementById("bannerMsg");if(msg)msg.textContent=pending.length+" request"+(pending.length>1?"s":"")+" pending your approval";}
   else{banner.style.display="none";}
 }
 function updatePinDots(){
