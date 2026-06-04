@@ -1001,8 +1001,14 @@
   </div>
 </div>
 <div class="modal-overlay" id="pendingModal">
-  <div class="modal" style="max-width:680px"><div class="modal-header"><div><div class="modal-title">&#9203; Pending Approvals</div><div style="font-size:12px;color:var(--muted);margin-top:3px" id="pendingModalSub"></div></div><button class="modal-close" onclick="closeModal('pendingModal')">&#215;</button></div>
-  <div class="modal-body" id="pendingModalBody"></div></div>
+  <div class="modal" style="max-width:680px;display:flex;flex-direction:column"><div class="modal-header"><div><div class="modal-title">&#9203; Pending Approvals</div><div style="font-size:12px;color:var(--muted);margin-top:3px" id="pendingModalSub"></div></div><button class="modal-close" onclick="closeModal('pendingModal')">&#215;</button></div>
+  <div class="modal-body" id="pendingModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('pendingModal')">Cancel</button>
+      <button class="btn-primary" id="pendingDenyBtn" style="background:#dc2626">&#10060; Deny</button>
+      <button class="btn-primary" id="pendingApproveBtn">&#9989; Approve</button>
+    </div>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -1224,7 +1230,7 @@ function loadFromBoard(){
 function isoDate(y,m,d){return y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0")}
 function fmtDate(s){if(!s)return"--";var d=new Date(s+"T12:00:00");return d.toLocaleDateString("en-AU",{day:"numeric",month:"short",year:"numeric"})}
 function fmtTime(t){if(!t)return"";try{var parts=t.split(":");var h=parseInt(parts[0],10);var m=parts[1];var ampm=h>=12?"PM":"AM";h=h%12||12;return h+":"+m+" "+ampm;}catch(e){return t}}
-function sc(s){return s==="Confirmed"?"status-confirmed":s==="Planned"?"status-planned":s==="Internally Approved"?"status-internally-approved":s==="Not Approved"?"status-not-approved":s==="Tentative"?"status-tentative":"status-tbc"}
+function sc(s){return s==="Confirmed"?"status-confirmed":s==="Football Dept Confirmed"?"status-football-confirmed":s==="Sent to Football Dept"?"status-sent-football":s==="Planned"?"status-planned":s==="Internally Approved"?"status-internally-approved":s==="Not Approved"?"status-not-approved":"status-tbc"}
 function closeModal(id){var el=document.getElementById(id);if(el)el.classList.remove("open")}
 function showToast(msg,type){var t=document.getElementById("toast");if(!t)return;t.textContent=msg;t.className="toast show"+(type?" "+type:"");setTimeout(function(){t.className="toast"},2800)}
 function canApprove(type){if(accessLevel==="admin")return true;return(APPROVAL[type]||[]).includes(accessLevel)}
