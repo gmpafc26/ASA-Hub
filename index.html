@@ -359,6 +359,7 @@
   <button class="tab-btn" data-tab="requests" onclick="switchTab('requests',this)">&#128203; Requests <span class="badge" id="requestCount">-</span></button>
   <button class="tab-btn" data-tab="process" onclick="switchTab('process',this)">&#128214; Process</button>
   <button class="tab-btn tab-btn-balances" id="balancesTabBtn" data-tab="balances" onclick="switchTab('balances',this)" style="display:none">&#9997;&#65039; Balances</button>
+  <button class="tab-btn" data-tab="schedule" onclick="switchTab('schedule',this)" id="scheduleTabBtn" style="display:none">&#128197; Schedule</button>
   <button class="tab-btn" data-tab="how-it-works" onclick="switchTab('how-it-works',this)">&#128214; How It Works</button>
   <button class="tab-btn tab-btn-cta" onclick="openRequestFormModal()">&#43; New Request</button>
 </nav>
@@ -786,6 +787,21 @@
     
     </div>
   </div>
+<div class="tab-pane" id="tab-schedule">
+  <div class="tab-page-header">
+    <div>
+      <h2 class="tab-page-title">Player Schedule</h2>
+      <p class="tab-page-sub">Manage AFL and AFLW availability — changes sync to the monday board and update the calendar instantly</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="squad-tab-btn active" id="schedBtn-afl" onclick="switchSchedSquad('afl',this)">AFL</button>
+      <button class="squad-tab-btn" id="schedBtn-aflw" onclick="switchSchedSquad('aflw',this)">AFLW</button>
+      <button class="btn-primary" onclick="openAddScheduleModal()">&#43; Add Entry</button>
+    </div>
+  </div>
+  <div id="scheduleAFLBody"></div>
+  <div id="scheduleAFLWBody" style="display:none"></div>
+</div>
 </div>
 </div>
 
@@ -1135,6 +1151,9 @@ const REQUESTS_GROUP="group_mm35jzs7";
 const PLAYERS_GROUP="group_mm354464";
 const AFLW_PLAYERS_GROUP="group_mm35q3j5";
 const MEDIA_GROUP="group_mm3hxc7y";
+const AFL_SCHED_GROUP="group_mm45jc6x";
+const AFLW_SCHED_GROUP="group_mm457qw";
+const COL_AVAIL="color_mm45j1w7";
 const SETTINGS_ITEM_ID="12058437766";
 const COL={
   date:"date_mm35z010",location:"text_mm353efc",notes:"long_text_mm352xyz",status:"color_mm351c4p",
@@ -1208,6 +1227,22 @@ function loadFromBoard(){
           status:cv[COL.status]||"TBC",approved:cv[COL.approved]==="Approved",
           briefed:cv[COL.briefed]==="Yes",notes:cv[COL.notes]||"",
           _playerNames:playerNames});
+      } else if(item.group.id===AFL_SCHED_GROUP||item.group.id===AFLW_SCHED_GROUP){
+        if(item.name&&item.name!=="New item"){
+          var availText=cv[COL_AVAIL]||"";
+          var availMap={"Available":"available","Partial":"partial","Not Available":"unavailable","CBA":"cba","Player Day Off":"unavailable"};
+          var noteText=cv[COL.notes]||item.name;
+          var availKey=availMap[availText]||"unavailable";
+          var isWeekend=false;
+          if(cv[COL.date]){var dw=new Date(cv[COL.date]+"T12:00:00").getDay();isWeekend=dw===0||dw===6;}
+          if(isWeekend)availKey="weekend";
+          var entry={date:cv[COL.date]||null,a:availKey,n:noteText,mondayId:parseInt(mondayId,10)};
+          if(item.group.id===AFL_SCHED_GROUP){
+            if(entry.date)schedule[entry.date]=entry;
+          } else {
+            if(entry.date)aflwSchedule[entry.date]=entry;
+          }
+        }
       } else if(item.name==="__settings__"){
         var stampCol=item.column_values.find(function(cv2){return cv2.id===COL.balance_stamp});
         if(stampCol&&stampCol.text){var sd=document.getElementById("stampDate");if(sd)sd.value=stampCol.text;var sdisp=document.getElementById("balancesStampDisplay");if(sdisp)sdisp.textContent=fmtDate(stampCol.text);}
@@ -1245,6 +1280,7 @@ function switchTab(tab,btn){
   if(!btn)btn=document.querySelector('.tab-btn[data-tab="'+tab+'"]');
   if(btn)btn.classList.add("active");
   if(tab==="calendar"){renderCalendar();}
+  if(tab==="schedule"){renderScheduleTable(document.getElementById("schedBtn-afl")&&document.getElementById("schedBtn-afl").classList.contains("active")?"afl":"aflw");}
   if(tab==="balances")renderBalancesTab();
 }
 
@@ -1970,7 +2006,7 @@ function applyAccessLevel(level){
   if(accessLabel)accessLabel.innerHTML=roleText;
   if(accessBadge)accessBadge.className="access-badge"+(level!=="viewer"?" logged-in":"");
   if(level==="admin"||level==="balance-updater"||level==="pcl-approver"){var bt=document.getElementById("balancesTabBtn");if(bt)bt.style.display="flex";}
-  if(level==="admin"){var apb=document.getElementById("addPlayerBtn");if(apb)apb.style.display="flex";var heb=document.getElementById("hiwEditBtn");if(heb)heb.style.display="flex";var peb=document.getElementById("processEditBtn");if(peb)peb.style.display="flex";}
+  if(level==="admin"){var apb=document.getElementById("addPlayerBtn");if(apb)apb.style.display="flex";var heb=document.getElementById("hiwEditBtn");if(heb)heb.style.display="flex";var peb=document.getElementById("processEditBtn");if(peb)peb.style.display="flex";var stb=document.getElementById("scheduleTabBtn");if(stb)stb.style.display="flex";}
   renderPlayers();renderRequests();updateApprovalBanner();
 }
 function resolveIdentity(mondayUserId){
@@ -1995,6 +2031,7 @@ function openPinModal(){
     var ab=document.getElementById("accessBadge");if(ab)ab.className="access-badge";
     var bt=document.getElementById("balancesTabBtn");if(bt)bt.style.display="none";
     var apb=document.getElementById("addPlayerBtn");if(apb)apb.style.display="none";
+    var stb2=document.getElementById("scheduleTabBtn");if(stb2)stb2.style.display="none";
     showToast("Signed out");renderPlayers();renderRequests();return;
   }
   pinEntry="";updatePinDots();
@@ -2024,6 +2061,125 @@ function toggleHiwEdit(){
   var btn=document.getElementById("hiwEditBtn");if(!btn)return;var editing=btn.dataset.editing==="true";
   if(editing){document.querySelectorAll(".hiw-card-title,.hiw-card-text,.hiw-editable").forEach(function(el){el.contentEditable="false";el.style.outline=""});btn.dataset.editing="false";btn.innerHTML="✏️ Edit Content";showToast("Content saved","success");}
   else{document.querySelectorAll(".hiw-card-title,.hiw-card-text,.hiw-editable").forEach(function(el){el.contentEditable="true";el.style.outline="2px solid var(--teal)"});btn.dataset.editing="true";btn.innerHTML="💾 Save Changes";showToast("Click any text to edit","success");}
+}
+
+
+// ── Schedule tab ──────────────────────────────────────────────────────────
+var schedEditDate=null,schedEditSquad="afl";
+function switchSchedSquad(squad,btn){
+  document.querySelectorAll("#schedBtn-afl,#schedBtn-aflw").forEach(function(b){b.classList.remove("active")});
+  btn.classList.add("active");
+  document.getElementById("scheduleAFLBody").style.display=squad==="afl"?"block":"none";
+  document.getElementById("scheduleAFLWBody").style.display=squad==="aflw"?"block":"none";
+  renderScheduleTable(squad);
+}
+function renderScheduleTabs(){
+  renderScheduleTable("afl");
+  // AFLW rendered lazily when switched
+}
+function renderScheduleTable(squad){
+  var containerId=squad==="afl"?"scheduleAFLBody":"scheduleAFLWBody";
+  var container=document.getElementById(containerId);if(!container)return;
+  var sched=squad==="afl"?schedule:aflwSchedule;
+  var entries=Object.keys(sched).sort().map(function(date){return Object.assign({date:date},sched[date]);});
+  var availLabels={available:"Available",partial:"Partial",unavailable:"Not Available",cba:"CBA",weekend:"Weekend"};
+  var availColours={available:"#059669",partial:"#d97706",unavailable:"#6b7280",cba:"#7c3aed",weekend:"#9ca3af"};
+  var html='<div style="background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;overflow:hidden">'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
+    +'<thead><tr style="background:#f8fafc">'
+    +'<th style="text-align:left;padding:10px 14px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;border-bottom:0.5px solid #e5e7eb">Date</th>'
+    +'<th style="text-align:left;padding:10px 14px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;border-bottom:0.5px solid #e5e7eb">Availability</th>'
+    +'<th style="text-align:left;padding:10px 14px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;border-bottom:0.5px solid #e5e7eb">Note</th>'
+    +'<th style="padding:10px 14px;border-bottom:0.5px solid #e5e7eb;width:80px"></th>'
+    +"</tr></thead><tbody>";
+  entries.forEach(function(e){
+    var col=availColours[e.a]||"#6b7280";
+    var label=availLabels[e.a]||e.a;
+    html+='<tr style="border-bottom:0.5px solid #f3f4f6">'
+      +'<td style="padding:10px 14px;font-weight:500">'+fmtDate(e.date)+'</td>'
+      +'<td style="padding:10px 14px"><span style="font-size:11px;font-weight:600;color:'+col+';background:'+col+'18;padding:2px 8px;border-radius:20px">'+label+'</span></td>'
+      +'<td style="padding:10px 14px;color:#6b7280">'+e.n+'</td>'
+      +'<td style="padding:10px 14px;text-align:right;display:flex;gap:6px;justify-content:flex-end">'
+      +'<button onclick="editScheduleEntry(''+e.date+'',''+squad+'')" style="background:none;border:0.5px solid #d1d5db;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;color:#6b7280">&#9998;</button>'
+      +'<button onclick="deleteScheduleEntry(''+e.date+'',''+squad+'')" style="background:none;border:0.5px solid #fca5a5;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;color:#ef4444">&#128465;</button>'
+      +'</td></tr>';
+  });
+  if(!entries.length)html+='<tr><td colspan="4" style="padding:32px;text-align:center;color:#9ca3af">No schedule entries yet — click + Add Entry to get started.</td></tr>';
+  html+="</tbody></table></div>";
+  container.innerHTML=html;
+}
+function schedModalSquad(squad,btn){
+  schedEditSquad=squad;
+  document.querySelectorAll("#schedModalAFL,#schedModalAFLW").forEach(function(b){b.classList.remove("active")});
+  btn.classList.add("active");
+}
+function openAddScheduleModal(){
+  schedEditDate=null;
+  schedEditSquad="afl";
+  document.getElementById("schedModalTitle").textContent="Add Schedule Entry";
+  document.getElementById("schedDate").value="";
+  document.getElementById("schedAvail").value="available";
+  document.getElementById("schedNote").value="";
+  document.querySelectorAll("#schedModalAFL,#schedModalAFLW").forEach(function(b){b.classList.remove("active")});
+  document.getElementById("schedModalAFL").classList.add("active");
+  document.getElementById("scheduleEntryModal").classList.add("open");
+}
+function editScheduleEntry(date,squad){
+  var sched=squad==="afl"?schedule:aflwSchedule;
+  var entry=sched[date];if(!entry)return;
+  schedEditDate=date;schedEditSquad=squad;
+  document.getElementById("schedModalTitle").textContent="Edit Schedule Entry";
+  document.getElementById("schedDate").value=date;
+  var isDay=entry.n.toLowerCase().indexOf("day off")>-1;
+  document.getElementById("schedAvail").value=entry.a==="unavailable"&&isDay?"unavailable_dayoff":entry.a;
+  document.getElementById("schedNote").value=entry.n;
+  document.querySelectorAll("#schedModalAFL,#schedModalAFLW").forEach(function(b){b.classList.remove("active")});
+  document.getElementById(squad==="afl"?"schedModalAFL":"schedModalAFLW").classList.add("active");
+  document.getElementById("scheduleEntryModal").classList.add("open");
+}
+function saveScheduleEntry(){
+  var date=document.getElementById("schedDate").value;if(!date){showToast("Select a date","error");return}
+  var availVal=document.getElementById("schedAvail").value;
+  var note=document.getElementById("schedNote").value.trim();if(!note){showToast("Enter a note","error");return}
+  var availKey=availVal==="unavailable_dayoff"?"unavailable":availVal;
+  var availLabel={available:"Available",partial:"Partial",unavailable:"Not Available",cba:"CBA",unavailable_dayoff:"Player Day Off",weekend:"Weekend"}[availVal]||"Not Available";
+  var sched=schedEditSquad==="afl"?schedule:aflwSchedule;
+  var groupId=schedEditSquad==="afl"?AFL_SCHED_GROUP:AFLW_SCHED_GROUP;
+  var entry={date:date,a:availKey,n:note};
+  // If editing existing entry, delete old one if date changed
+  if(schedEditDate&&schedEditDate!==date){
+    delete sched[schedEditDate];
+  }
+  sched[date]=entry;
+  // Sync to monday - create or update
+  var existingMondayId=sched[date]?sched[date].mondayId:null;
+  var cv={};
+  cv[COL.date]={date:date};
+  cv[COL_AVAIL]={label:availLabel};
+  cv[COL.notes]={text:note};
+  if(existingMondayId){
+    mondayApi("mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv,create_labels_if_missing:true){id}}",
+      {bid:BOARD_ID,iid:String(existingMondayId),cv:JSON.stringify(cv)});
+  } else {
+    mondayApi("mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}",
+      {bid:BOARD_ID,gid:groupId,name:note+" ("+date+")",cv:JSON.stringify(cv)}).then(function(r){
+        if(r&&r.data&&r.data.create_item)sched[date].mondayId=parseInt(r.data.create_item.id,10);
+      });
+  }
+  closeModal("scheduleEntryModal");
+  renderScheduleTable(schedEditSquad);
+  renderCalendar();
+  showToast("Schedule entry saved","success");
+}
+function deleteScheduleEntry(date,squad){
+  var sched=squad==="afl"?schedule:aflwSchedule;
+  var entry=sched[date];if(!entry)return;
+  if(!confirm("Remove entry for "+fmtDate(date)+"?"))return;
+  var mid=entry.mondayId;
+  delete sched[date];
+  if(mid)mondayApi("mutation($id:ID!){delete_item(item_id:$id){id}}",{id:String(mid)});
+  renderScheduleTable(squad);renderCalendar();
+  showToast("Entry removed","success");
 }
 
 // ── SDK init ───────────────────────────────────────────────────────────────
@@ -2116,6 +2272,46 @@ renderRequests();renderCalendar();
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('footballStatusModal')">Cancel</button>
       <button class="btn-primary" id="footballStatusSaveBtn">&#128190; Save Status</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="scheduleEntryModal">
+  <div class="modal" style="max-width:440px;display:flex;flex-direction:column">
+    <div class="modal-header">
+      <div class="modal-title" id="schedModalTitle">Add Schedule Entry</div>
+      <button class="modal-close" onclick="closeModal('scheduleEntryModal')">&#215;</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+      <div class="mreq-field">
+        <label class="mreq-label">Squad</label>
+        <div style="display:flex;gap:6px">
+          <button class="squad-tab-btn active" id="schedModalAFL" onclick="schedModalSquad('afl',this)">AFL</button>
+          <button class="squad-tab-btn" id="schedModalAFLW" onclick="schedModalSquad('aflw',this)">AFLW</button>
+        </div>
+      </div>
+      <div class="mreq-field">
+        <label class="mreq-label">Date <span class="mreq-req">*</span></label>
+        <input type="date" class="mreq-input" id="schedDate">
+      </div>
+      <div class="mreq-field">
+        <label class="mreq-label">Availability <span class="mreq-req">*</span></label>
+        <select class="mreq-input" id="schedAvail">
+          <option value="available">Available</option>
+          <option value="partial">Partial</option>
+          <option value="unavailable">Not Available</option>
+          <option value="cba">CBA</option>
+          <option value="unavailable_dayoff">Player Day Off</option>
+          <option value="weekend">Weekend</option>
+        </select>
+      </div>
+      <div class="mreq-field">
+        <label class="mreq-label">Note <span class="mreq-req">*</span></label>
+        <input type="text" class="mreq-input" id="schedNote" placeholder="e.g. Available from 2pm">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('scheduleEntryModal')">Cancel</button>
+      <button class="btn-primary" onclick="saveScheduleEntry()">&#128190; Save</button>
     </div>
   </div>
 </div>
