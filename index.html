@@ -38,6 +38,11 @@
   .tag{font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;border:1px solid}
   .tag-asa{color:#16a34a;border-color:#bbf7d0;background:#f0fdf4}.tag-photo{color:#92400e;border-color:#fde68a;background:#fffbeb}
   .tag-nike{color:#111;border-color:#d1d5db;background:#f9fafb}.tag-adidas{color:#1e40af;border-color:#bfdbfe;background:#eff6ff}
+  .player-actions{display:flex;gap:8px;margin-top:auto;padding-top:12px}
+  .btn-sm{flex:1;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;border-radius:7px;cursor:pointer;border:none;transition:all .15s;text-align:center;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-outline:hover{border-color:var(--teal);color:var(--teal)}
+  .btn-teal{background:var(--teal);color:#fff}.btn-teal:hover{background:var(--teal-light)}
+  .req-count-badge{background:var(--teal);color:#fff;border-radius:10px;padding:0 6px;font-size:10px;font-weight:700;display:inline-block}
   .cal-month-title{font-weight:800;font-size:20px}
   .cal-arrows{display:flex;gap:6px}
   .cal-arrow{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
@@ -324,7 +329,7 @@
         <button class="squad-tab-btn" id="calBtn-both" onclick="switchCalSquad('both',this)">Both</button>
       </div>
       <button onclick="openBlackoutModal()" style="background:var(--off-white);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:5px;font-weight:600">&#128247; + Blackout</button>
-      <button id="editScheduleBtn" onclick="openScheduleModal()" style="display:none;background:var(--off-white);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;color:var(--muted);cursor:pointer;display:none;align-items:center;gap:5px;font-weight:600">&#128197; Edit Schedule</button>
+      <button id="editScheduleBtn" onclick="openScheduleModal()" style="display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:5px 12px;font-size:12px;color:#15803d;cursor:pointer;align-items:center;gap:5px;font-weight:600">&#128197; Edit Schedule</button>
     </div>
     <!-- Legend strip -->
     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:7px 16px;background:var(--off-white);border-top:1px solid var(--border)">
@@ -700,64 +705,87 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- SCHEDULE MODAL (replaces Schedule tab)                        -->
+<!-- SCHEDULE MODAL                                                -->
 <!-- ============================================================ -->
 <div class="modal-overlay" id="scheduleModal">
-  <div class="modal" style="max-width:700px;width:96%;max-height:92vh">
+  <div class="modal" style="max-width:740px;width:96%;max-height:92vh">
     <div class="modal-header">
       <div>
         <div class="modal-title">&#128197; Edit Player Schedule</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">Manage AFL and AFLW availability — changes sync to the board and update the calendar instantly</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Manage AFL and AFLW availability — syncs to the board and calendar instantly</div>
       </div>
       <button class="modal-close" onclick="closeModal('scheduleModal')">&#215;</button>
     </div>
-    <div class="modal-body" style="padding:0;display:flex;flex-direction:column">
+    <div class="modal-body" style="padding:0;display:flex;flex-direction:column;overflow:hidden">
 
-      <!-- Top controls: squad toggle + mode buttons + add -->
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+      <!-- Squad + mode controls -->
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0">
         <div style="display:flex;gap:4px">
           <button class="squad-tab-btn active" id="smodBtn-afl" onclick="switchSchedModalSquad('afl',this)">AFL</button>
           <button class="squad-tab-btn" id="smodBtn-aflw" onclick="switchSchedModalSquad('aflw',this)">AFLW</button>
         </div>
-        <div style="display:flex;gap:4px;margin-left:auto">
-          <button class="sched-mode-btn active" id="schedModeEntry" onclick="switchSchedMode('entry',this)">+ Add Entry</button>
-          <button class="sched-mode-btn" id="schedModeBulk" onclick="switchSchedMode('bulk',this)">&#9889; Bulk Add</button>
+        <div style="display:flex;gap:6px;margin-left:auto">
+          <button class="sched-mode-btn active" id="schedModeEntry" onclick="switchSchedMode('entry')">&#43; Add Entry</button>
+          <button class="sched-mode-btn" id="schedModeBulk" onclick="switchSchedMode('bulk')">&#9889; Bulk Add</button>
         </div>
       </div>
 
-      <!-- Single entry form -->
-      <div id="schedEntryForm" style="padding:14px 16px;border-bottom:1px solid var(--border);background:#f8fafc;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Date</label>
-          <input type="date" class="mreq-input" id="schedDate" style="width:150px">
+      <!-- ADD ENTRY panel -->
+      <div id="schedEntryForm" style="padding:14px 16px;border-bottom:1px solid var(--border);background:#f8fafc;flex-shrink:0">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Date</label>
+            <input type="date" class="mreq-input" id="schedDate" style="width:145px" oninput="schedDateChanged()">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Type</label>
+            <select class="mreq-input" id="schedAvailType" style="width:190px" onchange="schedAvailTypeChanged()">
+              <option value="unavailable">Not Available</option>
+              <option value="unavailable_dayoff">Player Day Off</option>
+              <option value="unavailable_travel">Player Travel Day</option>
+              <option value="available_after">Available After...</option>
+              <option value="available_before">Available Before...</option>
+              <option value="available">Available All Day</option>
+              <option value="cba">CBA</option>
+              <option value="weekend">Weekend</option>
+            </select>
+          </div>
+          <div id="schedTimeWrap" style="display:none;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)" id="schedTimeLabel">Time</label>
+            <select class="mreq-input" id="schedTime" style="width:120px" onchange="schedBuildNote()">
+              <option value="6:00am">6:00 AM</option><option value="6:30am">6:30 AM</option>
+              <option value="7:00am">7:00 AM</option><option value="7:30am">7:30 AM</option>
+              <option value="8:00am">8:00 AM</option><option value="8:30am">8:30 AM</option>
+              <option value="9:00am">9:00 AM</option><option value="9:30am">9:30 AM</option>
+              <option value="10:00am">10:00 AM</option><option value="10:30am">10:30 AM</option>
+              <option value="11:00am">11:00 AM</option><option value="11:30am">11:30 AM</option>
+              <option value="12:00pm">12:00 PM</option><option value="12:30pm">12:30 PM</option>
+              <option value="1:00pm">1:00 PM</option><option value="1:30pm">1:30 PM</option>
+              <option value="2:00pm" selected>2:00 PM</option><option value="2:30pm">2:30 PM</option>
+              <option value="3:00pm">3:00 PM</option><option value="3:30pm">3:30 PM</option>
+              <option value="4:00pm">4:00 PM</option><option value="4:30pm">4:30 PM</option>
+              <option value="5:00pm">5:00 PM</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px">
+            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Note <span style="font-weight:400;text-transform:none">(auto-filled)</span></label>
+            <input type="text" class="mreq-input" id="schedNote" placeholder="e.g. Available from 2pm" style="width:100%">
+          </div>
+          <button class="btn-primary" id="schedSaveBtn" onclick="saveScheduleEntry()" style="white-space:nowrap;flex-shrink:0">&#128190; Save</button>
+          <button onclick="cancelScheduleEdit()" id="schedCancelBtn" class="btn-secondary" style="display:none;padding:8px 12px;font-size:12px">Cancel</button>
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Availability</label>
-          <select class="mreq-input" id="schedAvail" style="width:160px">
-            <option value="available">Available</option>
-            <option value="partial">Partial</option>
-            <option value="unavailable">Not Available</option>
-            <option value="cba">CBA</option>
-            <option value="unavailable_dayoff">Player Day Off</option>
-            <option value="weekend">Weekend</option>
-          </select>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px">
-          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Note</label>
-          <input type="text" class="mreq-input" id="schedNote" placeholder="e.g. Available from 2pm" style="width:100%">
-        </div>
-        <button class="btn-primary" id="schedSaveBtn" onclick="saveScheduleEntry()" style="white-space:nowrap;flex-shrink:0;height:36px">&#128190; Save</button>
-        <button onclick="cancelScheduleEdit()" id="schedCancelBtn" class="btn-secondary" style="display:none;height:36px;padding:0 12px;font-size:12px">Cancel</button>
+        <div id="schedEditingLabel" style="font-size:12px;color:var(--tentative);font-weight:600;margin-top:8px"></div>
       </div>
 
-      <!-- Bulk add form -->
-      <div id="schedBulkForm" style="padding:14px 16px;border-bottom:1px solid var(--border);background:#f8fafc;display:none;flex-direction:column;gap:12px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:2px">Select a month and set a default availability for all weekdays. You can override individual days after.</div>
+      <!-- BULK ADD panel -->
+      <div id="schedBulkForm" style="padding:16px;border-bottom:1px solid var(--border);background:#f8fafc;display:none;flex-direction:column;gap:14px;flex-shrink:0">
+        <div style="font-size:12px;color:var(--muted)">Pick a month. Weekdays get a configurable availability; weekends are auto-filled as Weekend. Existing entries are skipped unless you enable overwrite.</div>
+
+        <!-- Month + overwrite -->
         <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
           <div style="display:flex;flex-direction:column;gap:4px">
             <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Month</label>
             <select class="mreq-input" id="bulkMonth" onchange="previewBulk()" style="width:150px">
-              <option value="2026-05">May 2026</option>
               <option value="2026-06">June 2026</option>
               <option value="2026-07">July 2026</option>
               <option value="2026-08">August 2026</option>
@@ -767,34 +795,72 @@
               <option value="2026-12">December 2026</option>
             </select>
           </div>
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Weekday Availability</label>
-            <select class="mreq-input" id="bulkAvail" onchange="previewBulk()" style="width:170px">
-              <option value="available">Available</option>
-              <option value="partial" selected>Partial</option>
-              <option value="unavailable">Not Available</option>
-              <option value="cba">CBA</option>
-            </select>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px">
-            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Default Note</label>
-            <input type="text" class="mreq-input" id="bulkNote" placeholder="e.g. Available from 2pm" oninput="previewBulk()" style="width:100%">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px">
+            <input type="checkbox" id="bulkOverwrite" style="accent-color:var(--teal);width:14px;height:14px;cursor:pointer" onchange="previewBulk()">
+            <label for="bulkOverwrite" style="font-size:12px;cursor:pointer;font-weight:500">Overwrite existing entries</label>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <input type="checkbox" id="bulkOverwrite" style="accent-color:var(--teal);width:14px;height:14px">
-          <label for="bulkOverwrite" style="font-size:12px;color:var(--muted);cursor:pointer">Overwrite existing entries for this month</label>
+
+        <!-- Weekday availability type -->
+        <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Weekday Default</div>
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <label style="font-size:11px;font-weight:600;color:var(--text)">Availability Type</label>
+              <select class="mreq-input" id="bulkAvailType" style="width:200px" onchange="bulkAvailTypeChanged()">
+                <option value="unavailable">Not Available</option>
+                <option value="unavailable_dayoff">Player Day Off</option>
+                <option value="unavailable_travel">Player Travel Day</option>
+                <option value="available_after" selected>Available After...</option>
+                <option value="available_before">Available Before...</option>
+                <option value="available">Available All Day</option>
+                <option value="cba">CBA</option>
+              </select>
+            </div>
+            <div id="bulkTimeWrap" style="display:flex;flex-direction:column;gap:4px">
+              <label style="font-size:11px;font-weight:600;color:var(--text)" id="bulkTimeLabel">After time</label>
+              <select class="mreq-input" id="bulkTime" style="width:130px" onchange="previewBulk()">
+                <option value="6:00am">6:00 AM</option><option value="6:30am">6:30 AM</option>
+                <option value="7:00am">7:00 AM</option><option value="7:30am">7:30 AM</option>
+                <option value="8:00am">8:00 AM</option><option value="8:30am">8:30 AM</option>
+                <option value="9:00am">9:00 AM</option><option value="9:30am">9:30 AM</option>
+                <option value="10:00am">10:00 AM</option><option value="10:30am">10:30 AM</option>
+                <option value="11:00am">11:00 AM</option><option value="11:30am">11:30 AM</option>
+                <option value="12:00pm">12:00 PM</option><option value="12:30pm">12:30 PM</option>
+                <option value="1:00pm">1:00 PM</option><option value="1:30pm">1:30 PM</option>
+                <option value="2:00pm" selected>2:00 PM</option><option value="2:30pm">2:30 PM</option>
+                <option value="3:00pm">3:00 PM</option><option value="3:30pm">3:30 PM</option>
+                <option value="4:00pm">4:00 PM</option><option value="4:30pm">4:30 PM</option>
+                <option value="5:00pm">5:00 PM</option>
+              </select>
+            </div>
+            <div id="bulkNoteOverride" style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px">
+              <label style="font-size:11px;font-weight:600;color:var(--text)">Override note <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+              <input type="text" class="mreq-input" id="bulkNote" placeholder="Leave blank to auto-fill" oninput="previewBulk()" style="width:100%">
+            </div>
+          </div>
+          <div id="bulkGeneratedNote" style="font-size:12px;color:var(--muted);font-style:italic"></div>
         </div>
-        <div id="bulkPreview" style="max-height:140px;overflow-y:auto;background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px"></div>
+
+        <!-- Preview -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Preview</div>
+          <div id="bulkPreview" style="max-height:160px;overflow-y:auto;background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;color:var(--muted)">Select a month to preview.</div>
+        </div>
+
         <div style="display:flex;gap:8px">
           <button class="btn-primary" onclick="saveBulkSchedule()">&#9889; Apply Bulk Schedule</button>
-          <button class="btn-secondary" onclick="switchSchedMode('entry',document.getElementById('schedModeEntry'))">Cancel</button>
+          <button class="btn-secondary" onclick="switchSchedMode('entry')">Cancel</button>
         </div>
       </div>
 
-      <!-- Entry list -->
+      <!-- Entry list (collapsed by default) -->
       <div style="overflow-y:auto;flex:1">
-        <div id="schedModalList" style="min-height:200px"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none" onclick="toggleSchedList()" id="schedListToggle">
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)" id="schedEntryCount">Current entries</span>
+          <span id="schedListArrow" style="font-size:12px;color:var(--muted)">&#9660; Show</span>
+        </div>
+        <div id="schedModalList" style="display:none"></div>
       </div>
     </div>
   </div>
@@ -1674,22 +1740,72 @@ function toggleHiwEdit(){
 // SCHEDULE MODAL
 // ══════════════════════════════════════════════════════════════════════════
 
+// ── Availability type helpers ──────────────────────────────────────────────
+var AVAIL_TYPES={
+  unavailable:        {a:"unavailable",note:"Not Available"},
+  unavailable_dayoff: {a:"unavailable",note:"Player Day Off"},
+  unavailable_travel: {a:"unavailable",note:"Player Travel Day"},
+  available_after:    {a:"partial",    note:"Available after {time}"},
+  available_before:   {a:"partial",    note:"Available before {time}"},
+  available:          {a:"available",  note:"Available all day"},
+  cba:                {a:"cba",        note:"CBA"},
+  weekend:            {a:"weekend",    note:"Weekend"}
+};
+function buildNoteFromType(type,time){var tmpl=(AVAIL_TYPES[type]||{note:"Not Available"}).note;return tmpl.replace("{time}",time||"2:00pm");}
+function getAvailKeyFromType(type){return(AVAIL_TYPES[type]||{a:"unavailable"}).a;}
+function inferTypeFromEntry(entry){
+  if(!entry)return"unavailable";
+  var a=entry.a,n=(entry.n||"").toLowerCase();
+  if(a==="weekend")return"weekend";if(a==="cba")return"cba";if(a==="available")return"available";
+  if(a==="partial"&&(n.indexOf("after")>-1||n.indexOf("from")>-1))return"available_after";
+  if(a==="partial"&&n.indexOf("before")>-1)return"available_before";
+  if(a==="unavailable"&&n.indexOf("day off")>-1)return"unavailable_dayoff";
+  if(a==="unavailable"&&n.indexOf("travel")>-1)return"unavailable_travel";
+  return"unavailable";
+}
+
+function schedAvailTypeChanged(){
+  var type=document.getElementById("schedAvailType")?document.getElementById("schedAvailType").value:"unavailable";
+  var tw=document.getElementById("schedTimeWrap");var lbl=document.getElementById("schedTimeLabel");
+  var hasTime=type==="available_after"||type==="available_before";
+  if(tw)tw.style.display=hasTime?"flex":"none";
+  if(lbl)lbl.textContent=type==="available_before"?"Before time":"After time";
+  schedBuildNote();
+}
+function schedBuildNote(){
+  var type=document.getElementById("schedAvailType")?document.getElementById("schedAvailType").value:"unavailable";
+  var time=document.getElementById("schedTime")?document.getElementById("schedTime").value:"2:00pm";
+  var noteEl=document.getElementById("schedNote");if(noteEl)noteEl.value=buildNoteFromType(type,time);
+}
+
 function openScheduleModal(squad,prefillDate){
   schedModalSquad=squad||"afl";schedEditDate=null;
-  // Set squad toggle
   document.querySelectorAll("#smodBtn-afl,#smodBtn-aflw").forEach(function(b){b.classList.remove("active")});
   document.getElementById(schedModalSquad==="afl"?"smodBtn-afl":"smodBtn-aflw").classList.add("active");
-  // Reset to entry mode
-  switchSchedMode("entry",document.getElementById("schedModeEntry"));
-  // Reset form
+  switchSchedMode("entry");
   document.getElementById("schedDate").value=prefillDate||"";
-  document.getElementById("schedAvail").value="available";
-  document.getElementById("schedNote").value="";
+  document.getElementById("schedAvailType").value="unavailable";
+  schedAvailTypeChanged();
   document.getElementById("schedCancelBtn").style.display="none";
-  document.getElementById("schedSaveBtn").textContent="💾 Save";
-  // Set bulk month to current calendar month
+  document.getElementById("schedEditingLabel").textContent="";
+  // Pre-fill if existing entry
+  if(prefillDate){
+    var sched=schedModalSquad==="afl"?schedule:aflwSchedule;
+    var existing=sched[prefillDate];
+    if(existing){
+      schedEditDate=prefillDate;
+      document.getElementById("schedAvailType").value=inferTypeFromEntry(existing);
+      schedAvailTypeChanged();
+      var tm=(existing.n||"").match(/(\d{1,2}(?::\d{2})?(?:am|pm))/i);
+      if(tm){var tv=tm[1].toLowerCase().replace(" ","");var sel=document.getElementById("schedTime");if(sel)for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===tv){sel.selectedIndex=i;break;}}}
+      document.getElementById("schedNote").value=existing.n;
+      document.getElementById("schedCancelBtn").style.display="inline-flex";
+      document.getElementById("schedEditingLabel").textContent="Editing "+fmtDate(prefillDate);
+    }
+  }
   var bm=document.getElementById("bulkMonth");
-  if(bm){var y=calYear;var m=String(calMonth+1).padStart(2,"0");var mv=y+"-"+m;var found=false;for(var i=0;i<bm.options.length;i++){if(bm.options[i].value===mv){bm.selectedIndex=i;found=true;break;}}if(!found)bm.selectedIndex=0;}
+  if(bm){var mv=calYear+"-"+String(calMonth+1).padStart(2,"0");for(var i=0;i<bm.options.length;i++){if(bm.options[i].value===mv){bm.selectedIndex=i;break;}}}
+  bulkAvailTypeChanged();
   renderScheduleList();
   document.getElementById("scheduleModal").classList.add("open");
 }
@@ -1697,47 +1813,47 @@ function openScheduleModal(squad,prefillDate){
 function switchSchedModalSquad(squad,btn){
   schedModalSquad=squad;schedEditDate=null;
   document.querySelectorAll("#smodBtn-afl,#smodBtn-aflw").forEach(function(b){b.classList.remove("active")});
-  btn.classList.add("active");
-  cancelScheduleEdit();
-  renderScheduleList();
+  btn.classList.add("active");cancelScheduleEdit();renderScheduleList();
 }
 
-function switchSchedMode(mode,btn){
-  document.querySelectorAll(".sched-mode-btn").forEach(function(b){b.classList.remove("active")});
-  btn.classList.add("active");
-  document.getElementById("schedEntryForm").style.display=mode==="entry"?"flex":"none";
+function switchSchedMode(mode){
+  document.getElementById("schedModeEntry").classList.toggle("active",mode==="entry");
+  document.getElementById("schedModeBulk").classList.toggle("active",mode==="bulk");
+  document.getElementById("schedEntryForm").style.display=mode==="entry"?"block":"none";
   document.getElementById("schedBulkForm").style.display=mode==="bulk"?"flex":"none";
   if(mode==="bulk")previewBulk();
+}
+
+function toggleSchedList(){
+  var list=document.getElementById("schedModalList");
+  var arrow=document.getElementById("schedListArrow");
+  var hidden=list.style.display==="none";
+  list.style.display=hidden?"block":"none";
+  arrow.innerHTML=hidden?"&#9650; Hide":"&#9660; Show";
+  if(hidden)renderScheduleList();
+  var countEl=document.getElementById("schedEntryCount");
+  if(countEl){var sched=schedModalSquad==="afl"?schedule:aflwSchedule;countEl.textContent=Object.keys(sched).length+" entries — click to "+(hidden?"hide":"show");}
 }
 
 function renderScheduleList(){
   var sched=schedModalSquad==="afl"?schedule:aflwSchedule;
   var entries=Object.keys(sched).sort().map(function(date){return Object.assign({date:date},sched[date]);});
-  var availColours={available:"#059669",partial:"#d97706",unavailable:"#dc2626",cba:"#7c3aed",weekend:"#9ca3af"};
-  var availLabels={available:"Available",partial:"Partial",unavailable:"Not Available",cba:"CBA",weekend:"Weekend"};
-  var availBgs={available:"#f0fdf4",partial:"#fefce8",unavailable:"#fef2f2",cba:"#f5f3ff",weekend:"#f8fafc"};
-  var squadLabel=schedModalSquad.toUpperCase();
-  if(!entries.length){
-    document.getElementById("schedModalList").innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">No '+squadLabel+' schedule entries yet. Use + Add Entry above to get started.</div>';
-    return;
-  }
-  var html='<div style="padding:8px 16px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">'+squadLabel+' — '+entries.length+' entries</div>';
-  html+='<div>';
+  var listDiv=document.getElementById("schedModalList");if(!listDiv)return;
+  var countEl=document.getElementById("schedEntryCount");
+  var isOpen=listDiv.style.display!=="none";
+  if(countEl)countEl.textContent=entries.length+" entries — click to "+(isOpen?"hide":"show");
+  if(!isOpen)return;
+  var availCol={available:"#059669",partial:"#d97706",unavailable:"#dc2626",cba:"#7c3aed",weekend:"#9ca3af"};
+  var availLabel={available:"Available",partial:"Partial",unavailable:"Not Available",cba:"CBA",weekend:"Weekend"};
+  var html='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#f8fafc"><th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Date</th><th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Type</th><th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Note</th><th style="padding:8px 12px;border-bottom:1px solid var(--border);width:70px"></th></tr></thead><tbody>';
   entries.forEach(function(e){
-    var col=availColours[e.a]||"#6b7280";
-    var label=availLabels[e.a]||e.a;
-    var bg=availBgs[e.a]||"#f8fafc";
-    html+='<div class="sched-entry-row" id="schedrow-'+e.date+'">'
-      +'<div style="min-width:110px;font-size:13px;font-weight:500">'+fmtDate(e.date)+'</div>'
-      +'<div style="min-width:120px"><span class="sched-avail-pill" style="color:'+col+';background:'+bg+'">'+label+'</span></div>'
-      +'<div style="flex:1;font-size:12px;color:var(--muted)">'+e.n+'</div>'
-      +'<div style="display:flex;gap:6px;flex-shrink:0">'
-      +'<button data-d="'+e.date+'" onclick="editScheduleEntry(this.dataset.d)" style="background:none;border:0.5px solid #d1d5db;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;color:#6b7280" title="Edit">&#9998;</button>'
-      +'<button data-d="'+e.date+'" onclick="deleteScheduleEntry(this.dataset.d)" style="background:none;border:0.5px solid #fca5a5;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;color:#ef4444" title="Delete">&#128465;</button>'
-      +'</div></div>';
+    var isEditing=schedEditDate===e.date;
+    var col=availCol[e.a]||"#6b7280";var lbl=availLabel[e.a]||e.a;
+    html+='<tr style="border-bottom:0.5px solid #f3f4f6;'+(isEditing?"background:#fef9c3":"")+'"><td style="padding:9px 12px;font-weight:'+(isEditing?"700":"500")+'">'+fmtDate(e.date)+'</td><td style="padding:9px 12px"><span style="font-size:11px;font-weight:600;color:'+col+';background:'+col+'18;padding:2px 8px;border-radius:20px">'+lbl+'</span></td><td style="padding:9px 12px;color:var(--muted);font-size:12px">'+e.n+'</td><td style="padding:9px 12px;white-space:nowrap"><button data-date="'+e.date+'" onclick="editScheduleEntry(this.dataset.date)" style="background:none;border:0.5px solid #d1d5db;border-radius:5px;padding:3px 7px;cursor:pointer;font-size:12px;color:#6b7280;margin-right:3px">&#9998;</button><button data-date="'+e.date+'" onclick="deleteScheduleEntry(this.dataset.date)" style="background:none;border:0.5px solid #fca5a5;border-radius:5px;padding:3px 7px;cursor:pointer;font-size:12px;color:#ef4444">&#128465;</button></td></tr>';
   });
-  html+='</div>';
-  document.getElementById("schedModalList").innerHTML=html;
+  if(!entries.length)html+='<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--muted)">No entries yet.</td></tr>';
+  html+='</tbody></table>';
+  listDiv.innerHTML=html;
 }
 
 function editScheduleEntry(date){
@@ -1745,37 +1861,54 @@ function editScheduleEntry(date){
   var entry=sched[date];if(!entry)return;
   schedEditDate=date;
   document.getElementById("schedDate").value=date;
-  var isDay=entry.n.toLowerCase().indexOf("day off")>-1;
-  document.getElementById("schedAvail").value=entry.a==="unavailable"&&isDay?"unavailable_dayoff":entry.a;
+  document.getElementById("schedAvailType").value=inferTypeFromEntry(entry);
+  schedAvailTypeChanged();
+  var tm=(entry.n||"").match(/(\d{1,2}(?::\d{2})?(?:am|pm))/i);
+  if(tm){var tv=tm[1].toLowerCase().replace(" ","");var sel=document.getElementById("schedTime");if(sel)for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===tv){sel.selectedIndex=i;break;}}}
   document.getElementById("schedNote").value=entry.n;
   document.getElementById("schedCancelBtn").style.display="inline-flex";
-  document.getElementById("schedSaveBtn").textContent="💾 Update";
-  // scroll form into view
+  document.getElementById("schedEditingLabel").textContent="Editing "+fmtDate(date);
   document.getElementById("schedEntryForm").scrollIntoView({behavior:"smooth",block:"nearest"});
-  // highlight row
-  document.querySelectorAll(".sched-entry-row").forEach(function(r){r.style.background=""});
-  var row=document.getElementById("schedrow-"+date);if(row)row.style.background="#fef9c3";
+  renderScheduleList();
+}
+
+function schedDateChanged(){
+  var date=document.getElementById("schedDate").value;if(!date||schedEditDate)return;
+  var sched=schedModalSquad==="afl"?schedule:aflwSchedule;var existing=sched[date];
+  if(existing){
+    schedEditDate=date;
+    document.getElementById("schedAvailType").value=inferTypeFromEntry(existing);
+    schedAvailTypeChanged();
+    var tm=(existing.n||"").match(/(\d{1,2}(?::\d{2})?(?:am|pm))/i);
+    if(tm){var tv=tm[1].toLowerCase().replace(" ","");var sel=document.getElementById("schedTime");if(sel)for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===tv){sel.selectedIndex=i;break;}}}
+    document.getElementById("schedNote").value=existing.n;
+    document.getElementById("schedCancelBtn").style.display="inline-flex";
+    document.getElementById("schedEditingLabel").textContent="Editing existing entry for "+fmtDate(date);
+    renderScheduleList();
+  }
 }
 
 function cancelScheduleEdit(){
   schedEditDate=null;
   document.getElementById("schedDate").value="";
-  document.getElementById("schedAvail").value="available";
-  document.getElementById("schedNote").value="";
+  document.getElementById("schedAvailType").value="unavailable";
+  schedAvailTypeChanged();
   document.getElementById("schedCancelBtn").style.display="none";
-  document.getElementById("schedSaveBtn").textContent="💾 Save";
-  document.querySelectorAll(".sched-entry-row").forEach(function(r){r.style.background=""});
+  document.getElementById("schedEditingLabel").textContent="";
+  renderScheduleList();
 }
 
 function saveScheduleEntry(){
   var date=document.getElementById("schedDate").value;if(!date){showToast("Select a date","error");return}
-  var availVal=document.getElementById("schedAvail").value;
-  var note=document.getElementById("schedNote").value.trim();if(!note){showToast("Enter a note","error");return}
-  var availKey=availVal==="unavailable_dayoff"?"unavailable":availVal;
-  var availLabel={available:"Available",partial:"Partial",unavailable:"Not Available",cba:"CBA",unavailable_dayoff:"Player Day Off",weekend:"Weekend"}[availVal]||"Not Available";
+  var type=document.getElementById("schedAvailType").value;
+  var time=document.getElementById("schedTime")?document.getElementById("schedTime").value:"2:00pm";
+  var noteEl=document.getElementById("schedNote");
+  var note=noteEl.value.trim()||buildNoteFromType(type,time);
+  var availKey=getAvailKeyFromType(type);
+  var availLabelMap={available:"Available",partial:"Partial",unavailable:"Not Available",cba:"CBA",weekend:"Weekend"};
+  var availLabel=availLabelMap[availKey]||"Not Available";
   var sched=schedModalSquad==="afl"?schedule:aflwSchedule;
   var groupId=schedModalSquad==="afl"?AFL_SCHED_GROUP:AFLW_SCHED_GROUP;
-  // If editing and date changed, remove old entry
   if(schedEditDate&&schedEditDate!==date){
     var oldEntry=sched[schedEditDate];
     if(oldEntry&&oldEntry.mondayId)mondayApi("mutation($id:ID!){delete_item(item_id:$id){id}}",{id:String(oldEntry.mondayId)});
@@ -1784,99 +1917,86 @@ function saveScheduleEntry(){
   var existingMondayId=sched[date]?sched[date].mondayId:null;
   sched[date]={date:date,a:availKey,n:note,mondayId:existingMondayId||null};
   var cv={};cv[COL.date]={date:date};cv[COL_AVAIL]={label:availLabel};cv[COL.notes]={text:note};
-  if(existingMondayId){
-    mondayApi("mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv,create_labels_if_missing:true){id}}",
-      {bid:BOARD_ID,iid:String(existingMondayId),cv:JSON.stringify(cv)});
-  } else {
-    mondayApi("mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}",
-      {bid:BOARD_ID,gid:groupId,name:note+" ("+date+")",cv:JSON.stringify(cv)}).then(function(r){if(r&&r.data&&r.data.create_item)sched[date].mondayId=parseInt(r.data.create_item.id,10);});
-  }
-  cancelScheduleEdit();renderScheduleList();renderCalendar();
-  showToast("Schedule entry saved","success");
+  if(existingMondayId){mondayApi("mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv,create_labels_if_missing:true){id}}",{bid:BOARD_ID,iid:String(existingMondayId),cv:JSON.stringify(cv)});}
+  else{mondayApi("mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}",{bid:BOARD_ID,gid:groupId,name:note+" ("+date+")",cv:JSON.stringify(cv)}).then(function(r){if(r&&r.data&&r.data.create_item)sched[date].mondayId=parseInt(r.data.create_item.id,10);});}
+  cancelScheduleEdit();renderCalendar();showToast("Schedule entry saved","success");
 }
 
 function deleteScheduleEntry(date){
   var sched=schedModalSquad==="afl"?schedule:aflwSchedule;
   var entry=sched[date];if(!entry)return;
   if(!confirm("Remove entry for "+fmtDate(date)+"?"))return;
-  var mid=entry.mondayId;delete sched[date];
-  if(mid)mondayApi("mutation($id:ID!){delete_item(item_id:$id){id}}",{id:String(mid)});
-  renderScheduleList();renderCalendar();showToast("Entry removed","success");
+  if(entry.mondayId)mondayApi("mutation($id:ID!){delete_item(item_id:$id){id}}",{id:String(entry.mondayId)});
+  delete sched[date];
+  if(schedEditDate===date)cancelScheduleEdit();else renderScheduleList();
+  renderCalendar();showToast("Entry removed","success");
 }
 
-// ── Bulk schedule ──────────────────────────────────────────────────────────
+// ── Bulk availability type ─────────────────────────────────────────────────
+function bulkAvailTypeChanged(){
+  var type=document.getElementById("bulkAvailType")?document.getElementById("bulkAvailType").value:"unavailable";
+  var tw=document.getElementById("bulkTimeWrap");var lbl=document.getElementById("bulkTimeLabel");
+  var hasTime=type==="available_after"||type==="available_before";
+  if(tw)tw.style.display=hasTime?"flex":"none";
+  if(lbl)lbl.textContent=type==="available_before"?"Before time":"After time";
+  previewBulk();
+}
+
 function previewBulk(){
-  var monthVal=document.getElementById("bulkMonth").value;
-  var availVal=document.getElementById("bulkAvail").value;
-  var note=document.getElementById("bulkNote").value.trim()||"—";
-  if(!monthVal)return;
-  var parts=monthVal.split("-");var y=parseInt(parts[0],10);var m=parseInt(parts[1],10)-1;
-  var daysInMonth=new Date(y,m+1,0).getDate();
+  var mon=document.getElementById("bulkMonth")?document.getElementById("bulkMonth").value:"";
+  var preview=document.getElementById("bulkPreview");if(!preview)return;
+  if(!mon){preview.textContent="Select a month to preview.";return}
+  var parts=mon.split("-");var y=parseInt(parts[0],10),m=parseInt(parts[1],10)-1;
   var sched=schedModalSquad==="afl"?schedule:aflwSchedule;
   var overwrite=document.getElementById("bulkOverwrite").checked;
-  var availLabels={available:"Available",partial:"Partial",unavailable:"Not Available",cba:"CBA"};
-  var availColours={available:"#059669",partial:"#d97706",unavailable:"#dc2626",cba:"#7c3aed"};
-  var label=availLabels[availVal]||availVal;
-  var col=availColours[availVal]||"#6b7280";
-  var preview=[];
-  for(var d=1;d<=daysInMonth;d++){
-    var date=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
-    var dow=new Date(date+"T12:00:00").getDay();
-    var isWeekend=dow===0||dow===6;
-    if(isWeekend)continue;
-    var exists=!!sched[date];
-    if(exists&&!overwrite)continue;
-    preview.push({date:date,label:label,col:col,exists:exists});
+  var type=document.getElementById("bulkAvailType")?document.getElementById("bulkAvailType").value:"unavailable";
+  var time=document.getElementById("bulkTime")?document.getElementById("bulkTime").value:"2:00pm";
+  var noteOverride=document.getElementById("bulkNote")?document.getElementById("bulkNote").value.trim():"";
+  var autoNote=noteOverride||buildNoteFromType(type,time);
+  var genEl=document.getElementById("bulkGeneratedNote");
+  if(genEl)genEl.textContent=noteOverride?"":"Auto note: \""+autoNote+"\"";
+  var ld=new Date(y,m+1,0).getDate();
+  var lines=[];var willAdd=0,willSkip=0,willAddWknd=0;
+  for(var d=1;d<=ld;d++){
+    var dt=new Date(y,m,d);var dow=dt.getDay();
+    var iso=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+    var isWknd=dow===0||dow===6;var exists=!!sched[iso];
+    if(exists&&!overwrite){willSkip++;continue;}
+    if(isWknd){willAddWknd++;lines.push('<div style="display:flex;gap:8px;align-items:center;padding:3px 0"><span style="min-width:100px;color:#9ca3af;font-size:12px">'+fmtDate(iso)+'</span><span style="font-size:11px;padding:1px 7px;border-radius:20px;background:#f1f5f9;color:#64748b;font-weight:600">Weekend</span><span style="font-size:11px;color:#cbd5e1;margin-left:4px">auto</span></div>');}
+    else{var col=getAvailKeyFromType(type)==="available"?"#059669":getAvailKeyFromType(type)==="partial"?"#d97706":getAvailKeyFromType(type)==="cba"?"#7c3aed":"#dc2626";var lbl2={available:"Available",partial:"Partial",unavailable:"Not Available",cba:"CBA"}[getAvailKeyFromType(type)]||"Not Available";willAdd++;lines.push('<div style="display:flex;gap:8px;align-items:center;padding:3px 0"><span style="min-width:100px;font-size:12px">'+fmtDate(iso)+'</span><span style="font-size:11px;padding:1px 7px;border-radius:20px;color:'+col+';background:'+col+'18;font-weight:600">'+lbl2+'</span><span style="font-size:11px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:4px">'+autoNote+'</span>'+(exists?'<span style="font-size:10px;color:#d97706;font-weight:600">overwrite</span>':"")+'</div>');}
   }
-  var html="";
-  if(!preview.length){html='<div style="font-size:12px;color:var(--muted);padding:8px">No weekdays to add'+(overwrite?"":" (all already have entries — check Overwrite)")+'</div>';}
-  else{
-    preview.slice(0,8).forEach(function(p){
-      html+='<div class="bulk-preview-item">'
-        +'<div style="min-width:90px;font-size:12px;font-weight:500">'+fmtDate(p.date)+'</div>'
-        +'<span style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:20px;color:'+p.col+';background:'+p.col+'18">'+p.label+'</span>'
-        +'<span style="font-size:11px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:6px">'+note+'</span>'
-        +(p.exists?'<span style="font-size:10px;color:#d97706;font-weight:600;margin-left:4px">overwrite</span>':"")
-        +'</div>';
-    });
-    if(preview.length>8)html+='<div style="font-size:11px;color:var(--muted);padding:4px 8px">+ '+(preview.length-8)+' more weekdays...</div>';
-    html='<div style="margin-bottom:4px;font-size:11px;font-weight:600;color:var(--text)">'+preview.length+' weekday'+(preview.length!==1?"s":"")+" will be added:</div>"+html;
-  }
-  document.getElementById("bulkPreview").innerHTML=html;
+  if(!lines.length){preview.innerHTML='<div style="color:var(--muted)">No days to add'+(overwrite?"":" — existing entries will be skipped. Enable overwrite to replace.")+'</div>';return;}
+  preview.innerHTML='<div style="font-weight:600;color:var(--text);margin-bottom:8px;font-size:12px">'+willAdd+' weekday'+(willAdd!==1?"s":"")+(willAddWknd?" + "+willAddWknd+" weekends":"")+' will be added'+(willSkip?" · "+willSkip+" skipped":"")+'</div>'+lines.join("");
 }
 
 function saveBulkSchedule(){
-  var monthVal=document.getElementById("bulkMonth").value;if(!monthVal){showToast("Select a month","error");return}
-  var availVal=document.getElementById("bulkAvail").value;
-  var note=document.getElementById("bulkNote").value.trim();if(!note){showToast("Enter a note","error");return}
-  var parts=monthVal.split("-");var y=parseInt(parts[0],10);var m=parseInt(parts[1],10)-1;
-  var daysInMonth=new Date(y,m+1,0).getDate();
+  var mon=document.getElementById("bulkMonth")?document.getElementById("bulkMonth").value:"";if(!mon){showToast("Select a month","error");return}
+  var parts=mon.split("-");var y=parseInt(parts[0],10),m=parseInt(parts[1],10)-1;
   var sched=schedModalSquad==="afl"?schedule:aflwSchedule;
   var groupId=schedModalSquad==="afl"?AFL_SCHED_GROUP:AFLW_SCHED_GROUP;
   var overwrite=document.getElementById("bulkOverwrite").checked;
-  var availLabel={available:"Available",partial:"Partial",unavailable:"Not Available",cba:"CBA"}[availVal]||"Not Available";
-  var count=0;
-  for(var d=1;d<=daysInMonth;d++){
-    var date=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
-    var dow=new Date(date+"T12:00:00").getDay();
-    var isWeekend=dow===0||dow===6;
-    if(isWeekend)continue;
-    if(sched[date]&&!overwrite)continue;
-    var existingMid=sched[date]?sched[date].mondayId:null;
-    sched[date]={date:date,a:availVal,n:note,mondayId:existingMid||null};
-    var cv={};cv[COL.date]={date:date};cv[COL_AVAIL]={label:availLabel};cv[COL.notes]={text:note};
-    (function(dt,emid,entry){
-      if(emid){mondayApi("mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv,create_labels_if_missing:true){id}}",{bid:BOARD_ID,iid:String(emid),cv:JSON.stringify(cv)});}
-      else{mondayApi("mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}",
-        {bid:BOARD_ID,gid:groupId,name:note+" ("+dt+")",cv:JSON.stringify(cv)}).then(function(r){if(r&&r.data&&r.data.create_item)entry.mondayId=parseInt(r.data.create_item.id,10);});}
-    })(date,existingMid,sched[date]);
+  var type=document.getElementById("bulkAvailType").value;
+  var time=document.getElementById("bulkTime")?document.getElementById("bulkTime").value:"2:00pm";
+  var noteOverride=document.getElementById("bulkNote")?document.getElementById("bulkNote").value.trim():"";
+  var autoNote=noteOverride||buildNoteFromType(type,time);
+  var availKey=getAvailKeyFromType(type);
+  var availLabelMap={available:"Available",partial:"Partial",unavailable:"Not Available",cba:"CBA",weekend:"Weekend"};
+  var ld=new Date(y,m+1,0).getDate();var count=0;
+  for(var d=1;d<=ld;d++){
+    var dt=new Date(y,m,d);var dow=dt.getDay();
+    var iso=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+    var isWknd=dow===0||dow===6;var exists=sched[iso];
+    if(exists&&!overwrite)continue;
+    var thisAK=isWknd?"weekend":availKey;var thisNote=isWknd?"Weekend":autoNote;
+    var thisCv={};thisCv[COL.date]={date:iso};thisCv[COL_AVAIL]={label:availLabelMap[thisAK]||"Not Available"};thisCv[COL.notes]={text:thisNote};
+    var existingMid=exists?exists.mondayId:null;
+    sched[iso]={date:iso,a:thisAK,n:thisNote,mondayId:existingMid||null};
+    if(existingMid){mondayApi("mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv,create_labels_if_missing:true){id}}",{bid:BOARD_ID,iid:String(existingMid),cv:JSON.stringify(thisCv)});}
+    else{(function(isoInner,entry,cv2,gid2,n2){mondayApi("mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}",{bid:BOARD_ID,gid:gid2,name:n2+" ("+isoInner+")",cv:JSON.stringify(cv2)}).then(function(r){if(r&&r.data&&r.data.create_item)entry.mondayId=parseInt(r.data.create_item.id,10);});})(iso,sched[iso],thisCv,groupId,thisNote);}
     count++;
   }
-  if(count===0){showToast("No entries added (all exist — enable Overwrite to replace)","error");return;}
-  renderScheduleList();renderCalendar();
-  // Switch back to entry mode and show success
-  switchSchedMode("entry",document.getElementById("schedModeEntry"));
-  showToast(count+" schedule entr"+(count!==1?"ies":"y")+" added","success");
+  renderCalendar();renderScheduleList();
+  showToast(count+" entries added","success");
 }
 
 // ── SDK init ───────────────────────────────────────────────────────────────
