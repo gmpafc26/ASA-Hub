@@ -465,49 +465,71 @@
     </div>
     <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:var(--radius);padding:10px 16px;margin-bottom:20px;font-size:12px;color:#92400e;font-weight:500">&#128274; Internal use only — do not share access or request information outside the organisation.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+
+      <!-- What is this hub -->
       <div class="hiw-card">
         <div style="width:36px;height:36px;border-radius:8px;background:#e0f2fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#129295;</div>
         <div><div class="hiw-card-title hiw-editable">What is this hub?</div><div class="hiw-card-text hiw-editable">A centralised portal for managing AFL and AFLW player appearance requests across Retail, Commercial and PCL streams. All requests, approvals, player availability and ASA/CBA balances are tracked in one place and synced live to the monday.com board.</div></div>
       </div>
+
+      <!-- Access levels -->
       <div class="hiw-card">
         <div style="width:36px;height:36px;border-radius:8px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128272;</div>
         <div style="flex:1">
           <div class="hiw-card-title hiw-editable">Access levels</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:10px" class="hiw-editable">Anyone can view — no login needed. Approvers auto-login via their monday account.</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px" class="hiw-editable">Anyone can view without logging in. Use the PIN button (top right) to access approver or admin features.</div>
           <div style="display:flex;flex-direction:column;gap:6px">
-            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#f8fafc;border:1px solid var(--border);color:var(--muted)">&#9898; Viewer</span><span style="font-size:12px;color:var(--muted)">Browse players, calendar and requests</span></div>
-            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#fef3c7;border:1px solid #fcd34d;color:#92400e">&#128993; Retail</span><span style="font-size:12px;color:var(--muted)">Georgie Morris, Andrew Fuss & Simon Buckley</span></div>
-            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#f0fdf4;border:1px solid #86efac;color:#15803d">&#128994; Commercial</span><span style="font-size:12px;color:var(--muted)">Jodie Cairns & John Kleeman</span></div>
-            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#f5f3ff;border:1px solid #c4b5fd;color:#3C3489">&#127775; PCL</span><span style="font-size:12px;color:var(--muted)">Jacob — also manages balances</span></div>
-            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b">&#128308; Admin</span><span style="font-size:12px;color:var(--muted)">Georgie, Andrew, Simon &amp; Jacob</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#f8fafc;border:1px solid var(--border);color:var(--muted)">&#9898; Viewer</span><span style="font-size:12px;color:var(--muted)">Browse players, calendar and requests — no login required</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#f0fdf4;border:1px solid #86efac;color:#15803d">&#128994; Commercial</span><span style="font-size:12px;color:var(--muted)">Jodie Cairns &amp; John Kleeman — approve commercial requests</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b">&#128308; Admin</span><span style="font-size:12px;color:var(--muted)">Georgie, Andrew, Simon &amp; Jacob — full access including schedule, players &amp; balances</span></div>
           </div>
         </div>
       </div>
+
+      <!-- Players tab -->
       <div class="hiw-card">
         <div style="width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128101;</div>
-        <div><div class="hiw-card-title hiw-editable">Players tab</div><div class="hiw-card-text hiw-editable">Browse all AFL and AFLW players with their photo, jersey number, position, ASA type and remaining balance. Toggle between squads using the AFL / AFLW buttons. Click Requests on a player card to see their upcoming bookings.</div></div>
+        <div><div class="hiw-card-title hiw-editable">Players tab</div><div class="hiw-card-text hiw-editable">Browse AFL and AFLW players with photo, jersey number, position, ASA type and remaining balance. Toggle between squads using the AFL / AFLW buttons. Click <strong>Requests</strong> on a player card to see their upcoming bookings. Admins can click <strong>Edit</strong> on any player card to update their details, photo URL, ASA type or restricted status. Use <strong>+ Add Player</strong> to add a new player to the board.</div></div>
       </div>
+
+      <!-- Calendar tab -->
       <div class="hiw-card">
         <div style="width:36px;height:36px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128197;</div>
-        <div><div class="hiw-card-title hiw-editable">Calendar tab</div><div class="hiw-card-text hiw-editable">View player availability and existing requests at a glance. Toggle between AFL, AFLW and Both views. Admins can click Edit Schedule to manage availability entries directly from the calendar. Use + Blackout to block out media blackout dates.</div></div>
+        <div><div class="hiw-card-title hiw-editable">Calendar tab</div><div class="hiw-card-text hiw-editable">View player availability and existing requests at a glance. Toggle between AFL, AFLW and Both views. Click any day to see full availability details and request bookings. Use <strong>+ Blackout</strong> to add media blackout dates across a date range. Admins see an <strong>Edit Schedule</strong> button — clicking it opens the schedule manager. From a day's detail popup, admins can also click <strong>Edit</strong> next to any availability line to jump straight to editing that entry.</div></div>
       </div>
+
+      <!-- Making a request -->
       <div class="hiw-card">
         <div style="width:36px;height:36px;border-radius:8px;background:#fdf0ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#9993;&#65039;</div>
-        <div><div class="hiw-card-title hiw-editable">Making a request</div><div class="hiw-card-text hiw-editable">Click + New Request in the top nav. Fill in all details and select players. Conflicts with existing bookings will be flagged automatically.</div></div>
+        <div><div class="hiw-card-title hiw-editable">Making a request</div><div class="hiw-card-text hiw-editable">Click <strong>+ New Request</strong> in the top nav. Fill in the request name, type (Retail, Commercial or PCL), date, location, start time, duration, players and any notes. The date field shows AFL and AFLW availability for the selected day. Existing bookings for the same week are flagged on each player card. The request is automatically routed to the relevant approver on submission.</div></div>
       </div>
+
+      <!-- Requests & approvals -->
       <div class="hiw-card">
         <div style="width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#9989;</div>
-        <div><div class="hiw-card-title hiw-editable">Requests &amp; approvals</div><div class="hiw-card-text hiw-editable">The Requests tab shows all upcoming requests. Approvers see an amber banner when requests need review. Approved requests move to Internally Approved — the approver then notifies football dept, after which status updates to Confirmed.</div></div>
+        <div><div class="hiw-card-title hiw-editable">Requests &amp; approvals</div><div class="hiw-card-text hiw-editable">The <strong>Requests</strong> tab shows all requests sorted by date, filterable by department, status and time period. Approvers see an amber banner when requests are pending review — click it to open the approval modal. Approved requests move to <strong>Internally Approved</strong>. Use the <strong>&#128231; Football Dept</strong> button to email Trent or Rachael, then track progress using the football dept status dropdown (Not Sent → Sent → Football Dept Confirmed). Admins can edit any field on a request — including date, location, players and status — and all changes sync back to the board.</div></div>
       </div>
+
     </div>
+
+    <!-- Balances - full width -->
     <div class="hiw-card" style="margin-bottom:14px">
       <div style="width:36px;height:36px;border-radius:8px;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#9997;&#65039;</div>
-      <div style="flex:1"><div class="hiw-card-title hiw-editable">ASA / CBA balances</div><div class="hiw-card-text hiw-editable">The Balances tab (visible to Admin and Jacob) shows each player's remaining ASA/CBA percentage. Jacob is responsible for keeping these up to date — enter the new percentage and click Save All to Board to sync.</div></div>
+      <div style="flex:1"><div class="hiw-card-title hiw-editable">ASA / CBA balances</div><div class="hiw-card-text hiw-editable">The <strong>Balances</strong> tab is visible to admins. It shows each player's remaining ASA/CBA percentage as a colour-coded bar (green = healthy, amber = getting low, red = low). Update a player's balance by typing in the number field — changed values turn amber. Click <strong>Save All to Board</strong> to sync all changes to monday at once. The last updated date is shown at the top and stamped on the board.</div></div>
     </div>
+
+    <!-- Schedule management - full width -->
+    <div class="hiw-card" style="margin-bottom:14px">
+      <div style="width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128197;</div>
+      <div style="flex:1"><div class="hiw-card-title hiw-editable">Managing the schedule</div><div class="hiw-card-text hiw-editable">Admins access the schedule via the <strong>Edit Schedule</strong> button in the Calendar tab (or the Edit link on any day detail popup). The schedule modal has two modes. <strong>Add Entry</strong> lets you add or edit a single date — pick a type (Not Available, Player Day Off, Player Travel Day, Available After/Before a time, Available All Day, CBA) and the note auto-fills. Typing a date that already has an entry pre-loads it for editing. <strong>Bulk Add</strong> loads a full month grid with a row per day — set each weekday individually, use <strong>Apply to all</strong> to fill all weekdays at once then tweak individually, and hit <strong>Save Month Schedule</strong> to sync everything to the board. Weekends are auto-filled. Existing entries show with an amber dot and pre-populate their current values. Toggle <strong>Overwrite existing</strong> to replace already-set entries.</div></div>
+    </div>
+
+    <!-- Board sync - full width -->
     <div class="hiw-card">
       <div style="width:36px;height:36px;border-radius:8px;background:#f8fafc;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128203;</div>
-      <div style="flex:1"><div class="hiw-card-title hiw-editable">monday.com board sync</div><div class="hiw-card-text hiw-editable">Every change made in this hub is synced live to the ASA / CBA HUB board on monday.com. The board is always up to date and can be used as a source of truth for reporting or auditing.</div></div>
+      <div style="flex:1"><div class="hiw-card-title hiw-editable">monday.com board sync</div><div class="hiw-card-text hiw-editable">Every change made in this hub — new requests, edits, approvals, balance updates, player edits, schedule changes and media blackouts — is synced live to the <strong>ASA / CBA HUB</strong> board on monday.com. The board is always up to date and can be used as a source of truth. Note: editing your personal board notification settings for this board will not affect any automated email notifications, which run independently.</div></div>
     </div>
+
   </div>
 </div>
 
