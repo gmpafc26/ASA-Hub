@@ -95,9 +95,9 @@
   .cal-info-list li{display:flex;gap:8px;font-size:13px;align-items:flex-start}
   .cal-info-list li::before{content:"•";color:var(--teal);font-weight:700;flex-shrink:0}
   .cal-info-note{font-size:12px;color:var(--muted);margin-top:12px}
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,27,42,.55);backdrop-filter:blur(3px);z-index:1000;align-items:center;justify-content:center;padding:20px}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,27,42,.65);backdrop-filter:blur(3px);z-index:9999;align-items:center;justify-content:center;padding:16px}
   .modal-overlay.open{display:flex}
-  .modal{background:#fff;border-radius:16px;width:100%;max-width:580px;box-shadow:var(--shadow-lg);max-height:90vh;display:flex;flex-direction:column;animation:modalIn .2s ease}
+  .modal{background:#fff;border-radius:16px;width:100%;max-width:580px;box-shadow:var(--shadow-lg);max-height:calc(100vh - 32px);display:flex;flex-direction:column;animation:modalIn .2s ease}
   .modal.narrow{max-width:440px}
   @keyframes modalIn{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
   .modal-header{padding:14px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between}
@@ -235,7 +235,7 @@
   .pending-deny-btn2{flex:1;padding:11px 16px;background:#fff;color:var(--red);border:2px solid var(--red);border-radius:9px;font-family:"DM Sans",sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px}
   .pending-deny-btn2:hover{background:var(--red);color:#fff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(220,38,38,.25)}
   .badge{background:var(--teal);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px}
-  .toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(60px);opacity:0;transition:all .25s;z-index:2000}
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(60px);opacity:0;transition:all .25s;z-index:10000}
   .toast.show{transform:translateY(0);opacity:1}.toast.success{background:var(--confirmed)}.toast.error{background:var(--red)}
   .tab-page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--border)}
   .tab-page-title{font-size:17px;font-weight:700;color:var(--text);margin:0 0 3px}
@@ -717,7 +717,7 @@
       </div>
       <button class="modal-close" onclick="closeModal('scheduleModal')">&#215;</button>
     </div>
-    <div class="modal-body" style="padding:0;display:flex;flex-direction:column;overflow:hidden">
+    <div class="modal-body" style="padding:0;display:flex;flex-direction:column;overflow:hidden;min-height:0">
 
       <!-- Squad + mode controls -->
       <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0">
@@ -779,10 +779,10 @@
       </div>
 
       <!-- BULK ADD panel -->
-      <div id="schedBulkForm" style="display:none;flex-direction:column;flex-shrink:0;overflow:hidden">
+      <div id="schedBulkForm" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden">
 
         <!-- Month selector + controls strip -->
-        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f8fafc;border-bottom:1px solid var(--border);flex-wrap:wrap">
+        <div style="display:flex;align-items:flex-end;gap:10px;padding:10px 16px;background:#f8fafc;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0">
           <div style="display:flex;flex-direction:column;gap:3px">
             <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Month</label>
             <select class="mreq-input" id="bulkMonth" onchange="buildBulkGrid()" style="width:145px">
@@ -832,7 +832,7 @@
         </div>
 
         <!-- Per-day grid -->
-        <div style="overflow-y:auto;max-height:420px">
+        <div style="overflow-y:auto;flex:1;min-height:0">
           <div id="bulkDayGrid" style="padding:12px 16px;display:flex;flex-direction:column;gap:0">
             <div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Select a month above to load the schedule grid.</div>
           </div>
@@ -845,7 +845,7 @@
       </div>
 
       <!-- Entry list (collapsed by default) -->
-      <div style="overflow-y:auto;flex:1">
+      <div style="flex-shrink:0;border-top:1px solid var(--border)">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none" onclick="toggleSchedList()" id="schedListToggle">
           <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)" id="schedEntryCount">Current entries</span>
           <span id="schedListArrow" style="font-size:12px;color:var(--muted)">&#9660; Show</span>
@@ -1450,7 +1450,12 @@ function saveEdit(){
   r.location=document.getElementById("ef-location").value.trim();r.time_required=document.getElementById("ef-time").value.trim();
   r.start_time=document.getElementById("ef-start-time").value;r.notes=document.getElementById("ef-notes").value.trim();
   r.players=[].slice.call(document.querySelectorAll("#editPlayersCheckboxes input:checked")).map(function(i){return i.dataset.pid});
-  syncRequestToMonday(editingId,{status:r.status,approved:r.approved,notes:r.notes});
+  syncRequestToMonday(editingId,{
+    name:r.name,status:r.status,approved:r.approved,
+    date:r.date,location:r.location,type:r.type,
+    time_required:r.time_required,start_time:r.start_time,
+    notes:r.notes,players:r.players
+  });
   closeModal("editModal");renderRequests();renderCalendar();renderPlayers();showToast("Saved","success");
 }
 
@@ -1612,9 +1617,36 @@ function syncRequestToMonday(reqId,updates){
   var cv={};
   if(updates.status)cv[COL.status]={label:updates.status};
   if(updates.approved!==undefined)cv[COL.approved]={label:updates.approved?"Approved":"Pending"};
-  if(updates.notes!==undefined)cv[COL.notes]={text:updates.notes||""};
-  mondayApi('mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv,create_labels_if_missing:true){id}}',
-    {bid:BOARD_ID,iid:String(mondayId),cv:JSON.stringify(cv)});
+  if(updates.date!==undefined)cv[COL.date]=updates.date?{date:updates.date}:"";
+  if(updates.location!==undefined)cv[COL.location]=updates.location||"";
+  if(updates.type)cv[COL.req_type]={label:updates.type};
+  if(updates.time_required!==undefined)cv[COL.time_required]=updates.time_required||"";
+  if(updates.players!==undefined){
+    var allP=players.concat(aflwPlayers);
+    var playerNames=updates.players.map(function(pid){var p=allP.find(function(pl){return pl.id===pid});return p?p.name:""}).filter(Boolean).join(", ");
+    cv[COL.players_text]=playerNames;
+  }
+  if(updates.notes!==undefined||updates.start_time!==undefined){
+    // Rebuild notes field preserving start time prefix
+    var r2=requests.find(function(x){return x.id===reqId});
+    var sub=r2?r2.submitter:"";
+    var st=updates.start_time!==undefined?updates.start_time:(r2?r2.start_time:"");
+    var notesBody=updates.notes!==undefined?updates.notes:(r2?r2.notes:"");
+    var notesText=(sub?"Requested by: "+sub:"")+(st?" | Start: "+fmtTime(st):"")+(notesBody?" | "+notesBody:"");
+    cv[COL.notes]={text:notesText||""};
+  }
+  // Also update item name if changed
+  if(updates.name){
+    mondayApi('mutation($bid:ID!,$iid:ID!,$name:String!){change_item_value(board_id:$bid,item_id:$iid,column_id:"name",value:$name){id}}',
+      {bid:BOARD_ID,iid:String(mondayId),name:JSON.stringify(updates.name)}).catch(function(){
+        // Fallback: name change via create_item is not needed — just log
+        console.log("Name sync skipped");
+      });
+  }
+  if(Object.keys(cv).length>0){
+    mondayApi('mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv,create_labels_if_missing:true){id}}',
+      {bid:BOARD_ID,iid:String(mondayId),cv:JSON.stringify(cv)});
+  }
 }
 function createRequestOnMonday(req){
   var playerNames=req.players.map(function(pid){var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return p?p.name:""}).filter(Boolean).join(", ");
@@ -1810,8 +1842,13 @@ function switchSchedModalSquad(squad,btn){
 function switchSchedMode(mode){
   document.getElementById("schedModeEntry").classList.toggle("active",mode==="entry");
   document.getElementById("schedModeBulk").classList.toggle("active",mode==="bulk");
-  document.getElementById("schedEntryForm").style.display=mode==="entry"?"block":"none";
-  document.getElementById("schedBulkForm").style.display=mode==="bulk"?"flex":"none";
+  var entryForm=document.getElementById("schedEntryForm");
+  var bulkForm=document.getElementById("schedBulkForm");
+  var listWrap=document.querySelector("#scheduleModal .modal-body > div:last-child");
+  if(entryForm)entryForm.style.display=mode==="entry"?"block":"none";
+  if(bulkForm){bulkForm.style.display=mode==="bulk"?"flex":"none";}
+  // In entry mode, the list area can grow and scroll; in bulk mode it's hidden
+  if(listWrap){listWrap.style.overflow=mode==="entry"?"auto":"hidden";listWrap.style.flex=mode==="entry"?"1":"0";}
   if(mode==="bulk"){bulkFillTimeVisibility();buildBulkGrid();}
 }
 
