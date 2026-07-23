@@ -985,7 +985,9 @@ var userRoles={82646896:"admin",29892421:"admin",44397410:"admin",96759461:"admi
 var pinConfig={admin:"3942","retail-approver":"1870","commercial-approver":"1972","balance-updater":"1559","pcl-approver":"1559"};
 
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
-let editingId=null,calYear=2026,calMonth=4;
+let editingId=null;
+var _today=new Date();
+let calYear=_today.getFullYear(),calMonth=_today.getMonth();
 let filterDept="all",filterStatus="all",filterTime="active";
 let pinEntry="",accessLevel="viewer",mreqConflictOverride=false;
 var _pendingLiaisonId=null;
