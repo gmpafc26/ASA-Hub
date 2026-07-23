@@ -1006,9 +1006,23 @@ function mondayApi(query,vars){
 }
 
 function loadFromBoard(){
-  mondayApi('{boards(ids:[18412284375]){items_page(limit:200){items{id name group{id}column_values{id text}}}}}',{}).then(function(res){
-    if(!res||!res.data||!res.data.boards){setTimeout(function(){if(players.length===0)loadFromBoard();},2000);return;}
-    var items=res.data.boards[0].items_page.items;
+  var allItems=[];
+  function fetchPage(cursor){
+    var q=cursor
+      ?'{boards(ids:[18412284375]){items_page(limit:500,cursor:"'+cursor+'"){cursor items{id name group{id}column_values{id text}}}}}'
+      :'{boards(ids:[18412284375]){items_page(limit:500){cursor items{id name group{id}column_values{id text}}}}}';
+    mondayApi(q,{}).then(function(res){
+      if(!res||!res.data||!res.data.boards){if(!cursor)setTimeout(function(){if(players.length===0)loadFromBoard();},2000);return;}
+      var page=res.data.boards[0].items_page;
+      allItems=allItems.concat(page.items);
+      if(page.cursor){fetchPage(page.cursor);}
+      else{processBoard(allItems);}
+    }).catch(function(e){console.warn("loadFromBoard error:",e);if(!cursor)setTimeout(function(){if(players.length===0)loadFromBoard();},2000);});
+  }
+  fetchPage(null);
+}
+
+function processBoard(items){
     var newPlayers=[];var newAFLW=[];var newRequests=[];var pidCounter=1;
     items.forEach(function(item){
       var cv={};item.column_values.forEach(function(col){cv[col.id]=col.text||""});
@@ -1062,9 +1076,9 @@ function loadFromBoard(){
     players=newPlayers;
     aflwPlayers.splice(0,aflwPlayers.length);newAFLW.forEach(function(p){aflwPlayers.push(p);});
     requests=newRequests;
+    console.log("Board loaded:",players.length,"AFL,",aflwPlayers.length,"AFLW,",requests.length,"requests");
     renderPlayers();renderRequests();renderCalendar();
     if(document.getElementById("tab-balances")&&document.getElementById("tab-balances").classList.contains("active"))renderBalancesTab();
-  }).catch(function(e){console.warn("loadFromBoard error:",e);setTimeout(function(){if(players.length===0)loadFromBoard();},2000);});
 }
 
 function isoDate(y,m,d){return y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0")}
