@@ -30,6 +30,7 @@
   .player-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
   .player-img-wrap{background:var(--navy);height:200px;position:relative;overflow:hidden}
   .player-img-wrap img{width:100%;height:100%;object-fit:cover;object-position:top center}
+  .player-img-initials{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:rgba(255,255,255,.3)}
   .player-number{position:absolute;top:10px;left:10px;background:var(--teal);color:#fff;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center}
   .player-restricted-badge{position:absolute;top:10px;right:10px;background:rgba(220,38,38,.9);color:#fff;font-size:10px;font-weight:600;padding:3px 7px;border-radius:10px}
   .player-body{padding:14px;display:flex;flex-direction:column;flex:1}
@@ -993,6 +994,12 @@ let pinEntry="",accessLevel="viewer",mreqConflictOverride=false;
 var _pendingLiaisonId=null;
 
 function getMondayClient(){try{return window.mondaySdk?mondaySdk():null}catch(e){return null}}
+function playerImgError(el){
+  el.style.display="none";
+  var initials=(el.alt||"").split(" ").map(function(w){return w[0]||""}).slice(0,2).join("");
+  var d=document.createElement("div");d.className="player-img-initials";d.textContent=initials;
+  el.parentNode.insertBefore(d,el.nextSibling);
+}
 function mondayApi(query,vars){
   var sdk=getMondayClient();
   var sdkPromise=sdk?sdk.api(query,{variables:vars||{}}).catch(function(){return null}):Promise.resolve(null);
@@ -1003,23 +1010,59 @@ function mondayApi(query,vars){
       method:"POST",
       headers:{"Content-Type":"application/json","Authorization":MONDAY_TOKEN,"API-Version":"2024-01"},
       body:JSON.stringify({query:query,variables:vars||{}})
-    }).then(function(res){return res.json()}).catch(function(){return null});
+    }).then(function(res){
+      var data=res.json();
+      return data;
+    }).catch(function(){return null});
   });
+}
+
+function showLoadError(msg){
+  var pg=document.getElementById("playersGrid");
+  if(pg)pg.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px 24px">'
+    +'<div style="font-size:32px;margin-bottom:12px">&#9888;&#65039;</div>'
+    +'<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px">Unable to load board data</div>'
+    +'<div style="font-size:13px;color:var(--muted);max-width:400px;margin:0 auto;line-height:1.6">'+msg+'</div>'
+    +'<button onclick="loadFromBoard()" style="margin-top:16px;padding:9px 20px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;cursor:pointer">&#8635; Try Again</button>'
+    +'</div>';
+  var rc=document.getElementById("requestCount");if(rc)rc.textContent="!";
 }
 
 function loadFromBoard(){
   var allItems=[];
+  var pg=document.getElementById("playersGrid");
+  if(pg&&pg.innerHTML.indexOf("Loading")>-1||pg&&!pg.innerHTML)
+    pg.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">&#9889; Loading players from board...</div>';
+
   function fetchPage(cursor){
     var q=cursor
       ?'{boards(ids:[18412284375]){items_page(limit:500,cursor:"'+cursor+'"){cursor items{id name group{id}column_values{id text}}}}}'
       :'{boards(ids:[18412284375]){items_page(limit:500){cursor items{id name group{id}column_values{id text}}}}}';
     mondayApi(q,{}).then(function(res){
-      if(!res||!res.data||!res.data.boards){if(!cursor)setTimeout(function(){if(players.length===0)loadFromBoard();},2000);return;}
+      // Check for auth errors
+      if(res&&res.errors){
+        var isAuth=res.errors.some(function(e){return e.message&&(e.message.indexOf("auth")>-1||e.message.indexOf("token")>-1||e.message.indexOf("Unauthorized")>-1||e.message.indexOf("403")>-1);});
+        if(isAuth){showLoadError("The API token has expired. Please ask Georgie to update the hub with a fresh token from monday.com.");return;}
+        showLoadError("Board returned an error: "+(res.errors[0]&&res.errors[0].message||"Unknown error"));return;
+      }
+      if(!res||!res.data||!res.data.boards){
+        if(!cursor){
+          showLoadError("Could not connect to the monday.com board. Check your internet connection and try again.");
+          setTimeout(function(){if(players.length===0)loadFromBoard();},5000);
+        }
+        return;
+      }
       var page=res.data.boards[0].items_page;
       allItems=allItems.concat(page.items);
       if(page.cursor){fetchPage(page.cursor);}
       else{processBoard(allItems);}
-    }).catch(function(e){console.warn("loadFromBoard error:",e);if(!cursor)setTimeout(function(){if(players.length===0)loadFromBoard();},2000);});
+    }).catch(function(e){
+      console.warn("loadFromBoard error:",e);
+      if(!cursor){
+        showLoadError("Could not connect to the monday.com board. Check your internet connection and try again.");
+        setTimeout(function(){if(players.length===0)loadFromBoard();},5000);
+      }
+    });
   }
   fetchPage(null);
 }
@@ -1139,8 +1182,8 @@ function renderPlayers(){
     var reqCount=pR.length?'<span class="req-count-badge">'+pR.length+"</span>":"";
     var imgInitials=p.name.split(" ").map(function(w){return w[0]||""}).slice(0,2).join("");
     var imgHtml=p.img
-      ?'<img src="'+p.img+'" alt="'+p.name+'" loading="lazy" onerror="this.style.display=\'none\'">'
-      :'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:rgba(255,255,255,.3)">'+imgInitials+"</div>";
+      ?'<img src="'+p.img+'" alt="'+p.name+'" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="playerImgError(this)">'
+      :'<div class="player-img-initials">'+imgInitials+"</div>";
     html+='<div class="player-card"><div class="player-img-wrap">'+imgHtml+'<div class="player-number">'+p.num+"</div>"+restrictedBadge+"</div>"
       +'<div class="player-body"><div class="player-name">'+p.name+'</div><div class="player-position">'+p.pos+"</div>"
       +'<div class="player-tags">'+tags+"</div>"
