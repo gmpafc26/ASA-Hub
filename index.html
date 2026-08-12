@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- v1.8.0 | 2026-08-12 -->
 <script src="https://cdn.jsdelivr.net/npm/monday-sdk-js/dist/main.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ASA Player Requests Hub</title>
@@ -979,7 +983,7 @@ const COL={
 var PLAYER_MONDAY_IDS={};
 var REQUEST_MONDAY_IDS={};
 var monday=null;
-var MONDAY_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY5MjI0MzU4NiwiYWFpIjoxMSwidWlkIjo4MjY0Njg5NiwiaWFkIjoiMjAyNi0wOC0xMlQwMTo0MDo0Ni44MDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzA5Mjc2LCJyZ24iOiJ1c2UxIn0.Xj__D0HWK5ap19U40bSG5SzutFhVUL7lSxNjjbidHv8";
+var MONDAY_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY5MjI0MzU4NiwiYWFpIjoxMSwidWlkIjo4MjY0Njg5NiwiaWFkIjoiMjAyNi0wOC0xMlQwMTo0MDo0Ni4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzA5Mjc2LCJyZ24iOiJ1c2UxIn0.PEwaC0NRlvFKWL5xFJLoEPEq8pNwliBs4uFgeqhMPUk";
 var SDK_READY=false;
 
 var userRoles={82646896:"admin",29892421:"admin",44397410:"admin",96759461:"admin",41198358:"commercial-approver",62081586:"commercial-approver"};
@@ -993,16 +997,20 @@ let filterDept="all",filterStatus="all",filterTime="active";
 let pinEntry="",accessLevel="viewer",mreqConflictOverride=false;
 var _pendingLiaisonId=null;
 
-function getMondayClient(){try{return window.mondaySdk?mondaySdk():null}catch(e){return null}}
-function playerImgError(el){
-  el.style.display="none";
-  var initials=(el.alt||"").split(" ").map(function(w){return w[0]||""}).slice(0,2).join("");
-  var d=document.createElement("div");d.className="player-img-initials";d.textContent=initials;
-  el.parentNode.insertBefore(d,el.nextSibling);
+function getMondayClient(){
+  try{
+    var sdk=window.mondaySdk?mondaySdk():null;
+    // Verify the SDK is actually usable — not just initialised on the window
+    if(sdk&&typeof sdk.api==="function")return sdk;
+    return null;
+  }catch(e){return null}
 }
+
 function mondayApi(query,vars){
   var sdk=getMondayClient();
-  var sdkPromise=sdk?sdk.api(query,{variables:vars||{}}).catch(function(){return null}):Promise.resolve(null);
+  var sdkPromise=sdk
+    ?sdk.api(query,{variables:vars||{}}).catch(function(){return null})
+    :Promise.resolve(null);
   return sdkPromise.then(function(r){
     if(r&&!r.errors)return r;
     if(!MONDAY_TOKEN)return null;
@@ -1011,10 +1019,16 @@ function mondayApi(query,vars){
       headers:{"Content-Type":"application/json","Authorization":MONDAY_TOKEN,"API-Version":"2024-01"},
       body:JSON.stringify({query:query,variables:vars||{}})
     }).then(function(res){
-      var data=res.json();
-      return data;
+      return res.json();
     }).catch(function(){return null});
   });
+}
+
+function playerImgError(el){
+  el.style.display="none";
+  var initials=(el.alt||"").split(" ").map(function(w){return w[0]||""}).slice(0,2).join("");
+  var d=document.createElement("div");d.className="player-img-initials";d.textContent=initials;
+  el.parentNode.insertBefore(d,el.nextSibling);
 }
 
 function showLoadError(msg){
@@ -2185,16 +2199,55 @@ function saveBulkSchedule(){
 
 // ── SDK init ───────────────────────────────────────────────────────────────
 (function(){
-  var sdk=getMondayClient();
-  if(!sdk){setTimeout(function(){if(players.length===0)loadFromBoard();},1500);return;}
-  sdk.listen("context",function(res){
-    var ctx=res.data||res;SDK_READY=true;
-    if(ctx&&ctx.user&&ctx.user.id)resolveIdentity(ctx.user.id);
-    loadFromBoard();
-  });
-  sdk.get("context").then(function(res){var ctx=res.data||res;if(ctx&&ctx.user&&ctx.user.id)resolveIdentity(ctx.user.id);}).catch(function(){});
-  setTimeout(function(){sdk.api("{me{id name}}").then(function(res){if(res&&res.data&&res.data.me)resolveIdentity(res.data.me.id);}).catch(function(){});},600);
-  setTimeout(function(){if(players.length===0)loadFromBoard();},1500);
+  var boardLoaded=false;
+  var identityResolved=false;
+
+  function tryLoadBoard(){
+    if(!boardLoaded){boardLoaded=true;loadFromBoard();}
+  }
+  function tryIdentity(ctx){
+    if(!identityResolved&&ctx&&ctx.user&&ctx.user.id){identityResolved=true;resolveIdentity(ctx.user.id);}
+  }
+
+  function initSdk(){
+    var sdk=getMondayClient();
+    if(!sdk){
+      // SDK not ready yet — retry up to 10 times over 5 seconds
+      var attempts=0;
+      var retry=setInterval(function(){
+        attempts++;
+        var s=getMondayClient();
+        if(s){
+          clearInterval(retry);
+          attachSdk(s);
+        } else if(attempts>=10){
+          clearInterval(retry);
+          // Give up on SDK — load via token only
+          tryLoadBoard();
+        }
+      },500);
+      return;
+    }
+    attachSdk(sdk);
+  }
+
+  function attachSdk(sdk){
+    // Listen for context (fires when SDK is fully ready inside monday iframe)
+    sdk.listen("context",function(res){
+      var ctx=res.data||res;
+      tryIdentity(ctx);
+      tryLoadBoard();
+    });
+    // Also try get context immediately in case listen fires late
+    sdk.get("context").then(function(res){
+      var ctx=res.data||res;
+      tryIdentity(ctx);
+    }).catch(function(){});
+    // Fallback: if context listener never fires within 3s, load via token
+    setTimeout(function(){tryLoadBoard();},3000);
+  }
+
+  initSdk();
 })();
 
 var pg=document.getElementById("playersGrid");
