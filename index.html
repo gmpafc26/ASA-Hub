@@ -1011,7 +1011,7 @@ var PLAYER_MONDAY_IDS={};
 var REQUEST_MONDAY_IDS={};
 var currentMondayUserId=null;
 var monday=null;
-var MONDAY_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY5NDE3NzEyOCwiYWFpIjoxMSwidWlkIjo4MjY0Njg5NiwiaWFkIjoiMjAyNi0wOC0xOFQwNTo0Nzo1Mi4yOTVaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzA5Mjc2LCJyZ24iOiJ1c2UxIn0.Wqf8jADjsmFTXvZ3JbmbPAvKbQxpSxlyJMk7eTrQIAs";
+var MONDAY_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY5NDE3NzEyOCwiYWFpIjoxMSwidWlkIjo4MjY0Njg5NiwiaWFkIjoiMjAyNi0wOC0xOFQwNTo0Nzo1Mi4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzA5Mjc2LCJyZ24iOiJ1c2UxIn0.G0c9FibMD2P3np2VWnWsrK2v6Nw0UT3edfU438D4-U0";
 var SDK_READY=false;
 
 var userRoles={82646896:"admin",29892421:"admin",44397410:"admin",96759461:"admin",41198358:"commercial-approver",62081586:"commercial-approver"};
@@ -1032,68 +1032,30 @@ function getMondayClient(){
   return _mondaySdkInstance;
 }
 
-function _waitForSdkApi(sdk,callback){
-  // Poll until sdk.api is a function, then call callback
-  if(typeof sdk.api==="function"){callback();return;}
-  var attempts=0;
-  var poll=setInterval(function(){
-    attempts++;
-    if(typeof sdk.api==="function"){
-      clearInterval(poll);
-      _sdkApiReady=true;
-      callback();
-    } else if(attempts>=40){
-      clearInterval(poll);
-      console.warn("sdk.api never became available");
-      callback(); // proceed anyway
+function _detectSdk(){
+  try{
+    if(window.mondaySdk&&typeof window.mondaySdk==="function"){
+      var sdk=window.mondaySdk();
+      if(sdk)return sdk;
     }
-  },100);
+  }catch(e){}
+  try{if(window.monday)return window.monday;}catch(e){}
+  return null;
 }
 
+function _waitForSdkApi(sdk,callback){callback();}
+
 function mondayApi(query,vars){
-  var sdk=_mondaySdkInstance;
-
-  if(sdk){
-    // If .api isn't ready yet, queue this call and wait
-    if(typeof sdk.api!=="function"){
-      return new Promise(function(resolve){
-        _waitForSdkApi(sdk,function(){
-          if(typeof sdk.api==="function"){
-            sdk.api(query,{variables:vars||{}})
-              .then(function(r){resolve(r||null);})
-              .catch(function(){resolve(null);});
-          } else {
-            resolve(null);
-          }
-        });
-      });
-    }
-    // .api is ready — call it
-    return sdk.api(query,{variables:vars||{}})
-      .then(function(r){return r||null;})
-      .catch(function(e){
-        console.warn("SDK api error:",e);
-        // Retry once after 1s
-        return new Promise(function(resolve){
-          setTimeout(function(){
-            if(typeof sdk.api==="function"){
-              sdk.api(query,{variables:vars||{}})
-                .then(function(r2){resolve(r2||null);})
-                .catch(function(){resolve(null);});
-            } else resolve(null);
-          },1000);
-        });
-      });
-  }
-
-  // No SDK at all — direct fetch (only when genuinely outside monday)
-  console.warn("No SDK — using token fetch");
+  // Always use token-based fetch — reliable and already confirmed working (200s)
+  // SDK is used only for identity resolution (context listener)
   if(!MONDAY_TOKEN)return Promise.resolve(null);
   return fetch("https://api.monday.com/v2",{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":MONDAY_TOKEN,"API-Version":"2024-01"},
     body:JSON.stringify({query:query,variables:vars||{}})
-  }).then(function(res){return res.json();}).catch(function(){return null;});
+  }).then(function(res){return res.json();}).catch(function(e){
+    console.warn("fetch error:",e);return null;
+  });
 }
 
 function playerImgError(el){
@@ -1149,6 +1111,7 @@ function loadFromBoard(){
       ?'{boards(ids:[18412284375]){items_page(limit:500,cursor:"'+cursor+'"){cursor items{id name group{id}column_values{id text}}}}}'
       :'{boards(ids:[18412284375]){items_page(limit:500){cursor items{id name group{id}column_values{id text}}}}}';
     mondayApi(q,{}).then(function(res){
+      console.log("fetchPage response:",JSON.stringify(res).slice(0,200));
       // Check for auth errors
       if(res&&res.errors){
         var isAuth=res.errors.some(function(e){return e.message&&(e.message.indexOf("auth")>-1||e.message.indexOf("token")>-1||e.message.indexOf("Unauthorized")>-1||e.message.indexOf("403")>-1);});
@@ -2502,51 +2465,27 @@ function editUserFromList(id){
   }
 
   function initSdk(){
-    var sdk=null;
-    try{sdk=window.mondaySdk?mondaySdk():null;}catch(e){}
+    var sdk=_detectSdk();
     if(sdk){
       _mondaySdkInstance=sdk;
-      attachSdk(sdk);
-      return;
+      // Use SDK for identity only
+      try{
+        if(typeof sdk.listen==="function"){
+          sdk.listen("context",function(res){
+            var ctx=res.data||res;
+            tryIdentity(ctx);
+          });
+        }
+        if(typeof sdk.get==="function"){
+          sdk.get("context").then(function(res){
+            var ctx=res.data||res;
+            tryIdentity(ctx);
+          }).catch(function(){});
+        }
+      }catch(e){console.warn("SDK context error:",e);}
     }
-    var attempts=0;
-    var retry=setInterval(function(){
-      attempts++;
-      try{sdk=window.mondaySdk?mondaySdk():null;}catch(e){}
-      if(sdk){
-        clearInterval(retry);
-        _mondaySdkInstance=sdk;
-        attachSdk(sdk);
-      } else if(attempts>=20){
-        clearInterval(retry);
-        console.warn("monday SDK never loaded");
-        tryLoadBoard();
-      }
-    },500);
-  }
-
-  function attachSdk(sdk){
-    // Wire up context listener
-    sdk.listen("context",function(res){
-      var ctx=res.data||res;
-      tryIdentity(ctx);
-      // Wait for sdk.api to be ready before loading board
-      _waitForSdkApi(sdk,function(){tryLoadBoard();});
-    });
-    // Also try get("context") immediately
-    if(typeof sdk.get==="function"){
-      sdk.get("context").then(function(res){
-        var ctx=res.data||res;
-        tryIdentity(ctx);
-        _waitForSdkApi(sdk,function(){
-          setTimeout(function(){tryLoadBoard();},200);
-        });
-      }).catch(function(){
-        _waitForSdkApi(sdk,function(){
-          setTimeout(function(){tryLoadBoard();},500);
-        });
-      });
-    }
+    // Always load board immediately via token — don't wait for SDK
+    tryLoadBoard();
   }
 
   initSdk();
