@@ -1737,9 +1737,7 @@ function submitMakeRequest(){
   var nr={id:"r"+Date.now(),name:name,date:date,players:sel,location:loc,start_time:startTime,
     time_required:timeReq,type:type,status:status,briefed:false,approved:canApprove(type),submitter:sub,notes:notes};
   requests.unshift(nr);
-  var sdk=getMondayClient();
-  if(sdk){sdk.api("{me{id name}}").then(function(r){if(r&&r.data&&r.data.me){nr.submitterMondayId=r.data.me.id;nr.submitter=nr.submitter||r.data.me.name;}createRequestOnMonday(nr);}).catch(function(){createRequestOnMonday(nr);});}
-  else{createRequestOnMonday(nr);}
+  mondayApi("{me{id name}}").then(function(r){if(r&&r.data&&r.data.me){nr.submitterMondayId=r.data.me.id;nr.submitter=nr.submitter||r.data.me.name;}createRequestOnMonday(nr);}).catch(function(){createRequestOnMonday(nr);});
   closeModal("requestFormModal");renderRequests();renderCalendar();renderPlayers();
   showToast("Request submitted!","success");switchTab("requests",null);
 }
