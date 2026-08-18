@@ -142,15 +142,6 @@
   .briefed-row{display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-bottom:4px}
   .briefed-row input[type=checkbox]{accent-color:var(--confirmed);width:16px;height:16px;cursor:pointer}
   .briefed-row label{font-size:13px;font-weight:500;color:#15803d;cursor:pointer}
-  .pin-display{display:flex;justify-content:center;gap:12px;margin:20px 0}
-  .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .2s}
-  .pin-dot.filled{background:var(--teal);border-color:var(--teal)}
-  .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:220px;margin:0 auto}
-  .pin-key{height:48px;border-radius:10px;border:1px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;transition:all .15s}
-  .pin-key:hover{background:var(--off-white);border-color:var(--teal)}.pin-key.zero{grid-column:2}
-  .pin-error{color:var(--red);font-size:13px;text-align:center;margin-top:10px;min-height:20px}
-  .access-level-info{background:var(--off-white);border-radius:8px;padding:12px;margin-top:14px;font-size:12px;color:var(--muted);line-height:1.6}
-  .access-level-info strong{color:var(--text)}
   .mreq-wrap{max-width:700px;margin:0 auto}
   .mreq-header{display:flex;align-items:center;gap:16px;margin-bottom:28px}
   .mreq-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--teal),var(--teal-light));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
@@ -272,9 +263,9 @@
 <header class="hub-header">
   <div class="hub-logo"><div class="hub-logo-icon">&#9889;</div>ASA Player Requests Hub</div>
   <div class="header-right">
-    <div class="access-badge" id="accessBadge" onclick="openPinModal()" style="display:flex;align-items:center;gap:6px">
-      <span style="width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.3);display:inline-block;flex-shrink:0"></span>
-      <span id="accessLabel">Sign in</span>
+    <div class="access-badge" id="accessBadge" style="display:flex;align-items:center;gap:6px;cursor:default">
+      <span style="width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.3);display:inline-block;flex-shrink:0" id="accessDot"></span>
+      <span id="accessLabel">Loading...</span>
     </div>
   </div>
 </header>
@@ -284,6 +275,7 @@
   <button class="tab-btn" data-tab="requests" onclick="switchTab('requests',this)">&#128203; Requests <span class="badge" id="requestCount">-</span></button>
   <button class="tab-btn" data-tab="process" onclick="switchTab('process',this)">&#128214; Process</button>
   <button class="tab-btn tab-btn-balances" id="balancesTabBtn" data-tab="balances" onclick="switchTab('balances',this)" style="display:none">&#9997;&#65039; Balances</button>
+  <button class="tab-btn" id="usersTabBtn" data-tab="users" onclick="switchTab('users',this)" style="display:none">&#128101; Users</button>
   <button class="tab-btn" data-tab="how-it-works" onclick="switchTab('how-it-works',this)">&#128214; How It Works</button>
   <button class="tab-btn tab-btn-cta" onclick="openRequestFormModal()">&#43; New Request</button>
 </nav>
@@ -461,6 +453,61 @@
   </div>
 </div>
 
+<!-- USERS TAB -->
+<div class="tab-pane" id="tab-users">
+  <div class="tab-page-header">
+    <div><h2 class="tab-page-title">User Access</h2><p class="tab-page-sub">Manage who can access the hub and what they can do — changes take effect immediately</p></div>
+  </div>
+
+  <!-- Search for a monday user -->
+  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:var(--shadow)">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">Add or update a user</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Search by name to find anyone in your monday.com workspace, then assign their role.</div>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px">
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Search name</label>
+        <input type="text" id="userSearchInput" class="mreq-input" placeholder="e.g. Andrew Fuss" oninput="userSearchChanged()" style="width:100%">
+      </div>
+      <button class="btn-primary" onclick="searchUsers()" style="height:36px">&#128269; Search</button>
+    </div>
+    <!-- Search results dropdown -->
+    <div id="userSearchResults" style="display:none;margin-top:8px;border:1px solid var(--border);border-radius:9px;overflow:hidden;background:#fff"></div>
+    <!-- Selected user + role assignment -->
+    <div id="userLookupResult" style="margin-top:14px;display:none">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--off-white);border:1px solid var(--border);border-radius:9px;flex-wrap:wrap">
+        <div style="width:36px;height:36px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#0369a1;flex-shrink:0" id="userAvatar"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:13px" id="userName"></div>
+          <div style="font-size:12px;color:var(--muted)" id="userEmail"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Role</label>
+          <select class="mreq-input" id="userRoleSelect" style="width:200px">
+            <option value="viewer">&#9898; Viewer (read only)</option>
+            <option value="commercial-approver">&#128994; Commercial Approver</option>
+            <option value="admin">&#128308; Admin (full access)</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="saveUserRole()" style="height:36px">&#128190; Save Role</button>
+        <button onclick="removeUserRole()" style="height:36px;padding:0 12px;background:#fff;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">&#128465; Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Current users list -->
+  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:700;color:var(--text)">Current access list</div>
+      <div style="font-size:12px;color:var(--muted)" id="usersCount"></div>
+    </div>
+    <div id="usersList" style="padding:8px 0"></div>
+  </div>
+
+  <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:var(--radius);padding:12px 16px;margin-top:16px;font-size:12px;color:#92400e">
+    &#9888;&#65039; Anyone not on this list can still view the hub but cannot approve requests, edit players or manage the schedule.
+  </div>
+</div>
+
 <!-- HOW IT WORKS TAB -->
 <div class="tab-pane" id="tab-how-it-works">
   <div style="max-width:100%">
@@ -482,7 +529,7 @@
         <div style="width:36px;height:36px;border-radius:8px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128272;</div>
         <div style="flex:1">
           <div class="hiw-card-title hiw-editable">Access levels</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:10px" class="hiw-editable">Anyone can view without logging in. Use the PIN button (top right) to access approver or admin features.</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px" class="hiw-editable">Access is automatic — the hub reads your monday.com identity when opened inside monday and sets your access level accordingly. No login required.</div>
           <div style="display:flex;flex-direction:column;gap:6px">
             <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#f8fafc;border:1px solid var(--border);color:var(--muted)">&#9898; Viewer</span><span style="font-size:12px;color:var(--muted)">Browse players, calendar and requests — no login required</span></div>
             <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:100px;background:#f0fdf4;border:1px solid #86efac;color:#15803d">&#128994; Commercial</span><span style="font-size:12px;color:var(--muted)">Jodie Cairns &amp; John Kleeman — approve commercial requests</span></div>
@@ -643,23 +690,6 @@
 </div>
 
 <!-- PIN Modal -->
-<div class="modal-overlay" id="pinModal">
-  <div class="modal" style="max-width:340px">
-    <div class="modal-header"><div class="modal-title">&#128272; Approver Access</div><button class="modal-close" onclick="closeModal('pinModal')">&#215;</button></div>
-    <div class="modal-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:8px">Enter your PIN to access approver features.</p>
-      <div class="pin-display"><div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div><div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div></div>
-      <div class="pin-pad">
-        <button class="pin-key" onclick="pinPress('1')">1</button><button class="pin-key" onclick="pinPress('2')">2</button><button class="pin-key" onclick="pinPress('3')">3</button>
-        <button class="pin-key" onclick="pinPress('4')">4</button><button class="pin-key" onclick="pinPress('5')">5</button><button class="pin-key" onclick="pinPress('6')">6</button>
-        <button class="pin-key" onclick="pinPress('7')">7</button><button class="pin-key" onclick="pinPress('8')">8</button><button class="pin-key" onclick="pinPress('9')">9</button>
-        <button class="pin-key" onclick="pinClear()" style="font-size:12px">&#9003;</button><button class="pin-key zero" onclick="pinPress('0')">0</button>
-      </div>
-      <div class="pin-error" id="pinError"></div>
-      <div class="access-level-info"><strong>Access levels:</strong><br>&#128308; <strong>Admin</strong> - Full access — Georgie, Andrew, Simon &amp; Jacob<br>&#128994; <strong>Commercial Approver</strong> - Approve commercial requests<br>&#9898; <strong>Viewer</strong> - Read-only (no login required)</div>
-    </div>
-  </div>
-</div>
 
 <!-- Add Player Modal -->
 <div class="modal-overlay" id="addPlayerModal">
@@ -977,24 +1007,24 @@ const COL={
   players_text:"text_mm35qb0p",req_type:"color_mm35cenq",briefed:"color_mm359ffs",approved:"color_mm35zm9j",
   req_type_dropdown:"dropdown_mm38f2g1",time_required:"text_mm388at2",
   submitted_by:"multiple_person_mm3g7m2g",
-  balance_stamp:"date_mm3hme1r"
+  balance_stamp:"date_mm3hme1r",
+  roles:"text_mm35qb0p"
 };
 
 var PLAYER_MONDAY_IDS={};
 var REQUEST_MONDAY_IDS={};
 var monday=null;
-var MONDAY_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY5MjI0MzU4NiwiYWFpIjoxMSwidWlkIjo4MjY0Njg5NiwiaWFkIjoiMjAyNi0wOC0xMlQwMTo0MDo0Ni4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzA5Mjc2LCJyZ24iOiJ1c2UxIn0.PEwaC0NRlvFKWL5xFJLoEPEq8pNwliBs4uFgeqhMPUk";
+var MONDAY_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY1NDUxNzk2NCwiYWFpIjoxMSwidWlkIjo4MjY0Njg5NiwiaWFkIjoiMjAyNi0wNS0wNlQwNzoxOTowNi4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzA5Mjc2LCJyZ24iOiJ1c2UxIn0.S91_48zIq-aPoxjEBHuBuRLTSwPizmnHZsPQYGysQwU";
 var SDK_READY=false;
 
 var userRoles={82646896:"admin",29892421:"admin",44397410:"admin",96759461:"admin",41198358:"commercial-approver",62081586:"commercial-approver"};
-var pinConfig={admin:"3942","retail-approver":"1870","commercial-approver":"1972","balance-updater":"1559","pcl-approver":"1559"};
 
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 let editingId=null;
 var _today=new Date();
 let calYear=_today.getFullYear(),calMonth=_today.getMonth();
 let filterDept="all",filterStatus="all",filterTime="active";
-let pinEntry="",accessLevel="viewer",mreqConflictOverride=false;
+let accessLevel="viewer",mreqConflictOverride=false;
 var _pendingLiaisonId=null;
 
 function getMondayClient(){
@@ -1125,6 +1155,8 @@ function processBoard(items){
       } else if(item.name==="__settings__"){
         var stampCol=item.column_values.find(function(cv2){return cv2.id===COL.balance_stamp});
         if(stampCol&&stampCol.text){var sd=document.getElementById("stampDate");if(sd)sd.value=stampCol.text;var sdisp=document.getElementById("balancesStampDisplay");if(sdisp)sdisp.textContent=fmtDate(stampCol.text);}
+        var rolesCol=item.column_values.find(function(cv2){return cv2.id==="text_mm35jtbf"});
+        if(rolesCol&&rolesCol.text)loadPersistedRoles(rolesCol.text);
       }
     });
     var allPlayers=newPlayers.concat(newAFLW);
@@ -1158,6 +1190,7 @@ function switchTab(tab,btn){
   if(btn)btn.classList.add("active");
   if(tab==="calendar")renderCalendar();
   if(tab==="balances")renderBalancesTab();
+  if(tab==="users"){renderUsersList();loadAllUsers();}
 }
 
 function switchSquad(squad,btn){
@@ -1792,9 +1825,10 @@ function deleteBlackout(id){
 // ── Access / Auth ──────────────────────────────────────────────────────────
 function applyAccessLevel(level){
   accessLevel=level;
-  var dot=level==="admin"?'<span style="width:9px;height:9px;border-radius:50%;background:#ef4444;display:inline-block;flex-shrink:0"></span>':level!=="viewer"?'<span style="width:9px;height:9px;border-radius:50%;background:#22c55e;display:inline-block;flex-shrink:0"></span>':'<span style="width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.3);display:inline-block;flex-shrink:0"></span>';
-  var labelText=level==="admin"?"Admin":level==="retail-approver"?"Retail":level==="commercial-approver"?"Commercial":level==="pcl-approver"?"PCL":"Sign in";
-  var al=document.getElementById("accessLabel");if(al)al.innerHTML=dot+" "+labelText;
+  var dotColor=level==="admin"?"#ef4444":level!=="viewer"?"#22c55e":"rgba(255,255,255,.3)";
+  var labelText=level==="admin"?"Admin":level==="retail-approver"?"Retail":level==="commercial-approver"?"Commercial":level==="pcl-approver"?"PCL":"Viewer";
+  var dot=document.getElementById("accessDot");if(dot)dot.style.background=dotColor;
+  var al=document.getElementById("accessLabel");if(al)al.textContent=labelText;
   var ab=document.getElementById("accessBadge");if(ab)ab.className="access-badge"+(level!=="viewer"?" logged-in":"");
   if(level==="admin"||level==="balance-updater"||level==="pcl-approver"){var bt=document.getElementById("balancesTabBtn");if(bt)bt.style.display="flex";}
   if(level==="admin"){
@@ -1802,11 +1836,15 @@ function applyAccessLevel(level){
     var heb=document.getElementById("hiwEditBtn");if(heb)heb.style.display="flex";
     var peb=document.getElementById("processEditBtn");if(peb)peb.style.display="flex";
     var esb=document.getElementById("editScheduleBtn");if(esb)esb.style.display="flex";
+    var utb=document.getElementById("usersTabBtn");if(utb)utb.style.display="flex";
   }
   renderPlayers();renderRequests();updateApprovalBanner();
 }
 function resolveIdentity(mondayUserId){
-  var role=userRoles[parseInt(mondayUserId,10)];if(role)applyAccessLevel(role);
+  var id=parseInt(mondayUserId,10);
+  var role=userRoles[id];
+  if(role){applyAccessLevel(role);}
+  else{console.log("monday user not mapped (viewer):",id);applyAccessLevel("viewer");}
 }
 function updateApprovalBanner(){
   var banner=document.getElementById("approvalBanner");if(!banner)return;
@@ -1814,32 +1852,7 @@ function updateApprovalBanner(){
   var ACTIONED=["Internally Approved","Confirmed","Not Approved"];
   var pending=requests.filter(function(r){return !r.approved&&!r.denied&&ACTIONED.indexOf(r.status)<0&&canApprove(r.type)});
   if(pending.length>0){banner.style.display="flex";}else{banner.style.display="none";}
-}
-function updatePinDots(){for(var i=0;i<4;i++){var pd=document.getElementById("pd"+i);if(pd)pd.classList.toggle("filled",i<pinEntry.length);}}
-function openPinModal(){
-  if(accessLevel!=="viewer"){
-    accessLevel="viewer";
-    var al=document.getElementById("accessLabel");if(al)al.textContent="Sign in";
-    var ab=document.getElementById("accessBadge");if(ab)ab.className="access-badge";
-    ["balancesTabBtn","addPlayerBtn","editScheduleBtn"].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display="none";});
-    showToast("Signed out");renderPlayers();renderRequests();return;
-  }
-  pinEntry="";updatePinDots();
-  var pe=document.getElementById("pinError");if(pe)pe.textContent="";
-  document.getElementById("pinModal").classList.add("open");
-}
-function checkPin(){
-  var pin=pinEntry;var lv=null;
-  Object.keys(pinConfig).forEach(function(role){if(pinConfig[role]===pin)lv=role});
-  if(!lv){showToast("Incorrect PIN","error");pinEntry="";updatePinDots();return}
-  closeModal("pinModal");pinEntry="";updatePinDots();
-  applyAccessLevel(lv);
-  if(lv==="balance-updater")switchTab("balances",null);
-  else if(lv==="retail-approver"||lv==="commercial-approver"||lv==="pcl-approver"){switchTab("requests",null);updateApprovalBanner();}
-  showToast("Signed in as "+lv.replace(/-/g," "),"success");
-}
-function pinPress(d){if(pinEntry.length>=4)return;pinEntry+=d;updatePinDots();if(pinEntry.length===4)setTimeout(checkPin,150);}
-function pinClear(){pinEntry=pinEntry.slice(0,-1);updatePinDots();}
+}}
 
 // ── Process / HIW edit ─────────────────────────────────────────────────────
 function toggleProcessEdit(){
@@ -2197,7 +2210,176 @@ function saveBulkSchedule(){
   showToast(count+" entries saved","success");
 }
 
-// ── SDK init ───────────────────────────────────────────────────────────────
+// ── User management ────────────────────────────────────────────────────────
+var userRoleNames={admin:"Admin","commercial-approver":"Commercial Approver","retail-approver":"Retail Approver","pcl-approver":"PCL Approver",viewer:"Viewer"};
+var userRoleColors={admin:"#dc2626","commercial-approver":"#15803d","retail-approver":"#d97706","pcl-approver":"#7c3aed",viewer:"#94a3b8"};
+var userRoleBgs={admin:"#fef2f2","commercial-approver":"#f0fdf4","retail-approver":"#fffbeb","pcl-approver":"#f5f3ff",viewer:"#f8fafc"};
+var _lookupUser=null;
+var _allWorkspaceUsers=[];
+var _searchTimeout=null;
+
+function loadAllUsers(){
+  if(_allWorkspaceUsers.length)return;
+  mondayApi("{users{id name email}}").then(function(res){
+    if(res&&res.data&&res.data.users)_allWorkspaceUsers=res.data.users;
+  });
+}
+
+function userSearchChanged(){
+  clearTimeout(_searchTimeout);
+  var q=document.getElementById("userSearchInput").value.trim();
+  if(!q){document.getElementById("userSearchResults").style.display="none";return;}
+  _searchTimeout=setTimeout(function(){searchUsers();},300);
+}
+
+function searchUsers(){
+  var q=(document.getElementById("userSearchInput").value||"").trim().toLowerCase();
+  if(!q)return;
+  var resultsEl=document.getElementById("userSearchResults");
+
+  // If we have cached users, filter locally — much faster
+  if(_allWorkspaceUsers.length){
+    var matches=_allWorkspaceUsers.filter(function(u){
+      return u.name.toLowerCase().indexOf(q)>-1||(u.email&&u.email.toLowerCase().indexOf(q)>-1);
+    }).slice(0,8);
+    renderSearchResults(matches,resultsEl);
+    return;
+  }
+
+  // Otherwise fetch from API
+  resultsEl.style.display="block";
+  resultsEl.innerHTML='<div style="padding:12px 16px;font-size:12px;color:var(--muted)">Searching...</div>';
+  mondayApi("{users{id name email}}").then(function(res){
+    if(!res||!res.data||!res.data.users){
+      resultsEl.innerHTML='<div style="padding:12px 16px;font-size:12px;color:var(--red)">Search failed — try again</div>';
+      return;
+    }
+    _allWorkspaceUsers=res.data.users;
+    var matches=_allWorkspaceUsers.filter(function(u){
+      return u.name.toLowerCase().indexOf(q)>-1||(u.email&&u.email.toLowerCase().indexOf(q)>-1);
+    }).slice(0,8);
+    renderSearchResults(matches,resultsEl);
+  });
+}
+
+function renderSearchResults(matches,el){
+  if(!matches.length){
+    el.style.display="block";
+    el.innerHTML='<div style="padding:12px 16px;font-size:12px;color:var(--muted)">No users found matching that name.</div>';
+    return;
+  }
+  var html="";
+  matches.forEach(function(u,i){
+    var initials=u.name.split(" ").map(function(w){return w[0]||""}).slice(0,2).join("");
+    var existingRole=userRoles[parseInt(u.id,10)];
+    var roleLabel=existingRole?(' <span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px;color:'+(userRoleColors[existingRole]||"#94a3b8")+';background:'+(userRoleBgs[existingRole]||"#f8fafc")+'">'+userRoleNames[existingRole]+"</span>"):"";
+    html+='<div onclick="selectUser('+JSON.stringify(u)+')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:'+(i<matches.length-1?"0.5px solid #f3f4f6":"none")+';transition:background .12s" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#fff\'">'
+      +'<div style="width:32px;height:32px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#0369a1;flex-shrink:0">'+initials+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">'+u.name+roleLabel+'</div>'
+      +'<div style="font-size:11px;color:var(--muted)">'+( u.email||"")+'</div></div>'
+      +'<span style="font-size:11px;color:var(--muted)">Select &#8594;</span>'
+      +'</div>';
+  });
+  el.style.display="block";el.innerHTML=html;
+}
+
+function selectUser(u){
+  if(typeof u==="string")u=JSON.parse(u);
+  _lookupUser={id:parseInt(u.id,10),name:u.name,email:u.email};
+  var initials=u.name.split(" ").map(function(w){return w[0]||""}).slice(0,2).join("");
+  document.getElementById("userAvatar").textContent=initials;
+  document.getElementById("userName").textContent=u.name;
+  document.getElementById("userEmail").textContent=u.email||"";
+  var existingRole=userRoles[parseInt(u.id,10)]||"viewer";
+  document.getElementById("userRoleSelect").value=existingRole;
+  document.getElementById("userLookupResult").style.display="block";
+  document.getElementById("userSearchResults").style.display="none";
+  document.getElementById("userSearchInput").value=u.name;
+}
+
+function clearUserLookup(){
+  document.getElementById("userLookupResult").style.display="none";
+  document.getElementById("userSearchResults").style.display="none";
+  _lookupUser=null;
+}
+
+function saveUserRole(){
+  if(!_lookupUser){showToast("Search and select a user first","error");return;}
+  var role=document.getElementById("userRoleSelect").value;
+  var id=_lookupUser.id;
+  if(role==="viewer"){delete userRoles[id];}
+  else{userRoles[id]=role;}
+  persistRoles();
+  renderUsersList();
+  showToast(_lookupUser.name+" — role set to "+userRoleNames[role],"success");
+  document.getElementById("userLookupResult").style.display="none";
+  document.getElementById("userSearchInput").value="";
+  _lookupUser=null;
+}
+
+function removeUserRole(){
+  if(!_lookupUser)return;
+  delete userRoles[_lookupUser.id];
+  persistRoles();
+  renderUsersList();
+  showToast(_lookupUser.name+" removed from access list","success");
+  document.getElementById("userLookupResult").style.display="none";
+  document.getElementById("userSearchInput").value="";
+  _lookupUser=null;
+}
+
+function persistRoles(){
+  var rolesJson=JSON.stringify(userRoles);
+  mondayApi("mutation($iid:ID!,$bid:ID!,$cv:JSON!){change_multiple_column_values(item_id:$iid,board_id:$bid,column_values:$cv){id}}",
+    {iid:SETTINGS_ITEM_ID,bid:BOARD_ID,cv:JSON.stringify({"text_mm35jtbf":rolesJson})});
+}
+
+function loadPersistedRoles(text){
+  if(!text)return;
+  try{
+    var parsed=JSON.parse(text);
+    Object.keys(parsed).forEach(function(id){userRoles[parseInt(id,10)]=parsed[id];});
+  }catch(e){console.warn("Could not parse persisted roles:",e);}
+}
+
+function renderUsersList(){
+  var list=document.getElementById("usersList");if(!list)return;
+  var count=document.getElementById("usersCount");
+  var entries=Object.keys(userRoles).filter(function(id){return userRoles[id]&&userRoles[id]!=="viewer";});
+  if(count)count.textContent=entries.length+" user"+(entries.length!==1?"s":"")+" with elevated access";
+  if(!entries.length){list.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">No users configured yet. Use the search above to add people.</div>';return;}
+  var html="";
+  entries.forEach(function(id){
+    var role=userRoles[parseInt(id,10)];
+    var col=userRoleColors[role]||"#94a3b8";
+    var bg=userRoleBgs[role]||"#f8fafc";
+    var label=userRoleNames[role]||role;
+    // Find name from cached users if available
+    var cached=_allWorkspaceUsers.find(function(u){return parseInt(u.id,10)===parseInt(id,10);});
+    var displayName=cached?cached.name:"User ID: "+id;
+    var displayEmail=cached?cached.email:"";
+    var initials=displayName.split(" ").map(function(w){return w[0]||""}).slice(0,2).join("");
+    html+='<div style="display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:0.5px solid #f3f4f6">'
+      +'<div style="width:32px;height:32px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#0369a1;flex-shrink:0">'+initials+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">'+displayName+'</div>'+(displayEmail?'<div style="font-size:11px;color:var(--muted)">'+displayEmail+'</div>':"")+'</div>'
+      +'<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;color:'+col+';background:'+bg+'">'+label+'</span>'
+      +'<button data-uid="'+id+'" onclick="editUserFromList('+id+')" style="background:none;border:0.5px solid #d1d5db;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;color:#6b7280">&#9998; Edit</button>'
+      +'</div>';
+  });
+  list.innerHTML=html;
+}
+
+function editUserFromList(id){
+  var cached=_allWorkspaceUsers.find(function(u){return parseInt(u.id,10)===parseInt(id,10);});
+  if(cached){selectUser(cached);}
+  else{
+    // Fetch this user then select
+    mondayApi("{users(ids:["+id+"]){id name email}}").then(function(res){
+      if(res&&res.data&&res.data.users&&res.data.users.length)selectUser(res.data.users[0]);
+    });
+  }
+  window.scrollTo(0,0);
+}
 (function(){
   var boardLoaded=false;
   var identityResolved=false;
