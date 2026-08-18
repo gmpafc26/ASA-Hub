@@ -1848,7 +1848,7 @@ function updateApprovalBanner(){
   var ACTIONED=["Internally Approved","Confirmed","Not Approved"];
   var pending=requests.filter(function(r){return !r.approved&&!r.denied&&ACTIONED.indexOf(r.status)<0&&canApprove(r.type)});
   if(pending.length>0){banner.style.display="flex";}else{banner.style.display="none";}
-}}
+}
 
 // ── Process / HIW edit ─────────────────────────────────────────────────────
 function toggleProcessEdit(){
