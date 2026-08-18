@@ -1009,6 +1009,7 @@ const COL={
 
 var PLAYER_MONDAY_IDS={};
 var REQUEST_MONDAY_IDS={};
+var currentMondayUserId=null;
 var monday=null;
 var MONDAY_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY1NDUxNzk2NCwiYWFpIjoxMSwidWlkIjo4MjY0Njg5NiwiaWFkIjoiMjAyNi0wNS0wNlQwNzoxOTowNi4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzA5Mjc2LCJyZ24iOiJ1c2UxIn0.S91_48zIq-aPoxjEBHuBuRLTSwPizmnHZsPQYGysQwU";
 var SDK_READY=false;
@@ -1023,10 +1024,11 @@ let filterDept="all",filterStatus="all",filterTime="active";
 let accessLevel="viewer",mreqConflictOverride=false;
 var _pendingLiaisonId=null;
 
+var _sdkConfirmed=false; // set true once SDK successfully returns data
+
 function getMondayClient(){
   try{
     var sdk=window.mondaySdk?mondaySdk():null;
-    // Verify the SDK is actually usable — not just initialised on the window
     if(sdk&&typeof sdk.api==="function")return sdk;
     return null;
   }catch(e){return null}
@@ -1034,20 +1036,41 @@ function getMondayClient(){
 
 function mondayApi(query,vars){
   var sdk=getMondayClient();
-  var sdkPromise=sdk
-    ?sdk.api(query,{variables:vars||{}}).catch(function(){return null})
-    :Promise.resolve(null);
-  return sdkPromise.then(function(r){
-    if(r&&!r.errors)return r;
-    if(!MONDAY_TOKEN)return null;
-    return fetch("https://api.monday.com/v2",{
-      method:"POST",
-      headers:{"Content-Type":"application/json","Authorization":MONDAY_TOKEN,"API-Version":"2024-01"},
-      body:JSON.stringify({query:query,variables:vars||{}})
-    }).then(function(res){
-      return res.json();
-    }).catch(function(){return null});
-  });
+
+  // If SDK is available, always try it first with retry logic
+  if(sdk){
+    return sdk.api(query,{variables:vars||{}})
+      .then(function(r){
+        if(r&&!r.errors){_sdkConfirmed=true;return r;}
+        // SDK returned an error — if SDK was previously confirmed working, retry once
+        if(_sdkConfirmed){
+          return new Promise(function(resolve){setTimeout(function(){
+            sdk.api(query,{variables:vars||{}}).then(resolve).catch(function(){resolve(null);});
+          },500);});
+        }
+        // SDK not yet confirmed — fall through to fetch only if no MONDAY_TOKEN
+        // (i.e. genuinely outside monday context)
+        if(!MONDAY_TOKEN)return null;
+        // Inside monday but SDK not ready yet — retry via SDK after a short delay
+        return new Promise(function(resolve){setTimeout(function(){
+          var sdk2=getMondayClient();
+          if(sdk2){sdk2.api(query,{variables:vars||{}}).then(function(r2){
+            if(r2&&!r2.errors){_sdkConfirmed=true;resolve(r2);}
+            else resolve(null);
+          }).catch(function(){resolve(null);});}
+          else resolve(null);
+        },1000);});
+      })
+      .catch(function(){return null;});
+  }
+
+  // No SDK at all — only then use direct fetch (outside monday context)
+  if(!MONDAY_TOKEN)return Promise.resolve(null);
+  return fetch("https://api.monday.com/v2",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":MONDAY_TOKEN,"API-Version":"2024-01"},
+    body:JSON.stringify({query:query,variables:vars||{}})
+  }).then(function(res){return res.json();}).catch(function(){return null;});
 }
 
 function playerImgError(el){
@@ -1062,10 +1085,34 @@ function showLoadError(msg){
   if(pg)pg.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px 24px">'
     +'<div style="font-size:32px;margin-bottom:12px">&#9888;&#65039;</div>'
     +'<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px">Unable to load board data</div>'
-    +'<div style="font-size:13px;color:var(--muted);max-width:400px;margin:0 auto;line-height:1.6">'+msg+'</div>'
+    +'<div style="font-size:13px;color:var(--muted);max-width:420px;margin:0 auto;line-height:1.6">'+msg+'</div>'
     +'<button onclick="loadFromBoard()" style="margin-top:16px;padding:9px 20px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;cursor:pointer">&#8635; Try Again</button>'
     +'</div>';
   var rc=document.getElementById("requestCount");if(rc)rc.textContent="!";
+}
+
+function checkOpenedInMonday(){
+  // If the SDK never initialises after 5 seconds, we're likely outside monday
+  // Show a helpful message rather than silently failing with CORS errors
+  setTimeout(function(){
+    if(players.length===0&&aflwPlayers.length===0){
+      var pg=document.getElementById("playersGrid");
+      if(pg&&pg.innerHTML.indexOf("Loading")>-1){
+        pg.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px 24px">'
+          +'<div style="font-size:40px;margin-bottom:14px">&#128203;</div>'
+          +'<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px">Open this hub inside monday.com</div>'
+          +'<div style="font-size:13px;color:var(--muted);max-width:400px;margin:0 auto;line-height:1.7">'
+          +'This hub needs to be opened as a <strong>board view inside monday.com</strong> to connect to your data. '
+          +'Opening it directly via the URL won\'t work due to API security restrictions.'
+          +'</div>'
+          +'<div style="margin-top:20px;padding:14px 20px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;max-width:400px;margin:16px auto 0;font-size:12px;color:#15803d;line-height:1.7">'
+          +'<strong>How to open it:</strong><br>'
+          +'Go to your <strong>ASA / CBA HUB</strong> board in monday.com → click the hub view in the left sidebar or top view tabs.'
+          +'</div>'
+          +'</div>';
+      }
+    }
+  },5000);
 }
 
 function loadFromBoard(){
@@ -1134,6 +1181,7 @@ function processBoard(items){
           location:cv[COL.location]||"",time_required:cv[COL.time_required]||"",
           status:cv[COL.status]||"TBC",approved:cv[COL.approved]==="Approved",
           briefed:cv[COL.briefed]==="Yes",notes:cv[COL.notes]||"",
+          submitterMondayId:cv[COL.submitted_by]?parseInt(cv[COL.submitted_by],10)||null:null,
           _playerNames:playerNames});
       } else if(item.group.id===AFL_SCHED_GROUP||item.group.id===AFLW_SCHED_GROUP){
         if(item.name&&item.name!=="New item"){
@@ -1175,7 +1223,24 @@ function sc(s){return s==="Confirmed"?"status-confirmed":s==="Football Dept Conf
 function closeModal(id){var el=document.getElementById(id);if(el)el.classList.remove("open")}
 function showToast(msg,type){var t=document.getElementById("toast");if(!t)return;t.textContent=msg;t.className="toast show"+(type?" "+type:"");setTimeout(function(){t.className="toast"},2800)}
 function canApprove(type){if(accessLevel==="admin")return true;return(APPROVAL[type]||[]).includes(accessLevel)}
-function visReqs(){return requests.filter(function(r){return !r.denied&&(r.approved||canApprove(r.type)||accessLevel==="admin")})}
+function isMyRequest(r){
+  if(!currentMondayUserId)return false;
+  if(r.submitterMondayId&&parseInt(r.submitterMondayId,10)===currentMondayUserId)return true;
+  return false;
+}
+function canEditRequest(r){
+  // Approvers and admins can always edit
+  if(accessLevel==="admin"||canApprove(r.type))return true;
+  // Submitters can edit their own requests while still pending
+  if(isMyRequest(r)&&(r.status==="TBC"||r.status==="Planned"))return true;
+  return false;
+}
+function visReqs(){return requests.filter(function(r){
+  if(r.denied)return false;
+  if(r.approved||canApprove(r.type)||accessLevel==="admin")return true;
+  if(isMyRequest(r))return true;
+  return false;
+})}
 function wkBounds(dateStr){var d=new Date(dateStr+"T12:00:00"),dow=d.getDay(),diff=dow===0?-6:1-dow;var mon=new Date(d);mon.setDate(d.getDate()+diff);var sun=new Date(mon);sun.setDate(mon.getDate()+6);return[mon.toISOString().slice(0,10),sun.toISOString().slice(0,10)]}
 
 function switchTab(tab,btn){
@@ -1418,17 +1483,18 @@ function renderRequests(){
   for(var i=0;i<vis.length;i++){
     var r=vis[i];
     var names=r.players.map(function(pid){var ap=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return ap?ap.name:""}).filter(Boolean);
-    var canEd=accessLevel!=="viewer";
+    var canEd=canEditRequest(r);
     var eBtn=canEd?'<button onclick="openEditModal(\''+r.id+'\')" style="background:none;border:0.5px solid #d1d5db;border-radius:6px;padding:5px 8px;cursor:pointer;color:#6b7280;font-size:12px" title="Edit">&#9998;</button>':"";
     var dBtn=(accessLevel==="admin"||canApprove(r.type))?'<button onclick="deleteRequest(\''+r.id+'\')" style="background:none;border:0.5px solid #fca5a5;border-radius:6px;padding:5px 8px;cursor:pointer;color:#ef4444;font-size:12px" title="Delete">&#128465;</button>':"";
+    var myReqBadge=isMyRequest(r)&&accessLevel==="viewer"?'<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe">My request</span>':"";
     var aBtn=!r.approved&&canApprove(r.type)?'<button onclick="approveRequest(\''+r.id+'\')" style="background:#f0fdf4;border:0.5px solid #86efac;border-radius:6px;padding:5px 10px;cursor:pointer;color:#15803d;font-size:12px;font-weight:600">&#9989; Approve</button>':"";
+    var pendingNote=!r.approved&&canApprove(r.type)?'<span style="font-size:11px;color:#d97706;font-weight:600">&#8987; Pending your approval</span>':"";
+    var myEditNote=isMyRequest(r)&&(r.status==="TBC"||r.status==="Planned")&&accessLevel==="viewer"?'<span style="font-size:10px;font-weight:500;color:#6b7280">You can edit this request while pending</span>':"";
     var sendBtn=r.approved&&r.status==="Internally Approved"&&canApprove(r.type)?'<button onclick="sendToLiaison(\''+r.id+'\')" style="background:#f5f3ff;border:0.5px solid #c4b5fd;border-radius:6px;padding:5px 10px;cursor:pointer;color:#6d28d9;font-size:12px;font-weight:600">&#128231; Football Dept</button>':"";
     var FDSTATUSES=["Internally Approved","Sent to Football Dept","Football Dept Confirmed"];
     var confirmBtn=r.approved&&canApprove(r.type)?'<select onchange="updateFootballStatus(\''+r.id+'\',this.value)" style="font-size:11px;padding:4px 6px;border-radius:6px;border:0.5px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-family:inherit"><option value="" disabled'+(FDSTATUSES.indexOf(r.status)<0?" selected":"")+'>&#127944; Football Dept...</option><option value="Internally Approved"'+(r.status==="Internally Approved"?" selected":"")+'>Not Sent</option><option value="Sent to Football Dept"'+(r.status==="Sent to Football Dept"?" selected":"")+'>Sent to Football Dept</option><option value="Football Dept Confirmed"'+(r.status==="Football Dept Confirmed"?" selected":"")+'>Football Dept Confirmed</option></select>':"";
     var tc=r.type==="Commercial"?"type-commercial":r.type==="PCL"?"type-pcl":"type-retail";
-    var isPast=r.date&&new Date(r.date+"T12:00:00")<today;
-    var pendingNote=!r.approved&&canApprove(r.type)?'<span style="font-size:11px;color:#d97706;font-weight:600">&#8987; Pending your approval</span>':"";
-    var metaParts=[];
+    var isPast=r.date&&new Date(r.date+"T12:00:00")<today;    var metaParts=[];
     if(r.date)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#128197; '+fmtDate(r.date)+'</span>');
     if(r.location)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#128205; '+r.location+'</span>');
     if(r.start_time||r.time_required)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#9200; '+(r.start_time?fmtTime(r.start_time)+(r.time_required?" · "+r.time_required:""):r.time_required)+'</span>');
@@ -1439,7 +1505,8 @@ function renderRequests(){
     var cardLeft=r.status==="Confirmed"||r.status==="Football Dept Confirmed"?"#16a34a":r.status==="Sent to Football Dept"?"#7c3aed":r.status==="Not Approved"?"#ef4444":r.status==="Internally Approved"?"#d97706":"transparent";
     cards+='<div style="background:'+cardBg+';border:0.5px solid '+cardBorder+';border-left:3px solid '+cardLeft+';border-radius:10px;padding:16px 18px;opacity:'+(isPast?"0.6":"1")+'">'
       +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px">'
-        +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:14px;font-weight:600;color:#111827">'+r.name+'</span><span class="type-chip '+tc+'">'+r.type+'</span>'+pendingNote+'</div>'
+        +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:14px;font-weight:600;color:#111827">'+r.name+'</span><span class="type-chip '+tc+'">'+r.type+'</span>'+pendingNote+myReqBadge+'</div>'
+        +(myEditNote?'<div style="margin-bottom:4px">'+myEditNote+'</div>':'')
         +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'+metaParts.join("")+'</div></div>'
         +'<span class="status-chip '+sc(r.status)+'" style="flex-shrink:0">'+r.status+'</span>'
       +'</div>'
@@ -1554,6 +1621,7 @@ function deleteRequest(id){
 }
 function openEditModal(id){
   editingId=id;var r=requests.find(function(x){return x.id===id});if(!r)return;
+  var isSubmitterOnly=isMyRequest(r)&&accessLevel==="viewer";
   document.getElementById("ef-name").value=r.name||"";
   document.getElementById("ef-type").value=r.type||"Retail";
   document.getElementById("ef-status").value=r.status||"TBC";
@@ -1562,9 +1630,25 @@ function openEditModal(id){
   document.getElementById("ef-time").value=r.time_required||"";
   document.getElementById("ef-start-time").value=r.start_time||"";
   document.getElementById("ef-notes").value=r.notes||"";
+  // Submitters can only edit basic fields — lock status and type
+  var efType=document.getElementById("ef-type");var efStatus=document.getElementById("ef-status");
+  if(efType)efType.disabled=isSubmitterOnly;
+  if(efStatus)efStatus.disabled=isSubmitterOnly;
+  // Show/hide players section for submitters
+  var playersSection=document.getElementById("editPlayersCheckboxes");
+  var playersLabel=playersSection&&playersSection.previousElementSibling;
+  if(isSubmitterOnly){
+    if(playersSection)playersSection.style.display="none";
+    if(playersLabel)playersLabel.style.display="none";
+  } else {
+    if(playersSection)playersSection.style.display="";
+    if(playersLabel)playersLabel.style.display="";
+  }
   var allP=players.concat(aflwPlayers);
   var cbs=document.getElementById("editPlayersCheckboxes");
-  if(cbs){cbs.innerHTML="";allP.forEach(function(p){var label=document.createElement("label");label.style.cssText="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 0";var cb=document.createElement("input");cb.type="checkbox";cb.value=p.id;cb.dataset.pid=p.id;if(r.players.includes(p.id))cb.checked=true;label.appendChild(cb);label.appendChild(document.createTextNode(p.name+" (#"+p.num+")"));cbs.appendChild(label);})}
+  if(cbs&&!isSubmitterOnly){cbs.innerHTML="";allP.forEach(function(p){var label=document.createElement("label");label.style.cssText="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 0";var cb=document.createElement("input");cb.type="checkbox";cb.value=p.id;cb.dataset.pid=p.id;if(r.players.includes(p.id))cb.checked=true;label.appendChild(cb);label.appendChild(document.createTextNode(p.name+" (#"+p.num+")"));cbs.appendChild(label);})}
+  // Update modal title
+  document.querySelector("#editModal .modal-title").textContent=isSubmitterOnly?"Edit Your Request":"Edit Request";
   document.getElementById("editModal").classList.add("open");
 }
 function saveEdit(){
@@ -1838,6 +1922,7 @@ function applyAccessLevel(level){
 }
 function resolveIdentity(mondayUserId){
   var id=parseInt(mondayUserId,10);
+  currentMondayUserId=id;
   var role=userRoles[id];
   if(role){applyAccessLevel(role);}
   else{console.log("monday user not mapped (viewer):",id);applyAccessLevel("viewer");}
@@ -2431,6 +2516,7 @@ function editUserFromList(id){
 var pg=document.getElementById("playersGrid");
 if(pg)pg.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">&#9889; Loading players from board...</div>';
 renderRequests();renderCalendar();
+checkOpenedInMonday();
 </script>
 </body>
 </html>
