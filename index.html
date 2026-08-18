@@ -1025,49 +1025,69 @@ let accessLevel="viewer",mreqConflictOverride=false;
 var _pendingLiaisonId=null;
 
 var _mondaySdkInstance=null;
-var _sdkReady=false;
+var _sdkApiReady=false;
+var _sdkApiQueue=[];
 
 function getMondayClient(){
-  if(_mondaySdkInstance)return _mondaySdkInstance;
-  try{
-    var sdk=window.mondaySdk?mondaySdk():null;
-    if(sdk){_mondaySdkInstance=sdk;return sdk;}
-    return null;
-  }catch(e){return null;}
+  return _mondaySdkInstance;
+}
+
+function _waitForSdkApi(sdk,callback){
+  // Poll until sdk.api is a function, then call callback
+  if(typeof sdk.api==="function"){callback();return;}
+  var attempts=0;
+  var poll=setInterval(function(){
+    attempts++;
+    if(typeof sdk.api==="function"){
+      clearInterval(poll);
+      _sdkApiReady=true;
+      callback();
+    } else if(attempts>=40){
+      clearInterval(poll);
+      console.warn("sdk.api never became available");
+      callback(); // proceed anyway
+    }
+  },100);
 }
 
 function mondayApi(query,vars){
-  var sdk=getMondayClient();
+  var sdk=_mondaySdkInstance;
+
   if(sdk){
-    // Always use SDK when inside monday — never fall back to fetch
-    // If SDK isn't ready yet, queue a retry
-    return sdk.api(query,{variables:vars||{}})
-      .then(function(r){
-        if(r&&!r.errors){_sdkReady=true;return r;}
-        if(r&&r.errors){console.warn("monday API error:",r.errors);return r;}
-        // Null response — SDK not ready, retry after delay
-        return new Promise(function(resolve){
-          setTimeout(function(){
+    // If .api isn't ready yet, queue this call and wait
+    if(typeof sdk.api!=="function"){
+      return new Promise(function(resolve){
+        _waitForSdkApi(sdk,function(){
+          if(typeof sdk.api==="function"){
             sdk.api(query,{variables:vars||{}})
-              .then(function(r2){resolve(r2||null);})
+              .then(function(r){resolve(r||null);})
               .catch(function(){resolve(null);});
-          },1500);
+          } else {
+            resolve(null);
+          }
         });
-      })
+      });
+    }
+    // .api is ready — call it
+    return sdk.api(query,{variables:vars||{}})
+      .then(function(r){return r||null;})
       .catch(function(e){
-        console.warn("SDK api call failed:",e);
-        // Retry once on catch
+        console.warn("SDK api error:",e);
+        // Retry once after 1s
         return new Promise(function(resolve){
           setTimeout(function(){
-            sdk.api(query,{variables:vars||{}})
-              .then(function(r2){resolve(r2||null);})
-              .catch(function(){resolve(null);});
-          },1500);
+            if(typeof sdk.api==="function"){
+              sdk.api(query,{variables:vars||{}})
+                .then(function(r2){resolve(r2||null);})
+                .catch(function(){resolve(null);});
+            } else resolve(null);
+          },1000);
         });
       });
   }
-  // Absolutely no SDK — only reach fetch if genuinely outside monday
-  console.warn("No monday SDK available — fetch fallback");
+
+  // No SDK at all — direct fetch (only when genuinely outside monday)
+  console.warn("No SDK — using token fetch");
   if(!MONDAY_TOKEN)return Promise.resolve(null);
   return fetch("https://api.monday.com/v2",{
     method:"POST",
@@ -1217,6 +1237,8 @@ function processBoard(items){
     console.log("Board loaded:",players.length,"AFL,",aflwPlayers.length,"AFLW,",requests.length,"requests");
     renderPlayers();renderRequests();renderCalendar();
     if(document.getElementById("tab-balances")&&document.getElementById("tab-balances").classList.contains("active"))renderBalancesTab();
+    // Pre-load all workspace users so names show correctly in Users tab
+    if(accessLevel==="admin"&&!_allWorkspaceUsers.length)loadAllUsers();
 }
 
 function isoDate(y,m,d){return y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0")}
@@ -2305,7 +2327,11 @@ var _searchTimeout=null;
 function loadAllUsers(){
   if(_allWorkspaceUsers.length)return;
   mondayApi("{users{id name email}}").then(function(res){
-    if(res&&res.data&&res.data.users)_allWorkspaceUsers=res.data.users;
+    if(res&&res.data&&res.data.users){
+      _allWorkspaceUsers=res.data.users;
+      // Re-render list now that we have names
+      renderUsersList();
+    }
   });
 }
 
@@ -2476,8 +2502,6 @@ function editUserFromList(id){
   }
 
   function initSdk(){
-    // mondaySdk() is always available inside monday iframe — call it immediately
-    // without checking .api since that property may attach asynchronously
     var sdk=null;
     try{sdk=window.mondaySdk?mondaySdk():null;}catch(e){}
     if(sdk){
@@ -2485,7 +2509,6 @@ function editUserFromList(id){
       attachSdk(sdk);
       return;
     }
-    // SDK script not loaded yet — retry
     var attempts=0;
     var retry=setInterval(function(){
       attempts++;
@@ -2496,27 +2519,34 @@ function editUserFromList(id){
         attachSdk(sdk);
       } else if(attempts>=20){
         clearInterval(retry);
-        console.warn("monday SDK never loaded — outside monday context");
+        console.warn("monday SDK never loaded");
         tryLoadBoard();
       }
     },500);
   }
 
   function attachSdk(sdk){
+    // Wire up context listener
     sdk.listen("context",function(res){
       var ctx=res.data||res;
       tryIdentity(ctx);
-      tryLoadBoard();
+      // Wait for sdk.api to be ready before loading board
+      _waitForSdkApi(sdk,function(){tryLoadBoard();});
     });
-    sdk.get("context").then(function(res){
-      var ctx=res.data||res;
-      tryIdentity(ctx);
-      // Also trigger load here in case listen never fires
-      setTimeout(function(){tryLoadBoard();},500);
-    }).catch(function(){
-      // get("context") failed — still try loading, SDK may still work for API calls
-      setTimeout(function(){tryLoadBoard();},1000);
-    });
+    // Also try get("context") immediately
+    if(typeof sdk.get==="function"){
+      sdk.get("context").then(function(res){
+        var ctx=res.data||res;
+        tryIdentity(ctx);
+        _waitForSdkApi(sdk,function(){
+          setTimeout(function(){tryLoadBoard();},200);
+        });
+      }).catch(function(){
+        _waitForSdkApi(sdk,function(){
+          setTimeout(function(){tryLoadBoard();},500);
+        });
+      });
+    }
   }
 
   initSdk();
