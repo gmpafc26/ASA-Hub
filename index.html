@@ -1024,47 +1024,50 @@ let filterDept="all",filterStatus="all",filterTime="active";
 let accessLevel="viewer",mreqConflictOverride=false;
 var _pendingLiaisonId=null;
 
-var _sdkConfirmed=false; // set true once SDK successfully returns data
+var _mondaySdkInstance=null;
+var _sdkReady=false;
 
 function getMondayClient(){
+  if(_mondaySdkInstance)return _mondaySdkInstance;
   try{
     var sdk=window.mondaySdk?mondaySdk():null;
-    if(sdk&&typeof sdk.api==="function")return sdk;
+    if(sdk){_mondaySdkInstance=sdk;return sdk;}
     return null;
-  }catch(e){return null}
+  }catch(e){return null;}
 }
 
 function mondayApi(query,vars){
   var sdk=getMondayClient();
-
-  // If SDK is available, always try it first with retry logic
   if(sdk){
+    // Always use SDK when inside monday — never fall back to fetch
+    // If SDK isn't ready yet, queue a retry
     return sdk.api(query,{variables:vars||{}})
       .then(function(r){
-        if(r&&!r.errors){_sdkConfirmed=true;return r;}
-        // SDK returned an error — if SDK was previously confirmed working, retry once
-        if(_sdkConfirmed){
-          return new Promise(function(resolve){setTimeout(function(){
-            sdk.api(query,{variables:vars||{}}).then(resolve).catch(function(){resolve(null);});
-          },500);});
-        }
-        // SDK not yet confirmed — fall through to fetch only if no MONDAY_TOKEN
-        // (i.e. genuinely outside monday context)
-        if(!MONDAY_TOKEN)return null;
-        // Inside monday but SDK not ready yet — retry via SDK after a short delay
-        return new Promise(function(resolve){setTimeout(function(){
-          var sdk2=getMondayClient();
-          if(sdk2){sdk2.api(query,{variables:vars||{}}).then(function(r2){
-            if(r2&&!r2.errors){_sdkConfirmed=true;resolve(r2);}
-            else resolve(null);
-          }).catch(function(){resolve(null);});}
-          else resolve(null);
-        },1000);});
+        if(r&&!r.errors){_sdkReady=true;return r;}
+        if(r&&r.errors){console.warn("monday API error:",r.errors);return r;}
+        // Null response — SDK not ready, retry after delay
+        return new Promise(function(resolve){
+          setTimeout(function(){
+            sdk.api(query,{variables:vars||{}})
+              .then(function(r2){resolve(r2||null);})
+              .catch(function(){resolve(null);});
+          },1500);
+        });
       })
-      .catch(function(){return null;});
+      .catch(function(e){
+        console.warn("SDK api call failed:",e);
+        // Retry once on catch
+        return new Promise(function(resolve){
+          setTimeout(function(){
+            sdk.api(query,{variables:vars||{}})
+              .then(function(r2){resolve(r2||null);})
+              .catch(function(){resolve(null);});
+          },1500);
+        });
+      });
   }
-
-  // No SDK at all — only then use direct fetch (outside monday context)
+  // Absolutely no SDK — only reach fetch if genuinely outside monday
+  console.warn("No monday SDK available — fetch fallback");
   if(!MONDAY_TOKEN)return Promise.resolve(null);
   return fetch("https://api.monday.com/v2",{
     method:"POST",
@@ -2473,41 +2476,47 @@ function editUserFromList(id){
   }
 
   function initSdk(){
-    var sdk=getMondayClient();
-    if(!sdk){
-      // SDK not ready yet — retry up to 10 times over 5 seconds
-      var attempts=0;
-      var retry=setInterval(function(){
-        attempts++;
-        var s=getMondayClient();
-        if(s){
-          clearInterval(retry);
-          attachSdk(s);
-        } else if(attempts>=10){
-          clearInterval(retry);
-          // Give up on SDK — load via token only
-          tryLoadBoard();
-        }
-      },500);
+    // mondaySdk() is always available inside monday iframe — call it immediately
+    // without checking .api since that property may attach asynchronously
+    var sdk=null;
+    try{sdk=window.mondaySdk?mondaySdk():null;}catch(e){}
+    if(sdk){
+      _mondaySdkInstance=sdk;
+      attachSdk(sdk);
       return;
     }
-    attachSdk(sdk);
+    // SDK script not loaded yet — retry
+    var attempts=0;
+    var retry=setInterval(function(){
+      attempts++;
+      try{sdk=window.mondaySdk?mondaySdk():null;}catch(e){}
+      if(sdk){
+        clearInterval(retry);
+        _mondaySdkInstance=sdk;
+        attachSdk(sdk);
+      } else if(attempts>=20){
+        clearInterval(retry);
+        console.warn("monday SDK never loaded — outside monday context");
+        tryLoadBoard();
+      }
+    },500);
   }
 
   function attachSdk(sdk){
-    // Listen for context (fires when SDK is fully ready inside monday iframe)
     sdk.listen("context",function(res){
       var ctx=res.data||res;
       tryIdentity(ctx);
       tryLoadBoard();
     });
-    // Also try get context immediately in case listen fires late
     sdk.get("context").then(function(res){
       var ctx=res.data||res;
       tryIdentity(ctx);
-    }).catch(function(){});
-    // Fallback: if context listener never fires within 3s, load via token
-    setTimeout(function(){tryLoadBoard();},3000);
+      // Also trigger load here in case listen never fires
+      setTimeout(function(){tryLoadBoard();},500);
+    }).catch(function(){
+      // get("context") failed — still try loading, SDK may still work for API calls
+      setTimeout(function(){tryLoadBoard();},1000);
+    });
   }
 
   initSdk();
