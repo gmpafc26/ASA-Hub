@@ -652,6 +652,7 @@
         <div class="mreq-row">
           <div class="mreq-field"><label class="mreq-label">Status</label><select class="mreq-input" id="mreq-status"><option value="TBC">TBC</option><option value="Planned">Planned</option></select></div>
           <div class="mreq-field" id="mreqSubmitterField" style="display:none"><label class="mreq-label">Your Name</label><input type="text" class="mreq-input" id="mreq-submitter" placeholder="e.g. Jane Smith"></div>
+          <div class="mreq-field" id="mreqSubmitterIdentity" style="display:none"><label class="mreq-label">Submitting as</label><div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--off-white);border:1px solid var(--border);border-radius:8px"><div id="mreqIdentityAvatar" style="width:28px;height:28px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0369a1;flex-shrink:0"></div><span id="mreqIdentityName" style="font-size:13px;font-weight:600;color:var(--text)"></span></div></div>
         </div>
         <div class="mreq-field full"><label class="mreq-label">Brief / Notes</label><textarea class="mreq-input mreq-textarea" id="mreq-notes" placeholder="Purpose, what is needed, any key details..."></textarea></div>
         <div class="mreq-submit-row"><button class="mreq-submit-btn" id="mreqSubmitBtn" onclick="submitMakeRequest()">Submit Request &#8594;</button></div>
@@ -1194,11 +1195,18 @@ function processBoard(items){
         var rid="r"+mondayId;
         REQUEST_MONDAY_IDS[rid]=parseInt(mondayId,10);
         var playerNames=(cv[COL.players_text]||"").split(",").map(function(n){return n.trim()}).filter(Boolean);
+        var notesRaw=cv[COL.notes]||"";
+        var submitterMatch=notesRaw.match(/Requested by:\s*([^|]+)/);
+        var approvedByMatch=notesRaw.match(/Approved by:\s*([^|]+)/);
+        var submitterName=submitterMatch?submitterMatch[1].trim():"";
+        var approvedByName=approvedByMatch?approvedByMatch[1].trim():"";
+        var notesClean=notesRaw.replace(/Requested by:[^|]+\|?\s*/g,"").replace(/Approved by:[^|]+\|?\s*/g,"").replace(/Start:[^|]+\|?\s*/g,"").trim();
         newRequests.push({id:rid,mondayId:parseInt(mondayId,10),name:item.name,
           type:cv[COL.req_type]||"Retail",date:cv[COL.date]||null,
           location:cv[COL.location]||"",time_required:cv[COL.time_required]||"",
           status:cv[COL.status]||"TBC",approved:cv[COL.approved]==="Approved",
-          briefed:cv[COL.briefed]==="Yes",notes:cv[COL.notes]||"",
+          briefed:cv[COL.briefed]==="Yes",notes:notesClean,
+          submitter:submitterName,approvedBy:approvedByName||null,
           submitterMondayId:cv[COL.submitted_by]?parseInt(cv[COL.submitted_by],10)||null:null,
           _playerNames:playerNames});
       } else if(item.group.id===AFL_SCHED_GROUP||item.group.id===AFLW_SCHED_GROUP){
@@ -1544,6 +1552,8 @@ function renderRequests(){
     if(r.date)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#128197; '+fmtDate(r.date)+'</span>');
     if(r.location)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#128205; '+r.location+'</span>');
     if(r.start_time||r.time_required)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#9200; '+(r.start_time?fmtTime(r.start_time)+(r.time_required?" · "+r.time_required:""):r.time_required)+'</span>');
+    if(r.submitter)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6b7280">&#128100; Requested by '+r.submitter+'</span>');
+    if(r.approvedBy)metaParts.push('<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:'+(r.denied?"#ef4444":"#16a34a")+'">&#10003; '+(r.denied?"Declined":"Approved")+' by '+r.approvedBy+'</span>');
     var pillsHtml=names.length?names.map(function(n){return'<div style="width:28px;height:28px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0369a1;flex-shrink:0" title="'+n+'">'+n.split(" ").map(function(w){return w[0]}).join("").slice(0,2)+'</div>'}).join(""):'<span style="font-size:12px;color:#9ca3af">No players</span>';
     var hasBtns=(aBtn||sendBtn||confirmBtn||eBtn||dBtn);
     var cardBg=r.status==="Confirmed"||r.status==="Football Dept Confirmed"?"#f0fdf4":r.status==="Sent to Football Dept"?"#f5f3ff":r.status==="Not Approved"?"#fff5f5":"#fff";
@@ -1595,14 +1605,16 @@ function showPendingReviewCard(r){
 function pendingApproveWithComment(id,comment){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
   r.approved=true;r.status="Internally Approved";if(comment)r.approverComment=comment;
-  syncRequestToMonday(id,{approved:true,status:"Internally Approved"});
+  r.approvedBy=currentUserName||null;
+  syncRequestToMonday(id,{approved:true,status:"Internally Approved",approvedBy:r.approvedBy,notes:r.notes});
   renderRequests();renderCalendar();renderPlayers();showToast(r.name+" approved","success");updateApprovalBanner();closeModal("pendingModal");
 }
 function pendingDenyWithComment(id,comment){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
   r.denied=true;r.status="Not Approved";if(comment)r.approverComment=comment;
-  syncRequestToMonday(id,{status:"Not Approved",approved:false});
-  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" denied","error");updateApprovalBanner();closeModal("pendingModal");
+  r.approvedBy=currentUserName||null;
+  syncRequestToMonday(id,{status:"Not Approved",approved:false,approvedBy:r.approvedBy,notes:r.notes});
+  renderRequests();renderCalendar();renderPlayers();showToast(r.name+" declined","error");updateApprovalBanner();closeModal("pendingModal");
 }
 function sendToLiaison(id){
   var r=requests.find(function(x){return x.id===id});if(!r)return;
@@ -1718,11 +1730,23 @@ function openRequestFormModal(){
   if(document.getElementById("mreqPlayersGrid")&&document.getElementById("mreqPlayersGrid").children.length===0)initMreqPlayers();
   ["mreq-name","mreq-date","mreq-location","mreq-notes","mreq-time"].forEach(function(id){var el=document.getElementById(id);if(el)el.value="";});
   document.getElementById("mreq-start-time").value="";
-  // Auto-fill submitter from stored identity — show field only if unknown
+  // Auto-fill submitter from monday identity
   var subEl=document.getElementById("mreq-submitter");
   var subField=document.getElementById("mreqSubmitterField");
-  if(currentUserName){if(subEl)subEl.value=currentUserName;if(subField)subField.style.display="none";}
-  else{if(subEl)subEl.value="";if(subField)subField.style.display="flex";}
+  var subIdentity=document.getElementById("mreqSubmitterIdentity");
+  if(currentUserName){
+    if(subEl)subEl.value=currentUserName;
+    if(subField)subField.style.display="none";
+    if(subIdentity)subIdentity.style.display="flex";
+    var av=document.getElementById("mreqIdentityAvatar");
+    var nm=document.getElementById("mreqIdentityName");
+    if(av)av.textContent=currentUserName.split(" ").map(function(w){return w[0]||"";}).slice(0,2).join("");
+    if(nm)nm.textContent=currentUserName;
+  } else {
+    if(subEl)subEl.value="";
+    if(subField)subField.style.display="flex";
+    if(subIdentity)subIdentity.style.display="none";
+  }
   var conflict=document.getElementById("mreq-conflict");if(conflict)conflict.style.display="none";
   var success=document.getElementById("mreqSuccess");if(success)success.style.display="none";
   var form=document.getElementById("mreqForm");if(form)form.style.display="flex";
@@ -1839,7 +1863,7 @@ function submitMakeRequest(){
   var loc=document.getElementById("mreq-location").value.trim();
   var typeBtn=document.querySelector(".mreq-type-btn.active");var type=typeBtn?typeBtn.dataset.val:"Retail";
   var notes=document.getElementById("mreq-notes").value.trim();
-  var sub=document.getElementById("mreq-submitter").value.trim();
+  var sub=currentUserName||document.getElementById("mreq-submitter").value.trim();
   var timeReq=document.getElementById("mreq-time").value.trim();
   var startTime=document.getElementById("mreq-start-time").value;
   var sel=[].slice.call(document.querySelectorAll("#mreqPlayersGrid input:checked")).map(function(i){return i.dataset.pid});
@@ -1973,13 +1997,13 @@ function syncRequestToMonday(reqId,updates){
     var playerNames=updates.players.map(function(pid){var p=allP.find(function(pl){return pl.id===pid});return p?p.name:""}).filter(Boolean).join(", ");
     cv[COL.players_text]=playerNames;
   }
-  if(updates.notes!==undefined||updates.start_time!==undefined){
-    // Rebuild notes field preserving start time prefix
+  if(updates.notes!==undefined||updates.start_time!==undefined||updates.approvedBy!==undefined){
     var r2=requests.find(function(x){return x.id===reqId});
     var sub=r2?r2.submitter:"";
+    var appr=updates.approvedBy!==undefined?updates.approvedBy:(r2?r2.approvedBy:"");
     var st=updates.start_time!==undefined?updates.start_time:(r2?r2.start_time:"");
     var notesBody=updates.notes!==undefined?updates.notes:(r2?r2.notes:"");
-    var notesText=(sub?"Requested by: "+sub:"")+(st?" | Start: "+fmtTime(st):"")+(notesBody?" | "+notesBody:"");
+    var notesText=(sub?"Requested by: "+sub:"")+(appr?" | Approved by: "+appr:"")+(st?" | Start: "+fmtTime(st):"")+(notesBody?" | "+notesBody:"");
     cv[COL.notes]={text:notesText||""};
   }
   // Also update item name if changed
