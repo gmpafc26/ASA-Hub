@@ -1011,7 +1011,7 @@ var calSquad="afl";
 var schedModalSquad="afl";
 var schedEditDate=null;
 
-const APPROVAL={Retail:["admin","retail-approver"],Commercial:["admin","commercial-approver"],PCL:["admin","pcl-approver"]};
+const APPROVAL={Retail:["admin","retail-approver"],Commercial:["admin","commercial-approver"],PCL:["admin","pcl-approver"],CBA:["admin"]};
 const BOARD_ID=18412284375;
 const REQUESTS_GROUP="group_mm35jzs7";
 const PLAYERS_GROUP="group_mm354464";
@@ -1267,9 +1267,9 @@ function canEditRequest(r){
 function visReqs(){
   return requests.filter(function(r){
     if(r.denied)return false;
-    // My Requests view — only show user's own
     if(_reqView==="mine")return isMyRequest(r);
-    // All Requests view
+    // CBA is always visible to all (pre-approved, no sensitive approval info)
+    if(r.type==="CBA")return true;
     if(r.approved||canApprove(r.type)||accessLevel==="admin")return true;
     if(isMyRequest(r))return true;
     return false;
@@ -1512,7 +1512,7 @@ function renderRequests(){
   var rc=document.getElementById("requestCount");if(rc)rc.textContent=upcomingCount;
   if(filterDept!=="all")vis=vis.filter(function(r){return r.type===filterDept});
   if(filterStatus!=="all")vis=vis.filter(function(r){return r.status===filterStatus});
-  if(filterTime==="active")vis=vis.filter(function(r){if(!r.approved&&canApprove(r.type))return true;if(!r.date)return true;return new Date(r.date+"T12:00:00")>=today});
+  if(filterTime==="active")vis=vis.filter(function(r){if(r.type==="CBA")return true;if(!r.approved&&canApprove(r.type))return true;if(!r.date)return true;return new Date(r.date+"T12:00:00")>=today});
   else if(filterTime==="past")vis=vis.filter(function(r){if(!r.approved&&canApprove(r.type))return true;if(!r.date)return false;return new Date(r.date+"T12:00:00")<today});
   vis.sort(function(a,b){if(!a.date&&!b.date)return 0;if(!a.date)return 1;if(!b.date)return -1;return new Date(a.date+"T12:00:00")-new Date(b.date+"T12:00:00")});
   var container=document.getElementById("requestsCards");if(!container)return;
@@ -1817,7 +1817,7 @@ function updateMreqRoutingNote(){
   var typeBtn=document.querySelector(".mreq-type-btn.active");
   var type=typeBtn?typeBtn.dataset.val:"Retail";
   var note=document.getElementById("mreqRoutingNote");if(!note)return;
-  if(type==="CBA"){note.innerHTML='<span style="color:#15803d;font-size:11px">&#9989; Externally approved, adds directly to calendar</span>';return;}
+  if(type==="CBA"){note.innerHTML='<span style="color:#15803d;font-size:11px">&#9989; Pre-approved, added directly as Confirmed</span>';return;}
   var routeTo={Retail:"Retail approver",Commercial:"Commercial approver",PCL:"PCL approver"};
   note.innerHTML='<span style="color:var(--muted);font-size:11px">&#128231; Routes to '+( routeTo[type]||"approver")+'</span>';
 }
