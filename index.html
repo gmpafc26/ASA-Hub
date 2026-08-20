@@ -20,10 +20,11 @@
   .header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .access-badge{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;color:rgba(255,255,255,.8);font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap}
   .access-badge:hover{background:rgba(255,255,255,.18)}.access-badge.logged-in{background:rgba(0,180,216,.2);border-color:var(--teal-light);color:var(--teal-light)}
-  .tab-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;position:sticky;top:0;z-index:99}
-  .tab-btn{padding:14px 20px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .tab-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;position:sticky;top:0;z-index:99;overflow-x:auto;overflow-y:visible;scrollbar-width:none}
+  .tab-bar::-webkit-scrollbar{display:none}
+  .tab-btn{padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:7px;white-space:nowrap;flex-shrink:0}
   .tab-btn:hover{color:var(--text)}.tab-btn.active{color:var(--teal);border-bottom-color:var(--teal)}
-  .tab-btn-cta{margin-left:auto;background:var(--teal);color:#fff !important;font-weight:600;border-radius:7px;margin-top:8px;margin-bottom:8px;padding:8px 16px !important;border-bottom:none !important}
+  .tab-btn-cta{margin-left:auto;background:var(--teal);color:#fff !important;font-weight:600;border-radius:7px;margin-top:8px;margin-bottom:8px;padding:8px 16px !important;border-bottom:none !important;flex-shrink:0}
   .tab-btn-cta:hover{background:var(--teal-light) !important}.tab-btn-cta.active{background:var(--teal-light);border-bottom:none !important}
   .tab-btn-balances{color:#059669;font-weight:600}.tab-btn-balances.active{border-bottom-color:#059669;color:#059669}
   .tab-content{max-width:1400px;margin:0 auto;padding:0 24px}.tab-pane{display:none;padding:24px 0}.tab-pane.active{display:block}
@@ -474,22 +475,26 @@
     <div id="userSearchResults" style="display:none;margin-top:8px;border:1px solid var(--border);border-radius:9px;overflow:hidden;background:#fff"></div>
     <!-- Selected user + role assignment -->
     <div id="userLookupResult" style="margin-top:14px;display:none">
-      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--off-white);border:1px solid var(--border);border-radius:9px;flex-wrap:wrap">
-        <div style="width:36px;height:36px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#0369a1;flex-shrink:0" id="userAvatar"></div>
-        <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:flex-end;gap:12px;padding:12px 14px;background:var(--off-white);border:1px solid var(--border);border-radius:9px;flex-wrap:wrap">
+        <div style="width:36px;height:36px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#0369a1;flex-shrink:0;margin-bottom:2px" id="userAvatar"></div>
+        <div style="flex:1;min-width:140px;padding-bottom:4px">
           <div style="font-weight:700;font-size:13px" id="userName"></div>
           <div style="font-size:12px;color:var(--muted)" id="userEmail"></div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
           <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Role</label>
-          <select class="mreq-input" id="userRoleSelect" style="width:200px">
+          <select class="mreq-input" id="userRoleSelect" style="width:190px">
             <option value="viewer">&#9898; Viewer (read only)</option>
+            <option value="retail-approver">&#128993; Retail Approver</option>
             <option value="commercial-approver">&#128994; Commercial Approver</option>
+            <option value="pcl-approver">&#127775; PCL Approver</option>
             <option value="admin">&#128308; Admin (full access)</option>
           </select>
         </div>
-        <button class="btn-primary" onclick="saveUserRole()" style="height:36px">&#128190; Save Role</button>
-        <button onclick="removeUserRole()" style="height:36px;padding:0 12px;background:#fff;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">&#128465; Remove</button>
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-shrink:0">
+          <button class="btn-primary" onclick="saveUserRole()" style="height:36px;white-space:nowrap">&#128190; Save Role</button>
+          <button onclick="removeUserRole()" style="height:36px;padding:0 12px;background:#fff;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">&#128465; Remove</button>
+        </div>
       </div>
     </div>
   </div>
@@ -609,7 +614,7 @@
       <div class="mreq-form" id="mreqForm">
         <div class="mreq-field full"><label class="mreq-label">Request Name <span class="mreq-req">*</span></label><input type="text" class="mreq-input" id="mreq-name" placeholder="e.g. MG Campaign Shoot"></div>
         <div class="mreq-row">
-          <div class="mreq-field"><label class="mreq-label">Request Type <span class="mreq-req">*</span></label><div class="mreq-type-toggle"><button class="mreq-type-btn active" data-val="Retail" onclick="selectMreqType(this)">&#128717; Retail</button><button class="mreq-type-btn" data-val="Commercial" onclick="selectMreqType(this)">&#128188; Commercial</button><button class="mreq-type-btn" data-val="PCL" onclick="selectMreqType(this)">&#127775; PCL</button></div><div class="mreq-routing-note" id="mreqRoutingNote"></div></div>
+          <div class="mreq-field"><label class="mreq-label">Request Type <span class="mreq-req">*</span></label><div class="mreq-type-toggle"><button class="mreq-type-btn active" data-val="Retail" onclick="selectMreqType(this)">&#128717; Retail</button><button class="mreq-type-btn" data-val="Commercial" onclick="selectMreqType(this)">&#128188; Commercial</button><button class="mreq-type-btn" data-val="PCL" onclick="selectMreqType(this)">&#127775; PCL</button><button class="mreq-type-btn" data-val="CBA" onclick="selectMreqType(this)">&#128203; CBA / Other</button></div><div class="mreq-routing-note" id="mreqRoutingNote"></div></div>
           <div class="mreq-field"><label class="mreq-label">Date <span class="mreq-req">*</span></label><input type="date" class="mreq-input" id="mreq-date" onchange="mreqCheckConflicts()"><div class="mreq-date-avail" id="mreqDateAvail"></div></div>
         </div>
         <div class="mreq-field full"><label class="mreq-label">Location</label><input type="text" class="mreq-input" id="mreq-location" placeholder="e.g. Alberton Oval"></div>
@@ -617,13 +622,27 @@
           <div class="mreq-field"><label class="mreq-label">Start Time</label><select class="mreq-input" id="mreq-start-time"><option value="">Select time...</option><option value="06:00">6:00 AM</option><option value="06:30">6:30 AM</option><option value="07:00">7:00 AM</option><option value="07:30">7:30 AM</option><option value="08:00">8:00 AM</option><option value="08:30">8:30 AM</option><option value="09:00">9:00 AM</option><option value="09:30">9:30 AM</option><option value="10:00">10:00 AM</option><option value="10:30">10:30 AM</option><option value="11:00">11:00 AM</option><option value="11:30">11:30 AM</option><option value="12:00">12:00 PM</option><option value="12:30">12:30 PM</option><option value="13:00">1:00 PM</option><option value="13:30">1:30 PM</option><option value="14:00">2:00 PM</option><option value="14:30">2:30 PM</option><option value="15:00">3:00 PM</option><option value="15:30">3:30 PM</option><option value="16:00">4:00 PM</option><option value="16:30">4:30 PM</option><option value="17:00">5:00 PM</option><option value="17:30">5:30 PM</option><option value="18:00">6:00 PM</option><option value="19:00">7:00 PM</option><option value="20:00">8:00 PM</option></select></div>
           <div class="mreq-field"><label class="mreq-label">Time Required</label><input type="text" class="mreq-input" id="mreq-time" placeholder="e.g. 2 hours, Half day"></div>
         </div>
-        <div class="mreq-field full"><label class="mreq-label">Player(s) Requested <span class="mreq-req">*</span></label><p class="mreq-field-hint">Select one or more. Conflicts with existing bookings will be flagged.</p><div class="mreq-players-grid" id="mreqPlayersGrid"></div><div class="mreq-selected-pills" id="mreqSelectedPills"></div></div>
+        <div class="mreq-field full" id="mreqCbaBanner" style="display:none">
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:12px 16px;font-size:12px;color:#15803d;line-height:1.6">
+            <strong>&#128203; CBA / Other</strong> — this appearance is already externally approved and will be added directly to the calendar. No approval process required.
+          </div>
+        </div>
+        <div class="mreq-field full"><label class="mreq-label">Player(s) <span class="mreq-req">*</span></label>
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+            <button onclick="mreqSelectAllSquad('afl')" style="padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif">&#9989; All AFL Players</button>
+            <button onclick="mreqSelectAllSquad('aflw')" style="padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif">&#9989; All AFLW Players</button>
+            <button onclick="mreqSelectAllSquad('none')" style="padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif">&#10005; Clear</button>
+          </div>
+          <p class="mreq-field-hint" id="mreqPlayersHint">Select one or more. Conflicts with existing bookings will be flagged.</p>
+          <div class="mreq-players-grid" id="mreqPlayersGrid"></div>
+          <div class="mreq-selected-pills" id="mreqSelectedPills"></div>
+        </div>
         <div class="mreq-row">
           <div class="mreq-field"><label class="mreq-label">Status</label><select class="mreq-input" id="mreq-status"><option value="TBC">TBC</option><option value="Planned">Planned</option></select></div>
           <div class="mreq-field"><label class="mreq-label">Your Name</label><input type="text" class="mreq-input" id="mreq-submitter" placeholder="e.g. Jane Smith"></div>
         </div>
         <div class="mreq-field full"><label class="mreq-label">Brief / Notes</label><textarea class="mreq-input mreq-textarea" id="mreq-notes" placeholder="Purpose, what is needed, any key details..."></textarea></div>
-        <div class="mreq-submit-row"><button class="mreq-submit-btn" onclick="submitMakeRequest()">Submit Request &#8594;</button></div>
+        <div class="mreq-submit-row"><button class="mreq-submit-btn" id="mreqSubmitBtn" onclick="submitMakeRequest()">Submit Request &#8594;</button></div>
       </div>
       <div class="mreq-success" id="mreqSuccess" style="display:none">
         <div class="mreq-success-icon">&#9989;</div>
@@ -1664,12 +1683,24 @@ function openRequestFormModal(){
   var success=document.getElementById("mreqSuccess");if(success)success.style.display="none";
   var form=document.getElementById("mreqForm");if(form)form.style.display="flex";
   document.querySelectorAll(".mreq-type-btn").forEach(function(b,i){b.classList.toggle("active",i===0)});
+  var banner=document.getElementById("mreqCbaBanner");if(banner)banner.style.display="none";
+  var submitBtn=document.getElementById("mreqSubmitBtn");if(submitBtn)submitBtn.textContent="Submit Request \u2192";
+  var statusRow=document.getElementById("mreq-status")&&document.getElementById("mreq-status").closest(".mreq-row");
+  if(statusRow)statusRow.style.display="";
+  updateMreqRoutingNote();
   document.getElementById("requestFormModal").classList.add("open");
 }
 function mreqReset(){
   openRequestFormModal();
   document.getElementById("mreqSuccess").style.display="none";
   document.getElementById("mreqForm").style.display="flex";
+  // Reset to Retail type
+  document.querySelectorAll(".mreq-type-btn").forEach(function(b,i){b.classList.toggle("active",i===0);});
+  var banner=document.getElementById("mreqCbaBanner");if(banner)banner.style.display="none";
+  var submitBtn=document.getElementById("mreqSubmitBtn");if(submitBtn)submitBtn.textContent="Submit Request \u2192";
+  var statusRow=document.getElementById("mreq-status")&&document.getElementById("mreq-status").closest(".mreq-row");
+  if(statusRow)statusRow.style.display="";
+  updateMreqRoutingNote();
 }
 function initMreqPlayers(){
   var g=document.getElementById("mreqPlayersGrid");if(!g)return;
@@ -1694,7 +1725,42 @@ function mreqToggle(e,pid){
   var card=document.getElementById("mreqpc-"+pid);var cb=card.querySelector("input[type=checkbox]");
   if(e.target!==cb)cb.checked=!cb.checked;card.classList.toggle("selected",cb.checked);
 }
-function selectMreqType(btn){document.querySelectorAll(".mreq-type-btn").forEach(function(b){b.classList.remove("active")});btn.classList.add("active");}
+function selectMreqType(btn){
+  document.querySelectorAll(".mreq-type-btn").forEach(function(b){b.classList.remove("active")});
+  btn.classList.add("active");
+  var isCba=btn.dataset.val==="CBA";
+  var banner=document.getElementById("mreqCbaBanner");
+  var submitBtn=document.getElementById("mreqSubmitBtn");
+  var hint=document.getElementById("mreqPlayersHint");
+  var statusRow=document.getElementById("mreq-status")&&document.getElementById("mreq-status").closest(".mreq-row");
+  if(banner)banner.style.display=isCba?"block":"none";
+  if(submitBtn)submitBtn.textContent=isCba?"&#128197; Add to Calendar":"Submit Request \u2192";
+  if(hint)hint.textContent=isCba?"Select individual players, or use All AFL / All AFLW to add the entire squad.":"Select one or more. Conflicts with existing bookings will be flagged.";
+  // Hide status field for CBA (it's always auto-approved)
+  if(statusRow)statusRow.style.display=isCba?"none":"";
+  updateMreqRoutingNote();
+}
+
+function mreqSelectAllSquad(squad){
+  var allP=players.concat(aflwPlayers);
+  allP.forEach(function(p){
+    var cb=document.querySelector("#mreqPlayersGrid input[data-pid='"+p.id+"']");
+    var card=document.getElementById("mreqpc-"+p.id);
+    if(!cb||!card)return;
+    if(squad==="none"){cb.checked=false;card.classList.remove("selected");}
+    else if(squad==="afl"&&p.squad!=="aflw"){cb.checked=true;card.classList.add("selected");}
+    else if(squad==="aflw"&&p.squad==="aflw"){cb.checked=true;card.classList.add("selected");}
+  });
+}
+
+function updateMreqRoutingNote(){
+  var typeBtn=document.querySelector(".mreq-type-btn.active");
+  var type=typeBtn?typeBtn.dataset.val:"Retail";
+  var note=document.getElementById("mreqRoutingNote");if(!note)return;
+  if(type==="CBA"){note.innerHTML='<span style="color:#15803d;font-size:11px">&#9989; Externally approved — adds directly to calendar</span>';return;}
+  var routeTo={Retail:"Retail approver",Commercial:"Commercial approver",PCL:"PCL approver"};
+  note.innerHTML='<span style="color:var(--muted);font-size:11px">&#128231; Routes to '+( routeTo[type]||"approver")+'</span>';
+}
 function mreqCheckConflicts(){
   var date=document.getElementById("mreq-date").value;
   var ae=document.getElementById("mreqDateAvail");if(!ae)return;
@@ -1728,12 +1794,47 @@ function submitMakeRequest(){
   var date=document.getElementById("mreq-date").value;if(!date){showToast("Select a date","error");return}
   var loc=document.getElementById("mreq-location").value.trim();
   var typeBtn=document.querySelector(".mreq-type-btn.active");var type=typeBtn?typeBtn.dataset.val:"Retail";
-  var status=document.getElementById("mreq-status").value;
   var notes=document.getElementById("mreq-notes").value.trim();
   var sub=document.getElementById("mreq-submitter").value.trim();
   var timeReq=document.getElementById("mreq-time").value.trim();
   var startTime=document.getElementById("mreq-start-time").value;
   var sel=[].slice.call(document.querySelectorAll("#mreqPlayersGrid input:checked")).map(function(i){return i.dataset.pid});
+
+  // CBA / Other — write directly to calendar, skip approval process
+  if(type==="CBA"){
+    if(!sel.length){showToast("Select at least one player","error");return;}
+    var allP=players.concat(aflwPlayers);
+    // Determine which squads are selected
+    var hasAfl=sel.some(function(pid){var p=allP.find(function(x){return x.id===pid;});return p&&p.squad!=="aflw";});
+    var hasAflw=sel.some(function(pid){var p=allP.find(function(x){return x.id===pid;});return p&&p.squad==="aflw";});
+    var noteText=name+(notes?" — "+notes:"")+(loc?" @ "+loc:"");
+    // Write to AFL schedule
+    if(hasAfl){
+      var existing=schedule[date];
+      var mondayId=existing?existing.mondayId:null;
+      schedule[date]={date:date,a:"cba",n:noteText,mondayId:mondayId||null};
+      var cv={};cv[COL.date]={date:date};cv[COL_AVAIL]={label:"CBA"};cv[COL.notes]={text:noteText};
+      if(mondayId){mondayApi("mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv,create_labels_if_missing:true){id}}",{bid:BOARD_ID,iid:String(mondayId),cv:JSON.stringify(cv)});}
+      else{(function(entry,cv2){mondayApi("mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}",{bid:BOARD_ID,gid:AFL_SCHED_GROUP,name:noteText+" ("+date+")",cv:JSON.stringify(cv2)}).then(function(r){if(r&&r.data&&r.data.create_item)entry.mondayId=parseInt(r.data.create_item.id,10);});})(schedule[date],cv);}
+    }
+    // Write to AFLW schedule
+    if(hasAflw){
+      var existingW=aflwSchedule[date];
+      var mondayIdW=existingW?existingW.mondayId:null;
+      aflwSchedule[date]={date:date,a:"cba",n:noteText,mondayId:mondayIdW||null};
+      var cvW={};cvW[COL.date]={date:date};cvW[COL_AVAIL]={label:"CBA"};cvW[COL.notes]={text:noteText};
+      if(mondayIdW){mondayApi("mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv,create_labels_if_missing:true){id}}",{bid:BOARD_ID,iid:String(mondayIdW),cv:JSON.stringify(cvW)});}
+      else{(function(entry,cv2){mondayApi("mutation($bid:ID!,$gid:String!,$name:String!,$cv:JSON!){create_item(board_id:$bid,group_id:$gid,item_name:$name,column_values:$cv,create_labels_if_missing:true){id}}",{bid:BOARD_ID,gid:AFLW_SCHED_GROUP,name:noteText+" ("+date+")",cv:JSON.stringify(cv2)}).then(function(r){if(r&&r.data&&r.data.create_item)entry.mondayId=parseInt(r.data.create_item.id,10);});})(aflwSchedule[date],cvW);}
+    }
+    renderCalendar();renderScheduleList();
+    showToast("Added to calendar","success");
+    mreqReset();
+    switchTab("calendar",null);
+    return;
+  }
+
+  // Standard request flow
+  var status=document.getElementById("mreq-status").value;
   var nr={id:"r"+Date.now(),name:name,date:date,players:sel,location:loc,start_time:startTime,
     time_required:timeReq,type:type,status:status,briefed:false,approved:canApprove(type),submitter:sub,notes:notes};
   requests.unshift(nr);
