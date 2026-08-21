@@ -1190,8 +1190,10 @@ function processBoard(items){
         var notesRaw=cv[COL.notes]||"";
         var submitterMatch=notesRaw.match(/Requested by:\s*([^|]+)/);
         var approvedByMatch=notesRaw.match(/Approved by:\s*([^|]+)/);
+        var startTimeMatch=notesRaw.match(/Start:\s*([^|]+)/);
         var submitterName=submitterMatch?submitterMatch[1].trim():"";
         var approvedByName=approvedByMatch?approvedByMatch[1].trim():"";
+        var startTimeParsed=startTimeMatch?startTimeMatch[1].trim():"";
         var notesClean=notesRaw.replace(/Requested by:[^|]+\|?\s*/g,"").replace(/Approved by:[^|]+\|?\s*/g,"").replace(/Start:[^|]+\|?\s*/g,"").trim();
         newRequests.push({id:rid,mondayId:parseInt(mondayId,10),name:item.name,
           type:cv[COL.req_type]||"Retail",date:cv[COL.date]||null,
@@ -1199,6 +1201,7 @@ function processBoard(items){
           status:cv[COL.status]||"TBC",approved:cv[COL.approved]==="Approved",
           briefed:cv[COL.briefed]==="Yes",notes:notesClean,
           submitter:submitterName,approvedBy:approvedByName||null,
+          start_time:startTimeParsed||"",
           submitterMondayId:cv[COL.submitted_by]?parseInt(cv[COL.submitted_by],10)||null:null,
           _playerNames:playerNames});
       } else if(item.group.id===AFL_SCHED_GROUP||item.group.id===AFLW_SCHED_GROUP){
@@ -1588,7 +1591,7 @@ function showPendingReviewCard(r){
   function addInfo(icon,label,val){if(!val)return;var row=document.createElement("div");row.style.cssText="display:flex;gap:8px;font-size:13px";row.innerHTML='<span>'+icon+'</span><span style="color:#6b7280;min-width:80px">'+label+'</span><span>'+val+'</span>';wrap.appendChild(row);}
   var names=r.players.map(function(pid){var p=players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});return p?p.name:""}).filter(Boolean).join(", ");
   addInfo("📋","Request",r.name);addInfo("📂","Type",r.type);addInfo("📅","Date",r.date?fmtDate(r.date):"TBC");
-  addInfo("📍","Location",r.location);addInfo("⏰","Duration",r.time_required);addInfo("👥","Players",names||"None");addInfo("📝","Notes",r.notes);
+  addInfo("📍","Location",r.location);addInfo("⏰","Time",(r.start_time?fmtTime(r.start_time)+(r.time_required?" · "+r.time_required:""):r.time_required)||"");addInfo("👥","Players",names||"None");addInfo("📝","Notes",r.notes);
   var cw=document.createElement("div");
   cw.innerHTML='<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Add a comment (optional)</label><textarea id="approvalComment" style="width:100%;padding:8px;border:0.5px solid #d1d5db;border-radius:6px;font-size:12px;min-height:60px" placeholder="e.g. Approved, please confirm with football dept"></textarea>';
   wrap.appendChild(cw);body.appendChild(wrap);
@@ -1629,6 +1632,7 @@ function sendToLiaison(id){
     +"<br><strong>Type:</strong> "+r.type
     +"<br><strong>Date:</strong> "+dateStr
     +(r.location?"<br><strong>Location:</strong> "+r.location:"")
+    +(r.start_time?"<br><strong>Start Time:</strong> "+fmtTime(r.start_time):"")
     +(r.time_required?"<br><strong>Duration:</strong> "+r.time_required:"")
     +"<br><strong>Players:</strong> "+allNames
     +(r.notes?"<br><strong>Notes:</strong> "+r.notes:"")
