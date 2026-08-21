@@ -361,7 +361,7 @@
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
       <div style="display:flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0">
         <button id="reqViewAll" onclick="setReqView('all')" style="padding:7px 16px;font-size:12px;font-weight:600;border:none;background:var(--navy);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif">All Requests</button>
-        <button id="reqViewMine" onclick="setReqView('mine')" style="padding:7px 16px;font-size:12px;font-weight:600;border:none;background:#fff;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif">My Requests</button>
+        <button id="reqViewMine" onclick="setReqView('mine')" style="padding:7px 16px;font-size:12px;font-weight:600;border:none;background:#fff;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;display:none">My Requests</button>
       </div>
     </div>
     <div class="requests-filters-wrap">
@@ -1249,6 +1249,9 @@ function setReqView(view){
   _reqView=view;
   var btnAll=document.getElementById("reqViewAll");
   var btnMine=document.getElementById("reqViewMine");
+  var mineBtn=document.getElementById("reqViewMine");
+  // Only show My Requests option if identity is resolved
+  if(mineBtn)mineBtn.style.display=currentMondayUserId?"inline-block":"none";
   if(btnAll){btnAll.style.background=view==="all"?"var(--navy)":"#fff";btnAll.style.color=view==="all"?"#fff":"var(--muted)";}
   if(btnMine){btnMine.style.background=view==="mine"?"var(--navy)":"#fff";btnMine.style.color=view==="mine"?"#fff":"var(--muted)";}
   renderRequests();
@@ -1267,10 +1270,15 @@ function canEditRequest(r){
 function visReqs(){
   return requests.filter(function(r){
     if(r.denied)return false;
+    // My Requests view — only show user's own
     if(_reqView==="mine")return isMyRequest(r);
-    // CBA is always visible to all (pre-approved, no sensitive approval info)
+    // CBA always visible to all
     if(r.type==="CBA")return true;
-    if(r.approved||canApprove(r.type)||accessLevel==="admin")return true;
+    // Admins and approvers see everything in their scope
+    if(accessLevel==="admin"||canApprove(r.type))return true;
+    // Approved/confirmed requests visible to all viewers
+    if(r.approved||r.status==="Confirmed"||r.status==="Internally Approved"||r.status==="Football Dept Confirmed")return true;
+    // Submitters can always see their own pending requests
     if(isMyRequest(r))return true;
     return false;
   });
@@ -1502,10 +1510,6 @@ function setFilterDrop(type,val){if(type==="dept")filterDept=val;else if(type===
 function renderRequests(){
   var today=new Date();today.setHours(0,0,0,0);
   updateApprovalBanner();
-  // Default viewers to "My Requests" view
-  if(accessLevel==="viewer"&&_reqView==="all"&&currentMondayUserId){
-    setReqView("mine");return;
-  }
   var vis=visReqs();
   var todayCount=new Date();todayCount.setHours(0,0,0,0);
   var upcomingCount=vis.filter(function(r){if(!r.date)return true;return new Date(r.date+"T12:00:00")>=todayCount}).length;
@@ -2064,12 +2068,14 @@ function resolveIdentity(mondayUserId){
     mondayApi("{me{id name}}").then(function(res){
       if(res&&res.data&&res.data.me){
         currentUserName=res.data.me.name;
-        // Pre-fill submitter field if form is open
         var sub=document.getElementById("mreq-submitter");
         if(sub&&!sub.value)sub.value=currentUserName;
       }
     }).catch(function(){});
   }
+  // Show My Requests button now that identity is known
+  var mineBtn=document.getElementById("reqViewMine");
+  if(mineBtn)mineBtn.style.display="inline-block";
 }
 function updateApprovalBanner(){
   var banner=document.getElementById("approvalBanner");if(!banner)return;
