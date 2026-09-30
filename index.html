@@ -555,7 +555,7 @@
 
       <div class="hiw-card">
         <div style="width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#128101;</div>
-        <div><div class="hiw-card-title hiw-editable">Players tab</div><div class="hiw-card-text hiw-editable">Browse AFL and AFLW players with photo, jersey number, position, ASA type and remaining balance. Toggle between squads using the AFL / AFLW buttons. Click <strong>Requests</strong> on any player card to see their upcoming bookings. Admins can click <strong>Edit</strong> to update a player's details, photo, ASA type or restricted status, and <strong>+ Add Player</strong> to add someone new to the board.</div></div>
+        <div><div class="hiw-card-title hiw-editable">Players tab</div><div class="hiw-card-text hiw-editable">Browse AFL and AFLW players with photo, jersey number, position, ASA type and remaining balance. Toggle between squads using the AFL / AFLW buttons. Click <strong>Requests</strong> on any player card to see their upcoming bookings. Admins can click <strong>Edit</strong> to update a player's details, photo, ASA type or restricted status, and <strong>+ Add Player</strong> to add someone new to the board. Admins can also delete a player from the edit window. A confirmation appears first, and the player is archived on the board so it can be restored.</div></div>
       </div>
 
       <div class="hiw-card">
@@ -696,7 +696,20 @@
       <div class="form-row full"><div class="form-group full"><label class="form-label">Photo URL</label><input type="text" class="form-control" id="ep-img" placeholder="https://..."></div></div>
       <div class="form-row full"><div class="form-group full" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="ep-restricted" style="accent-color:var(--teal);width:16px;height:16px;cursor:pointer"><label for="ep-restricted" style="font-size:13px;font-weight:500;cursor:pointer">Restricted (Alberton Only / Photo Usage)</label></div></div>
     </div>
-    <div class="modal-footer"><button class="btn-sm btn-outline" onclick="closeModal('balanceModal')">Cancel</button><button class="btn-primary" onclick="saveEditPlayer()">&#128190; Save Changes</button></div>
+    <div class="modal-footer"><button onclick="openDeletePlayerConfirm()" style="margin-right:auto;padding:8px 14px;background:#fff;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">&#128465; Delete Player</button><button class="btn-sm btn-outline" onclick="closeModal('balanceModal')">Cancel</button><button class="btn-primary" onclick="saveEditPlayer()">&#128190; Save Changes</button></div>
+  </div>
+</div>
+
+<!-- Delete Player Confirmation -->
+<div class="modal-overlay" id="deletePlayerModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><div class="modal-title">Delete player?</div><button class="modal-close" onclick="closeModal('deletePlayerModal')">&#215;</button></div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--text);line-height:1.6;margin-bottom:10px">You are about to delete <strong id="dpName"></strong> from the hub and the board.</p>
+      <p style="font-size:12px;color:var(--muted);line-height:1.6" id="dpRequests"></p>
+      <p style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px">The player is archived on the monday.com board rather than permanently erased, so an admin can restore them from the board's archive if this was a mistake.</p>
+    </div>
+    <div class="modal-footer"><button class="btn-sm btn-outline" onclick="closeModal('deletePlayerModal')">Cancel</button><button id="dpConfirmBtn" onclick="confirmDeletePlayer()" style="padding:8px 16px;background:#dc2626;border:none;color:#fff;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Yes, delete player</button></div>
   </div>
 </div>
 
@@ -1012,7 +1025,14 @@ var schedModalSquad="afl";
 var schedEditDate=null;
 
 const APPROVAL={Retail:["admin","retail-approver"],Commercial:["admin","commercial-approver"],PCL:["admin","pcl-approver"],CBA:["admin"]};
-const BOARD_ID=18412284375;
+// The board ID is read from the address monday loads the hub with (?boardId=...),
+// so a duplicated board works with no edits. The number below is only a fallback.
+var BOARD_ID_SOURCE="fallback";
+const BOARD_ID=(function(){
+  try{var b=new URLSearchParams(window.location.search).get("boardId");if(b&&/^\d+$/.test(b)){BOARD_ID_SOURCE="url";return parseInt(b,10);}}catch(e){}
+  return 18433315215;
+})();
+console.log("Hub board ID:",BOARD_ID,"(source: "+BOARD_ID_SOURCE+")");
 const REQUESTS_GROUP="group_mm35jzs7";
 const PLAYERS_GROUP="group_mm354464";
 const AFLW_PLAYERS_GROUP="group_mm35q3j5";
@@ -1020,7 +1040,7 @@ const MEDIA_GROUP="group_mm3hxc7y";
 const AFL_SCHED_GROUP="group_mm45jc6x";
 const AFLW_SCHED_GROUP="group_mm457qw";
 const COL_AVAIL="color_mm45j1w7";
-const SETTINGS_ITEM_ID="12058437766";
+var SETTINGS_ITEM_ID=""; // set automatically on load by finding the item named __settings__
 const COL={
   date:"date_mm35z010",location:"text_mm353efc",notes:"long_text_mm352xyz",status:"color_mm351c4p",
   player_number:"text_mm35f5cc",position:"text_mm351tb2",balance:"numeric_mm3571tn",restricted:"boolean_mm35w6eq",photo:"text_mm35jtbf",
@@ -1036,7 +1056,7 @@ var REQUEST_MONDAY_IDS={};
 var currentMondayUserId=null;
 var currentUserName=null;
 var monday=null;
-var MONDAY_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY5NDE3NzEyOCwiYWFpIjoxMSwidWlkIjo4MjY0Njg5NiwiaWFkIjoiMjAyNi0wOC0xOFQwNTo0Nzo1Mi4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzA5Mjc2LCJyZ24iOiJ1c2UxIn0.G0c9FibMD2P3np2VWnWsrK2v6Nw0UT3edfU438D4-U0";
+var MONDAY_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY1NDUxNzk2NCwiYWFpIjoxMSwidWlkIjo4MjY0Njg5NiwiaWFkIjoiMjAyNi0wNS0wNlQwNzoxOTowNi4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzA5Mjc2LCJyZ24iOiJ1c2UxIn0.S91_48zIq-aPoxjEBHuBuRLTSwPizmnHZsPQYGysQwU";
 var SDK_READY=false;
 
 var userRoles={82646896:"admin",29892421:"admin",44397410:"admin",96759461:"admin",41198358:"commercial-approver",62081586:"commercial-approver"};
@@ -1133,8 +1153,8 @@ function loadFromBoard(){
 
   function fetchPage(cursor){
     var q=cursor
-      ?'{boards(ids:[18412284375]){items_page(limit:500,cursor:"'+cursor+'"){cursor items{id name group{id}column_values{id text}}}}}'
-      :'{boards(ids:[18412284375]){items_page(limit:500){cursor items{id name group{id}column_values{id text}}}}}';
+      ?'{boards(ids:['+BOARD_ID+']){items_page(limit:500,cursor:"'+cursor+'"){cursor items{id name group{id}column_values{id text}}}}}'
+      :'{boards(ids:['+BOARD_ID+']){items_page(limit:500){cursor items{id name group{id}column_values{id text}}}}}';
     mondayApi(q,{}).then(function(res){
       console.log("fetchPage response:",JSON.stringify(res).slice(0,200));
       // Check for auth errors
@@ -1170,6 +1190,7 @@ function processBoard(items){
     items.forEach(function(item){
       var cv={};item.column_values.forEach(function(col){cv[col.id]=col.text||""});
       var mondayId=String(item.id);
+      if(item.name==="__settings__")SETTINGS_ITEM_ID=String(item.id);
       if((item.group.id===PLAYERS_GROUP||item.group.id===AFLW_PLAYERS_GROUP)&&item.name!=="__settings__"){
         var pid="p"+pidCounter++;
         PLAYER_MONDAY_IDS[pid]=parseInt(mondayId,10);
@@ -1392,6 +1413,45 @@ function saveEditPlayer(){
   if(mid)mondayApi('mutation($bid:ID!,$iid:ID!,$cv:JSON!){change_multiple_column_values(board_id:$bid,item_id:$iid,column_values:$cv){id}}',
     {bid:BOARD_ID,iid:String(mid),cv:JSON.stringify({[COL.player_number]:p.num,[COL.position]:p.pos,[COL.photo]:p.img})});
   closeModal("balanceModal");renderPlayers();showToast("Player updated","success");
+}
+
+var _deletePlayerId=null;
+function findPlayerById(pid){return players.find(function(pl){return pl.id===pid})||aflwPlayers.find(function(pl){return pl.id===pid});}
+function openDeletePlayerConfirm(){
+  if(accessLevel!=="admin"){showToast("Only admins can delete players","error");return;}
+  var pid=document.getElementById("ep-pid").value;
+  var p=findPlayerById(pid);if(!p)return;
+  _deletePlayerId=pid;
+  var n=requests.filter(function(r){return (r.players||[]).indexOf(pid)>-1;}).length;
+  document.getElementById("dpName").textContent=p.name;
+  document.getElementById("dpRequests").textContent=n?(p.name+" is listed on "+n+" request"+(n!==1?"s":"")+". They will no longer appear on "+(n!==1?"those requests":"that request")+"."):"";
+  document.getElementById("deletePlayerModal").classList.add("open");
+}
+function confirmDeletePlayer(){
+  var pid=_deletePlayerId;if(!pid)return;
+  if(accessLevel!=="admin"){showToast("Only admins can delete players","error");return;}
+  var p=findPlayerById(pid);if(!p)return;
+  var mid=PLAYER_MONDAY_IDS[pid];
+  if(!mid){showToast("This player has not finished saving to the board yet. Refresh and try again.","error");return;}
+  var btn=document.getElementById("dpConfirmBtn");
+  btn.disabled=true;btn.textContent="Deleting...";
+  mondayApi("mutation($iid:ID!){archive_item(item_id:$iid){id}}",{iid:String(mid)}).then(function(res){
+    btn.disabled=false;btn.textContent="Yes, delete player";
+    if(!res||res.errors||!res.data||!res.data.archive_item){
+      console.warn("Delete player failed:",res);
+      showToast("Could not delete the player. Nothing was changed.","error");
+      return;
+    }
+    players=players.filter(function(x){return x.id!==pid;});
+    for(var i=aflwPlayers.length-1;i>=0;i--){if(aflwPlayers[i].id===pid)aflwPlayers.splice(i,1);}
+    delete PLAYER_MONDAY_IDS[pid];
+    requests.forEach(function(r){if(r.players)r.players=r.players.filter(function(x){return x!==pid;});});
+    _deletePlayerId=null;
+    closeModal("deletePlayerModal");closeModal("balanceModal");
+    renderPlayers();renderRequests();renderCalendar();
+    var bt=document.getElementById("tab-balances");if(bt&&bt.classList.contains("active"))renderBalancesTab();
+    showToast(p.name+" deleted","success");
+  });
 }
 
 function openAddPlayerModal(){
@@ -2480,7 +2540,15 @@ function searchUsers(){
     var matches=_allWorkspaceUsers.filter(function(u){
       return u.name.toLowerCase().indexOf(q)>-1||(u.email&&u.email.toLowerCase().indexOf(q)>-1);
     }).slice(0,8);
-    renderSearchResults(matches,resultsEl);
+    if(matches.length){renderSearchResults(matches,resultsEl);return;}
+    // No local match, ask monday directly in case the cached list is incomplete
+    resultsEl.style.display="block";
+    resultsEl.innerHTML='<div style="padding:12px 16px;font-size:12px;color:var(--muted)">Searching...</div>';
+    mondayApi("query($n:String){users(name:$n){id name email}}",{n:q}).then(function(res){
+      var found=(res&&res.data&&res.data.users)||[];
+      found.forEach(function(u){if(!_allWorkspaceUsers.some(function(x){return String(x.id)===String(u.id);}))_allWorkspaceUsers.push(u);});
+      renderSearchResults(found.slice(0,8),resultsEl);
+    });
     return;
   }
 
@@ -2511,14 +2579,22 @@ function renderSearchResults(matches,el){
     var initials=u.name.split(" ").map(function(w){return w[0]||""}).slice(0,2).join("");
     var existingRole=userRoles[parseInt(u.id,10)];
     var roleLabel=existingRole?(' <span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px;color:'+(userRoleColors[existingRole]||"#94a3b8")+';background:'+(userRoleBgs[existingRole]||"#f8fafc")+'">'+userRoleNames[existingRole]+"</span>"):"";
-    html+='<div onclick="selectUser('+JSON.stringify(u)+')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:'+(i<matches.length-1?"0.5px solid #f3f4f6":"none")+';transition:background .12s" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#fff\'">'
+    html+='<div data-uid="'+u.id+'" onclick="selectUserById(this.dataset.uid)" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:'+(i<matches.length-1?"0.5px solid #f3f4f6":"none")+';transition:background .12s" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#fff\'">'
       +'<div style="width:32px;height:32px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#0369a1;flex-shrink:0">'+initials+'</div>'
-      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">'+u.name+roleLabel+'</div>'
-      +'<div style="font-size:11px;color:var(--muted)">'+( u.email||"")+'</div></div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">'+escUserHtml(u.name)+roleLabel+'</div>'
+      +'<div style="font-size:11px;color:var(--muted)">'+escUserHtml(u.email||"")+'</div></div>'
       +'<span style="font-size:11px;color:var(--muted)">Select &#8594;</span>'
       +'</div>';
   });
   el.style.display="block";el.innerHTML=html;
+}
+
+function escUserHtml(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+function selectUserById(id){
+  var u=_allWorkspaceUsers.find(function(x){return String(x.id)===String(id);});
+  if(u)selectUser(u);
+  else showToast("Could not find that user, search again","error");
 }
 
 function selectUser(u){
@@ -2567,9 +2643,15 @@ function removeUserRole(){
 }
 
 function persistRoles(){
+  if(!SETTINGS_ITEM_ID){showToast("Settings are still loading, try again in a moment","error");return;}
   var rolesJson=JSON.stringify(userRoles);
   mondayApi("mutation($iid:ID!,$bid:ID!,$cv:JSON!){change_multiple_column_values(item_id:$iid,board_id:$bid,column_values:$cv){id}}",
-    {iid:SETTINGS_ITEM_ID,bid:BOARD_ID,cv:JSON.stringify({"text_mm35jtbf":rolesJson})});
+    {iid:SETTINGS_ITEM_ID,bid:BOARD_ID,cv:JSON.stringify({"text_mm35jtbf":rolesJson})}).then(function(res){
+    if(!res||res.errors||!res.data||!res.data.change_multiple_column_values){
+      console.warn("persistRoles failed:",res);
+      showToast("Role changed here but could not be saved to the board","error");
+    }
+  });
 }
 
 function loadPersistedRoles(text){
