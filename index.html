@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1.8.0 | 2026-08-12 -->
+<!-- v1.9.0 | 2026-11-27 | session-based monday.api(), no embedded token -->
 <script src="https://cdn.jsdelivr.net/npm/monday-sdk-js/dist/main.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ASA Player Requests Hub</title>
@@ -1028,7 +1028,7 @@ const APPROVAL={Retail:["admin","retail-approver"],Commercial:["admin","commerci
 // The board ID is read from the address monday loads the hub with (?boardId=...),
 // so a duplicated board works with no edits. The number below is only a fallback.
 var BOARD_ID_SOURCE="fallback";
-const BOARD_ID=(function(){
+var BOARD_ID=(function(){
   try{var b=new URLSearchParams(window.location.search).get("boardId");if(b&&/^\d+$/.test(b)){BOARD_ID_SOURCE="url";return parseInt(b,10);}}catch(e){}
   return 18433315215;
 })();
@@ -1056,7 +1056,6 @@ var REQUEST_MONDAY_IDS={};
 var currentMondayUserId=null;
 var currentUserName=null;
 var monday=null;
-var MONDAY_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjcyNzY5NzYyOSwiYWFpIjoxMSwidWlkIjo4MjY0Njg5NiwiaWFkIjoiMjAyNi0xMS0yNlQxMDowNjo0OS4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6NzA5Mjc2LCJyZ24iOiJ1c2UxIn0.yP7Z3XLOiA4b-b-q-4yoPJ4ndDrEi57KTCAukrLmFe8";
 var SDK_READY=false;
 
 var userRoles={82646896:"admin",29892421:"admin",44397410:"admin",96759461:"admin",41198358:"commercial-approver",62081586:"commercial-approver"};
@@ -1091,15 +1090,18 @@ function _detectSdk(){
 function _waitForSdkApi(sdk,callback){callback();}
 
 function mondayApi(query,vars){
-  // Always use token-based fetch — reliable and already confirmed working (200s)
-  // SDK is used only for identity resolution (context listener)
-  if(!MONDAY_TOKEN)return Promise.resolve(null);
-  return fetch("https://api.monday.com/v2",{
-    method:"POST",
-    headers:{"Content-Type":"application/json","Authorization":MONDAY_TOKEN,"API-Version":"2024-01"},
-    body:JSON.stringify({query:query,variables:vars||{}})
-  }).then(function(res){return res.json();}).catch(function(e){
-    console.warn("fetch error:",e);return null;
+  // Runs as the logged-in monday user via the SDK session. No shared token.
+  // Board, column and group permissions in monday apply per person.
+  var sdk=_mondaySdkInstance||_detectSdk();
+  if(!sdk||typeof sdk.api!=="function"){console.warn("monday SDK not available");return Promise.resolve(null);}
+  _mondaySdkInstance=sdk;
+  return sdk.api(query,{variables:vars||{},apiVersion:"2024-01"}).then(function(res){
+    return res;
+  }).catch(function(e){
+    console.warn("monday.api error:",e);
+    // Normalise to the {errors:[...]} shape the rest of the hub expects
+    var msg=(e&&e.message)||(e&&e.error_message)||"Request failed";
+    return {errors:[{message:msg}]};
   });
 }
 
@@ -1160,7 +1162,7 @@ function loadFromBoard(){
       // Check for auth errors
       if(res&&res.errors){
         var isAuth=res.errors.some(function(e){return e.message&&(e.message.indexOf("auth")>-1||e.message.indexOf("token")>-1||e.message.indexOf("Unauthorized")>-1||e.message.indexOf("403")>-1);});
-        if(isAuth){showLoadError("The API token has expired. Please ask Georgie to update the hub with a fresh token from monday.com.");return;}
+        if(isAuth){showLoadError("monday.com refused the request. You may not have access to this board, or the app needs its permissions approved. Please contact the hub admin.");return;}
         showLoadError("Board returned an error: "+(res.errors[0]&&res.errors[0].message||"Unknown error"));return;
       }
       if(!res||!res.data||!res.data.boards){
@@ -2713,26 +2715,28 @@ function editUserFromList(id){
 
   function initSdk(){
     var sdk=_detectSdk();
-    if(sdk){
-      _mondaySdkInstance=sdk;
-      // Use SDK for identity only
-      try{
-        if(typeof sdk.listen==="function"){
-          sdk.listen("context",function(res){
-            var ctx=res.data||res;
-            tryIdentity(ctx);
-          });
-        }
-        if(typeof sdk.get==="function"){
-          sdk.get("context").then(function(res){
-            var ctx=res.data||res;
-            tryIdentity(ctx);
-          }).catch(function(){});
-        }
-      }catch(e){console.warn("SDK context error:",e);}
+    if(!sdk){tryLoadBoard();return;}
+    _mondaySdkInstance=sdk;
+    var started=false;
+    function start(ctx){
+      if(started)return;started=true;
+      if(ctx&&BOARD_ID_SOURCE==="fallback"&&ctx.boardId){
+        BOARD_ID=parseInt(ctx.boardId,10);BOARD_ID_SOURCE="context";
+        console.log("Hub board ID:",BOARD_ID,"(source: context)");
+      }
+      tryIdentity(ctx);
+      tryLoadBoard();
     }
-    // Always load board immediately via token — don't wait for SDK
-    tryLoadBoard();
+    try{
+      if(typeof sdk.get==="function"){
+        sdk.get("context").then(function(res){start(res.data||res);}).catch(function(){start(null);});
+      }
+      if(typeof sdk.listen==="function"){
+        sdk.listen("context",function(res){var ctx=res.data||res;tryIdentity(ctx);});
+      }
+    }catch(e){console.warn("SDK context error:",e);}
+    // Don't hang if context never arrives
+    setTimeout(function(){start(null);},2500);
   }
 
   initSdk();
