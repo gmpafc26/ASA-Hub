@@ -5,8 +5,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1.9.0 | 2026-11-27 | session-based monday.api(), no embedded token -->
-<script src="https://cdn.jsdelivr.net/npm/monday-sdk-js/dist/main.js"></script>
+<!-- v1.9.2 | 2026-11-27 | SDK pinned to 0.5.9 (latest 1.0.0-beta has no api()) -->
+<script src="https://cdn.jsdelivr.net/npm/monday-sdk-js@0.5.9/dist/main.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ASA Player Requests Hub</title>
 <style>
@@ -1093,12 +1093,12 @@ function mondayApi(query,vars){
   // Runs as the logged-in monday user via the SDK session. No shared token.
   // Board, column and group permissions in monday apply per person.
   var sdk=_mondaySdkInstance||_detectSdk();
-  if(!sdk||typeof sdk.api!=="function"){console.warn("monday SDK not available");return Promise.resolve(null);}
+  if(!sdk||typeof sdk.api!=="function"){console.warn("monday SDK not available");return Promise.resolve({errors:[{message:"monday SDK api() not available. Check the SDK script loaded (pinned 0.5.9) and the page is running inside a monday app view."}]});}
   _mondaySdkInstance=sdk;
   return sdk.api(query,{variables:vars||{},apiVersion:"2024-01"}).then(function(res){
     return res;
   }).catch(function(e){
-    console.warn("monday.api error:",e);
+    console.warn("monday.api error:",e);try{console.warn("monday.api error detail:",JSON.stringify(e));}catch(x){}
     // Normalise to the {errors:[...]} shape the rest of the hub expects
     var msg=(e&&e.message)||(e&&e.error_message)||"Request failed";
     return {errors:[{message:msg}]};
